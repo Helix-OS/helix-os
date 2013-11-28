@@ -54,14 +54,17 @@ void *amalloc( mheap_t *heap, int size, int align ){
 			*temp,
 			*blarg;
 
-	if ( size < 16 ) size = 16;
+	if ( size < sizeof( mblock_t )) size = sizeof( mblock_t );
 
 	// include size of header
 	size = size + sizeof( mblock_t );
 
 	// round blocks up to the nearest block
+	/*
 	if ( size % sizeof( mblock_t ))
 		size += (size + sizeof( mblock_t )) % sizeof( mblock_t ); 
+	*/
+	size += (sizeof( mblock_t ) - size % sizeof( mblock_t )) % sizeof( mblock_t );
 
 	kprintf( "Finding block of size 0x%x\n", size );
 
@@ -78,7 +81,8 @@ void *amalloc( mheap_t *heap, int size, int align ){
 				temp->prev = move;
 				temp->type = MBL_FREE;
 
-				heap->first_free = temp;
+				if ( heap->first_free->type == MBL_USED || temp < heap->first_free )
+					heap->first_free = temp;
 
 				move->size = size;
 				move->next = temp;
@@ -121,7 +125,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 					blarg->prev = temp;
 					blarg->type = MBL_FREE;
 
-					if ( !tsize && blarg > heap->first_free )
+					if ( !tsize && blarg < heap->first_free )
 						heap->first_free = blarg;
 
 					temp->size = size;
@@ -161,19 +165,28 @@ void afree( mheap_t *heap, void *ptr ){
 
 	move = (mblock_t *)((unsigned int)ptr - sizeof( mblock_t ));
 	if ( move->type == MBL_USED ){
-		kprintf( "Freeing 0x%x, size=0x%x\n", move, move->size );
+		kprintf( "Freeing 0x%x, size=0x%x, next=0x%x, prev=0x%x\n",
+			move, move->size, move->next, move->prev );
 		move->type = MBL_FREE;
 
-		if ( move->next != MBL_END && move->next->type == MBL_FREE ){
+		while ( move->next != MBL_END && move->next->type == MBL_FREE ){
+			kprintf( "next... " );
 			move->size += move->next->size;
+			move->next->type = MBL_DIRTY;
 			move->next = move->next->next;
-			kprintf( "Joining next block, size=0x%x\n", move->size );
+			kprintf( "Joining next block 0x%x(%d), size=0x%x\n",
+				move->next, move->next == MBL_END, move->size );
 		}
 
-		if ( move->prev && move->prev->type == MBL_FREE ){
+		while ( move->prev && move->prev->type == MBL_FREE ){
+			kprintf( "Previous... " );
 			move->prev->size += move->size;
 			move->prev->next = move->next;
 			move = move->prev;
+
+			if ( move->next != MBL_END )
+				move->next->prev = move;
+
 			kprintf( "Joining previous block, size=0x%x \n", move->size );
 		}
 
@@ -201,7 +214,8 @@ void dump_aheap_blocks( mheap_t *heap ){
 
 	kprintf( "+----------------[ Heap dump ]---------------+\n" );
 	for ( i = 0; move && move != MBL_END; move = move->next, i++ ){
-		kprintf( "| 0x%x: size: 0x%x\tstatus: %s |\n", move, move->size, status[ move->type == MBL_USED ]);
+		kprintf( "| 0x%x: size: 0x%x\tprev: 0x%x\tnext: 0x%x\tstatus: %s |\n",
+			move, move->size, move->prev, move->next, status[ move->type == MBL_USED ]);
 	}
 	kprintf( "| %d blocks, %d pages\t\t\t     |\n", i, heap->npages );
 	kprintf( "+--------------------------------------------+\n" );

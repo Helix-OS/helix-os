@@ -4,6 +4,7 @@
 
 #define MBL_FREE 0x66726565
 #define MBL_USED 0x75736564
+#define MBL_DIRTY 0x64697274
 #define MBL_END  (struct mblock *)0xdeadbeef
 
 typedef struct mblock {
