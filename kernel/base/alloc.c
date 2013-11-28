@@ -89,12 +89,14 @@ void *amalloc( mheap_t *heap, int size, int align ){
 			break;
 
 		} else if ( align && move->type == MBL_FREE &&
-			size < move->size - (PAGE_SIZE - (((unsigned int)move % PAGE_SIZE)?(unsigned int)move % PAGE_SIZE: PAGE_SIZE ) - sizeof( mblock_t ))){
+			size < move->size - (PAGE_SIZE - (unsigned int)move % PAGE_SIZE) - sizeof( mblock_t )){
 
-			tsize = PAGE_SIZE - (((unsigned int)move % PAGE_SIZE)?(unsigned int)move % PAGE_SIZE: PAGE_SIZE ) - sizeof( mblock_t );
+			tsize = PAGE_SIZE - ((unsigned int)move % PAGE_SIZE) - sizeof( mblock_t );
+
 			temp = (mblock_t *)((unsigned int)move + tsize);
+			kprintf( "tsize: 0x%x, ", tsize );
 
-			if ( temp->type == MBL_USED ){
+			if ( tsize > move->size || temp->type == MBL_USED ){
 				kprintf( "This ain't no good thang\n" );
 			} else {
 
@@ -134,8 +136,10 @@ void *amalloc( mheap_t *heap, int size, int align ){
 
 		} else if ( move->next == MBL_END ){
 			kprintf( "Getting more pages...\n" );
-			buf = heap->blocks + heap->npages * PAGE_SIZE;
+			buf = (unsigned int)heap->blocks + heap->npages * PAGE_SIZE;
 			map_pages( heap->page_dir, buf, buf + heap->page_blocks * PAGE_SIZE, PAGE_WRITEABLE | PAGE_PRESENT );
+
+			heap->npages += heap->page_blocks;
 
 			temp = (mblock_t *)buf;
 			temp->prev = move;
@@ -145,7 +149,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 			move->next = temp;
 		}
 
-		kprintf( "Trying next block...\n" );
+		kprintf( "Have block with size 0x%x, trying next block...\n", move->size );
 		move = move->next;
 	}
 
@@ -184,6 +188,23 @@ void *kmalloc( int size, int align ){
 	ret = amalloc( kheap, size, align );
 	
 	return ret;
+}
+
+void dump_aheap_blocks( mheap_t *heap ){
+	char *status[] = { 	"free",
+				"used" };
+	mblock_t *move = heap->blocks;
+	int i;
+
+	if ( !heap )
+		return;
+
+	kprintf( "+----------------[ Heap dump ]---------------+\n" );
+	for ( i = 0; move && move != MBL_END; move = move->next, i++ ){
+		kprintf( "| 0x%x: size: 0x%x\tstatus: %s |\n", move, move->size, status[ move->type == MBL_USED ]);
+	}
+	kprintf( "| %d blocks, %d pages\t\t\t     |\n", i, heap->npages );
+	kprintf( "+--------------------------------------------+\n" );
 }
 
 void kfree( void *ptr ){
