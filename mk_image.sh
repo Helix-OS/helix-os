@@ -9,7 +9,7 @@ fi
 
 function copy_stuff(){
 	mkdir -p temp_mount/boot
-	cp kern/obsidian-i586.bin temp_mount/boot/
+	cp kernel/helix_kernel-i586 temp_mount/boot/
 	cp initrd.img temp_mount/boot/
 	echo "Copied" temp_mount/boot/*
 }

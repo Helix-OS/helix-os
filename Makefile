@@ -2,8 +2,8 @@ ARCH		= i586
 TARGET		= $(ARCH)-elf
 MAKE		= make
 EMULATOR	= qemu-system-i386
-#EMU_FLAGS	= -hda vdrive.hdd -s -serial stdio -m 32
-EMU_FLAGS	= -kernel kernel/helix_kernel-i586 -serial stdio -nographic -m 16 -s
+EMU_FLAGS	= -hda vdrive.hdd -s -serial stdio -m 32 -nographic
+#EMU_FLAGS	= -kernel kernel/helix_kernel-i586 -serial stdio -nographic -m 16 -s
 CROSS		= $(shell pwd)/cross
 
 KNAME		= obsidian-$(ARCH)
@@ -16,7 +16,7 @@ OBJCOPY		= $(CROSS)/bin/$(TARGET)-objcopy
 STRIP		= $(CROSS)/bin/$(TARGET)-strip
 CONFIG_C_FLAGS	= -g
 
-all: helix-kernel
+all: helix-kernel ktools image
 dev-all: check helix-kernel userland image docs test
 
 debug:
@@ -38,13 +38,13 @@ helix-kernel:
 	@cd kernel; $(MAKE) KNAME=$(KNAME) CONFIG_C_FLAGS="$(CONFIG_C_FLAGS)" \
 		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)
 
+ktools:
+	cd tools; $(MAKE)
+
 image:
 	@echo -e "[\033[0;34mGenerating image...\033[0;0m]"
-	@echo -e "[\033[0;32mGenerating initrd\033[0;0m]"
-	@cd tools; $(NATIVECC) -o mkinitrd mkinitrd.c
-	@cd init; ../tools/mkinitrd ../initrd.img *
-	@echo -e "[\033[0;32mdone\033[0;0m]"
 	@echo -e "[\033[0;32mMaking image\033[0;0m]"
+	tools/mkinitrd ./initrd.img kernel/modules/*
 	@sh ./mk_image.sh
 	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
 	@echo -e "[\033[0;32mdone\033[0;0m]"
@@ -68,5 +68,11 @@ docs:
 
 clean:
 	@cd kernel; $(MAKE) clean
+	@cd tools; $(MAKE) clean
 
 .PHONY: all
+dicks:
+	@echo -e "[\033[0;32mGenerating initrd\033[0;0m]"
+	@cd tools; $(NATIVECC) -o mkinitrd mkinitrd.c
+	@cd init; ../tools/mkinitrd ../initrd.img *
+	@echo -e "[\033[0;32mdone\033[0;0m]"
