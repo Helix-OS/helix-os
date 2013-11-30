@@ -178,8 +178,8 @@ void page_fault_handler( registers_t *regs ){
 	unsigned long fault_addr;
 
 	asm volatile( "mov %%cr2, %0": "=r"( fault_addr ));
-	panic( "page fault: 0x%x:%s%s%s\n",
-		fault_addr,
+	panic( "page fault: 0x%x: 0x%x:%s%s%s\n",
+		fault_addr, regs->err_code,
 		(!regs->err_code & 1 )?		" not present":"",
 		( regs->err_code & 2 )?		" readonly":"",
 		( regs->err_code & 4 )?		" usermode":""

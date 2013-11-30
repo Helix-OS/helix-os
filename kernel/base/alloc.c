@@ -4,7 +4,7 @@
 #include <base/string.h>
 
 extern unsigned int end;
-static unsigned int early_placement = 0;
+unsigned int early_placement = 0;
 struct mheap *kheap = 0;
 extern unsigned int *kernel_dir;
 

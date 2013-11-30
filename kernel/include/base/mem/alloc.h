@@ -25,5 +25,6 @@ typedef struct mheap {
 void *kmalloc_early( int size, int align );
 void *kmalloc( int size, int align );
 void kfree_early( void *ptr );
+mheap_t *init_heap( mheap_t *heap, unsigned int *p_dir, unsigned int start, unsigned int size );
 
 #endif
