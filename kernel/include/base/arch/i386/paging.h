@@ -7,20 +7,20 @@
 #define PAGE_PRESENT	1
 #define PAGE_SIZE	0x1000
 
-int map_page(	unsigned int *dir, unsigned int vaddress );
-int map_r_page( unsigned int *dir, unsigned int vaddress, unsigned int raddress );
-int map_pages(	unsigned int *dir, unsigned int start, unsigned int end, unsigned int permissions );
-int free_page(	unsigned int *dir, unsigned int vaddress );
-int set_page(	unsigned int *dir, unsigned int vaddress );
-unsigned int get_page( unsigned int *dir, unsigned int vaddress );
+int map_page(	unsigned *dir, unsigned vaddress );
+int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress );
+int map_pages(	unsigned *dir, unsigned start, unsigned end, unsigned permissions );
+int free_page(	unsigned *dir, unsigned vaddress );
+int set_page(	unsigned *dir, unsigned vaddress );
+unsigned get_page( unsigned *dir, unsigned vaddress );
 
-void set_page_dir( unsigned int *dir );
+void set_page_dir( unsigned *dir );
 void flush_tlb( );
-unsigned int *get_current_page_dir( );
+unsigned *get_current_page_dir( );
 
-int init_paging( unsigned int max_mem );
+int init_paging( unsigned max_mem );
 void page_fault_handler( registers_t *regs );
 
-unsigned int get_free_page( );
+unsigned get_free_page( );
 
 #endif

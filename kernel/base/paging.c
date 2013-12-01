@@ -14,7 +14,7 @@ unsigned int	*current_dir,
 		*kernel_dir;
 char *page_bitmap;
 
-int init_paging( unsigned int max_mem ){
+int init_paging( unsigned max_mem ){
 	unsigned long i, j;
 	register_interrupt_handler( 0xe, page_fault_handler );
 
@@ -38,9 +38,9 @@ int init_paging( unsigned int max_mem ){
 	return 0;
 }
 
-int map_page( unsigned int *dir, unsigned int vaddress ){
+int map_page( unsigned *dir, unsigned vaddress ){
 	int ret = 1;
-	unsigned int	*move = (void *)0, 
+	unsigned	*move = (void *)0, 
 			raddress;
 
 	raddress = get_free_page( );
@@ -61,9 +61,9 @@ int map_page( unsigned int *dir, unsigned int vaddress ){
 	return ret;
 }
 
-int map_r_page( unsigned int *dir, unsigned int vaddress, unsigned int raddress ){
+int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress ){
 	int ret = 0;
-	unsigned int *move = (void *)0;
+	unsigned *move = (void *)0;
 
 	raddress = (vaddress & 0xfff) | (raddress & ~0xfff);
 
@@ -80,7 +80,7 @@ int map_r_page( unsigned int *dir, unsigned int vaddress, unsigned int raddress 
 	return ret;
 }
 
-int map_pages( unsigned int *dir, unsigned int start, unsigned int end, unsigned int permissions ){
+int map_pages( unsigned *dir, unsigned start, unsigned end, unsigned permissions ){
 	unsigned int i;
 
 	for ( i = start | permissions; i < end; i+= PAGE_SIZE )
@@ -89,7 +89,7 @@ int map_pages( unsigned int *dir, unsigned int start, unsigned int end, unsigned
 	return 1;
 }
 
-int free_page( unsigned int *dir, unsigned int vaddress ){
+int free_page( unsigned *dir, unsigned vaddress ){
 	int ret = 0;
 	unsigned int	*move = (void *)0,
 			raddress = 0;
@@ -112,14 +112,14 @@ int free_page( unsigned int *dir, unsigned int vaddress ){
 	return ret;
 }
 
-unsigned int get_page( unsigned int *dir, unsigned int vaddress ){
-	unsigned int ret = 0;
-	unsigned int *move = (void *)0;
+unsigned get_page( unsigned *dir, unsigned vaddress ){
+	unsigned ret = 0;
+	unsigned *move = (void *)0;
 
 	if ( dir ){
 		move = (unsigned *)dir[ vaddress >> 22 ];
 		if ( move ){
-			move = (unsigned int *)((unsigned int)move & ~0xfff);
+			move = (unsigned *)((unsigned)move & ~0xfff);
 			ret = move[ vaddress >> 12 & 0x3ff ];
 		}
 	}
@@ -127,8 +127,8 @@ unsigned int get_page( unsigned int *dir, unsigned int vaddress ){
 	return ret;
 }
 
-unsigned int get_free_page( ){
-	unsigned int	ret = 0,
+unsigned get_free_page( ){
+	unsigned	ret = 0,
 			i, j,
 			page;
 
@@ -148,14 +148,14 @@ unsigned int get_free_page( ){
 	return ret;
 }
 
-void set_page_dir( unsigned int *dir ){
-	unsigned int	address = 0,
+void set_page_dir( unsigned *dir ){
+	unsigned	address = 0,
 			cr0;
 
 	if ( paging_enabled )
-		address = get_page( current_dir, (unsigned int)dir );
+		address = get_page( current_dir, (unsigned)dir );
 	else
-		address = (unsigned int)dir;
+		address = (unsigned)dir;
 
 	if ( !address ){
 		kprintf( "Got bad address [panic here]\n" );

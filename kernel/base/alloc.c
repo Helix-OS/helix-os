@@ -11,7 +11,7 @@ extern unsigned int *kernel_dir;
 void *kmalloc_early( int size, int align ){
 	void *ret;
 	if ( !early_placement )
-		early_placement = ((unsigned int)&end & 0xfffff000) + 0x1000;
+		early_placement = ((unsigned)&end & 0xfffff000) + 0x1000;
 
 	if ( align && early_placement & 0xfff ){
 		early_placement &= 0xfffff000;
@@ -25,7 +25,7 @@ void *kmalloc_early( int size, int align ){
 	return ret;
 }
 
-mheap_t *init_heap( mheap_t *heap, unsigned int *p_dir, unsigned int start, unsigned int size ){
+mheap_t *init_heap( mheap_t *heap, unsigned *p_dir, unsigned start, unsigned size ){
 	memset( heap, 0, sizeof( mheap_t ));
 
 	map_pages( p_dir, start, start + size, PAGE_WRITEABLE | PAGE_PRESENT );
@@ -48,7 +48,7 @@ mheap_t *init_heap( mheap_t *heap, unsigned int *p_dir, unsigned int start, unsi
 void *amalloc( mheap_t *heap, int size, int align ){
 	void *ret = 0;
 	int found = 0;
-	unsigned int	buf,
+	unsigned	buf,
 			tsize;
 	mblock_t	*move,
 			*temp,
@@ -60,10 +60,6 @@ void *amalloc( mheap_t *heap, int size, int align ){
 	size = size + sizeof( mblock_t );
 
 	// round blocks up to the nearest block
-	/*
-	if ( size % sizeof( mblock_t ))
-		size += (size + sizeof( mblock_t )) % sizeof( mblock_t ); 
-	*/
 	size += (sizeof( mblock_t ) - size % sizeof( mblock_t )) % sizeof( mblock_t );
 
 	kprintf( "Finding block of size 0x%x\n", size );
@@ -75,7 +71,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 
 			move->type = MBL_USED;
 			if ( move->size > size && move->size - size > sizeof( mblock_t )){
-				temp = (mblock_t *)((unsigned int)move + size);
+				temp = (mblock_t *)((unsigned)move + size);
 				temp->size = move->size - size;
 				temp->next = move->next;
 				temp->prev = move;
@@ -89,15 +85,15 @@ void *amalloc( mheap_t *heap, int size, int align ){
 				kprintf( "Splitting block, move->next=0x%x\n", move->next );
 			}
 
-			ret = (mblock_t *)((unsigned int)move + sizeof( mblock_t ));
+			ret = (mblock_t *)((unsigned)move + sizeof( mblock_t ));
 			break;
 
 		} else if ( align && move->type == MBL_FREE &&
-			size < move->size - (PAGE_SIZE - (unsigned int)move % PAGE_SIZE) - sizeof( mblock_t )){
+			size < move->size - (PAGE_SIZE - (unsigned)move % PAGE_SIZE) - sizeof( mblock_t )){
 
-			tsize = PAGE_SIZE - ((unsigned int)move % PAGE_SIZE) - sizeof( mblock_t );
+			tsize = PAGE_SIZE - ((unsigned)move % PAGE_SIZE) - sizeof( mblock_t );
 
-			temp = (mblock_t *)((unsigned int)move + tsize);
+			temp = (mblock_t *)((unsigned)move + tsize);
 			kprintf( "tsize: 0x%x, ", tsize );
 
 			if ( tsize > move->size || temp->type == MBL_USED ){
@@ -119,7 +115,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 				}
 
 				if ( temp->size > size && temp->size - size > sizeof( mblock_t )){
-					blarg = (mblock_t *)((unsigned int)temp + size);
+					blarg = (mblock_t *)((unsigned)temp + size);
 					blarg->size = temp->size - size;
 					blarg->next = temp->next;
 					blarg->prev = temp;
@@ -133,14 +129,14 @@ void *amalloc( mheap_t *heap, int size, int align ){
 					kprintf( "Split aligned block forwards\n" );
 				}
 
-				ret = (mblock_t *)((unsigned int)temp + sizeof( mblock_t ));
+				ret = (mblock_t *)((unsigned)temp + sizeof( mblock_t ));
 
 				break;
 			}
 
 		} else if ( move->next == MBL_END ){
 			kprintf( "Getting more pages...\n" );
-			buf = (unsigned int)heap->blocks + heap->npages * PAGE_SIZE;
+			buf = (unsigned)heap->blocks + heap->npages * PAGE_SIZE;
 			map_pages( heap->page_dir, buf, buf + heap->page_blocks * PAGE_SIZE, PAGE_WRITEABLE | PAGE_PRESENT );
 
 			heap->npages += heap->page_blocks;
@@ -163,7 +159,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 void afree( mheap_t *heap, void *ptr ){
 	mblock_t	*move;
 
-	move = (mblock_t *)((unsigned int)ptr - sizeof( mblock_t ));
+	move = (mblock_t *)((unsigned)ptr - sizeof( mblock_t ));
 	if ( move->type == MBL_USED ){
 		kprintf( "Freeing 0x%x, size=0x%x, next=0x%x, prev=0x%x\n",
 			move, move->size, move->next, move->prev );

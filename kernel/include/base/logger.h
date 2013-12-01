@@ -4,7 +4,7 @@
 
 void init_logger( );
 int transmit_empty( );
-unsigned int write_logger( void *buf, unsigned int size );
+unsigned write_logger( void *buf, unsigned size );
 char *logputs( char *str );
 int kvprintf( char *format, va_list args );
 int kprintf( char *format, ... );

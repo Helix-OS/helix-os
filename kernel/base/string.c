@@ -2,14 +2,14 @@
 #define _kernel_string_c
 #include <base/string.h>
 
-unsigned int strlen( char *input ){
+unsigned strlen( char *input ){
 	int i;
 	for ( i = 0; input[i] != '\0'; i++ );
 	return i;
 }
 
 int strcmp( char *s1, char *s2 ){
-	unsigned int i = 0, ret = 0, s1_len = 0, s2_len = 0;
+	unsigned i = 0, ret = 0, s1_len = 0, s2_len = 0;
 	s1_len = strlen( s1 );
 	s2_len = strlen( s2 );
 	
@@ -23,7 +23,7 @@ int strcmp( char *s1, char *s2 ){
 }
 
 /* Basic memory stuff */
-void *memset( void *dest, unsigned char value, unsigned int count ){
+void *memset( void *dest, unsigned char value, unsigned count ){
 	char *ret_dest = dest;
 	while ( count-- ){
 		*(ret_dest++) = value;
@@ -31,7 +31,7 @@ void *memset( void *dest, unsigned char value, unsigned int count ){
 	return dest;
 }
 
-void *memsetw( void *dest, unsigned char value, unsigned int count ){
+void *memsetw( void *dest, unsigned char value, unsigned count ){
 	char *ret_dest = dest;
 	while ( count-- ){
 		*(ret_dest++) = value;
@@ -39,7 +39,7 @@ void *memsetw( void *dest, unsigned char value, unsigned int count ){
 	return dest;
 }
 
-void *memcpy( void *dest, void *src, unsigned int count ){
+void *memcpy( void *dest, void *src, unsigned count ){
 	char *ret_dest = dest;
 	char *src_dest = src;
 	while ( count-- ){
@@ -48,7 +48,7 @@ void *memcpy( void *dest, void *src, unsigned int count ){
 	return dest;
 }
 
-void *memmove( void *dest, void *src, unsigned int count ){
+void *memmove( void *dest, void *src, unsigned count ){
 	char *ret_dest = dest;
 	char *src_dest = src;
 	while ( count-- ){

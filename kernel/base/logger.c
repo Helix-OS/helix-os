@@ -18,9 +18,9 @@ int transmit_empty( ){
 	return inb( PORT + 5 ) & 0x20;
 }
 
-unsigned int write_logger( void *buf, unsigned int size ){
+unsigned int write_logger( void *buf, unsigned size ){
 	char *in = buf;
-	unsigned int i;
+	unsigned i;
 
 	for ( i = 0; i < size; i++ ){
 		while( !transmit_empty( ))
@@ -41,8 +41,8 @@ char *logputs( char *str ){
 	return str;
 }
 
-void print_num( unsigned int input ){
-	unsigned int i, a;
+void print_num( unsigned input ){
+	unsigned i, a;
 	char	buf[32];
 
 	if ( !input ){
@@ -58,8 +58,8 @@ void print_num( unsigned int input ){
 		write_logger( &buf[i], 1 );
 }
 
-void print_hex( unsigned int input ){
-	unsigned int i, a;
+void print_hex( unsigned input ){
+	unsigned i, a;
 	char	buf[32],
 		*hextab = "0123456789abcdef";
 
@@ -80,7 +80,7 @@ int kvprintf( char *format, va_list args ){
 	int		slen = strlen( format ),
 			i = 0,
 			signed_int;
-	unsigned int	unsigned_int;
+	unsigned	unsigned_int;
 	char 		buf,
 			*str;
 
@@ -104,11 +104,11 @@ int kvprintf( char *format, va_list args ){
 					print_num( signed_int );
 					break;
 				case 'u':
-					unsigned_int = va_arg( args, unsigned int );
+					unsigned_int = va_arg( args, unsigned );
 					print_num( unsigned_int );
 					break;
 				case 'x':
-					unsigned_int = va_arg( args, unsigned int );
+					unsigned_int = va_arg( args, unsigned );
 					print_hex( unsigned_int );
 					break;
 			}
