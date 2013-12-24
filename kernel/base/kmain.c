@@ -5,6 +5,7 @@
 #include <base/mem/alloc.h>
 #include <base/module.h>
 #include <base/kstd.h>
+#include <base/elf.h>
 
 extern unsigned int *kernel_dir;
 extern mheap_t *kheap;
@@ -12,12 +13,16 @@ extern unsigned int early_placement;
 
 void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	int *modules;
+	multiboot_elf_t *elfinfo = 0;
 
 	kprintf( "-==[ Helix kernel booting\n" );
 
 	// Take care of multiboot stuff...
 	if ( magic != 0x2badb002 )
 		panic( "Need multiboot-compliant bootloader to boot Helix kernel.\n" );
+
+	if ( mboot->flags & MULTIBOOT_FLAG_ELF )
+		elfinfo = &mboot->elf_headers;
 
 	if ( mboot->flags & MULTIBOOT_FLAG_MODS && mboot->mods_count ){
 		modules = (int *)*(int *)mboot->mods_addr;
@@ -32,8 +37,10 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	init_heap( kheap, kernel_dir, 0xc0000000, PAGE_SIZE * 8 );
 
 	// Initialize module system
-	init_module_system( );
+	init_module_system( elfinfo );
 	load_init_modules((void *)modules );
+
+	dump_aheap_blocks( kheap );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );
 	while( 1 ) asm volatile( "hlt" );

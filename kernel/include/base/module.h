@@ -2,7 +2,10 @@
 #define _helix_module_h
 #include <base/stdint.h>
 #include <base/elf.h>
+#include <base/multiboot.h>
+#include <base/string.h>
 
+// Some structs to access the initmods images
 typedef struct mtable_header {
 	uint32_t entries;
 	uint32_t entry_size;
@@ -17,7 +20,24 @@ typedef struct mod_table {
 	uint32_t magic;
 } mtable_t;
 
-void init_module_system( );
+// Structs to keep track of modules
+typedef struct module {
+	char 		*name;
+	Elf32_Ehdr 	*elf_head;
+	unsigned long 	address;
+	unsigned long 	pages;
+	char 		*def_symtab;
+	
+	int 		ndeps;
+	struct module 	*depends;
+
+	int 		nlinks;
+	struct module 	*links;
+
+	struct module 	*next;
+} module_t;
+
+void init_module_system( multiboot_elf_t *elfinfo );
 void load_init_modules( mhead_t *initmods );
 int load_module( Elf32_Ehdr *elf_obj );
 
