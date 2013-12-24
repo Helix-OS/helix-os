@@ -22,6 +22,25 @@ int strcmp( char *s1, char *s2 ){
 	return ret;
 }
 
+int strncmp( char *s1, char *s2, int len ){
+	int ret = 0;
+	int i;
+
+	for ( i = 0; i < len; i++ ){
+		ret += s1[i] != s2[i];
+
+		if ( !s1[i] || !s2[i] )
+			break;
+	}
+
+	return ret;
+}
+
+char *strdup( char *s ){
+	char *ret = kmalloc( strlen( s ));
+	return memcpy( ret, s, strlen( s ));
+}
+
 /* Basic memory stuff */
 void *memset( void *dest, unsigned char value, unsigned count ){
 	char *ret_dest = dest;

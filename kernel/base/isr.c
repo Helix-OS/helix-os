@@ -61,18 +61,18 @@ void dump_registers( registers_t *regs ){
 }
 
 void zero_division_fault( registers_t *regs ){
-	logputs( "Zero division fault\n" );
 	dump_registers( regs );
+	panic( "Zero division fault\n" );
 }
 
 void invalid_op_fault( registers_t *regs ){
-	logputs( "Invalid opcode\n" );
 	dump_registers( regs );
+	panic( "Invalid opcode\n" );
 }
 
 void gen_protect_fault( registers_t *regs ){
-	logputs( "General protection fault\n" );
 	dump_registers( regs );
+	panic( "General protection fault\n" );
 }
 
 void double_fault( registers_t *regs ){

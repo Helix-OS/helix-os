@@ -191,12 +191,81 @@ void afree( mheap_t *heap, void *ptr ){
 	}
 }
 
-void *kmalloc( int size, int align ){
+void *arealloc( mheap_t *heap, void *ptr, unsigned long size ){
+	void 		*ret = 0,
+			*buf;
+	mblock_t 	*move,
+			*temp;
+	unsigned long 	nsize;
+
+	kprintf( "[krealloc] " );
+	move = (mblock_t *)((unsigned)ptr - sizeof( mblock_t ));
+	nsize = size + ((sizeof( mblock_t ) - size ) % sizeof( mblock_t )) % sizeof( mblock_t );
+
+	if ( move->type == MBL_USED ){
+		if ( nsize > move->size - sizeof( mblock_t )){
+			if ( ptr && move->next != MBL_END && move->next->type == MBL_FREE &&
+					move->size + move->next->size > nsize + sizeof( mblock_t )){
+
+				nsize += sizeof( mblock_t );
+				temp = (mblock_t *)((unsigned long)move->next + ( nsize - move->size ));
+				temp->next = move->next->next;
+				temp->size = move->next->size - ( nsize - move->size );
+				temp->type = MBL_FREE;
+				temp->prev = move;
+
+				kprintf( "[arealloc] Split next block forwards: 0x%x, 0x%x, 0x%x, 0x%x\n",
+						temp, temp->size, temp->prev, temp->next );
+
+				if ( heap->first_free == move->next )
+					heap->first_free = temp;
+
+				move->next = temp;
+				move->size = nsize;
+
+				ret = ptr;
+			} else {
+				kprintf( "[arealloc] Allocating new block\n" );
+				buf = amalloc( heap, nsize, 0 );
+				if ( ptr ){
+					memcpy( buf, ptr, move->size );
+					afree( heap, ptr );
+				}
+
+				ret = buf;
+			}
+		}
+	}
+
+	return ret;
+}
+
+void *kmalloc( int size ){
 	void *ret = (void *)0;
 
-	ret = amalloc( kheap, size, align );
+	ret = amalloc( kheap, size, 0 );
 	
 	return ret;
+}
+
+void *kmalloca( int size ){
+	void *ret;
+
+	ret = amalloc( kheap, size, 1 );
+
+	return ret;
+}
+
+void kfree( void *ptr ){
+	afree( kheap, ptr );
+}
+
+void *krealloc( void *ptr, unsigned long size ){
+	return arealloc( kheap, ptr, size );
+}
+
+void kfree_early( void *ptr ){	
+	return;
 }
 
 void dump_aheap_blocks( mheap_t *heap ){
@@ -215,14 +284,6 @@ void dump_aheap_blocks( mheap_t *heap ){
 	}
 	kprintf( "| %d blocks, %d pages\t\t\t     |\n", i, heap->npages );
 	kprintf( "+--------------------------------------------+\n" );
-}
-
-void kfree( void *ptr ){
-	afree( kheap, ptr );
-}
-
-void kfree_early( void *ptr ){	
-	return;
 }
 
 #endif
