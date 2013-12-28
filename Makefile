@@ -2,7 +2,7 @@ ARCH		= i586
 TARGET		= $(ARCH)-elf
 MAKE		= make
 EMULATOR	= qemu-system-i386
-EMU_FLAGS	= -hda vdrive.hdd -s -serial stdio -m 32 -nographic
+EMU_FLAGS	= -hda vdrive.hdd -s -serial stdio -m 32 -nographic 
 #EMU_FLAGS	= -kernel kernel/helix_kernel-i586 -serial stdio -nographic -m 16 -s
 CROSS		= $(shell pwd)/cross
 

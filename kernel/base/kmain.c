@@ -7,6 +7,8 @@
 #include <base/kstd.h>
 #include <base/elf.h>
 
+#include <base/arch/i386/pitimer.h>
+
 extern unsigned int *kernel_dir;
 extern mheap_t *kheap;
 extern unsigned int early_placement;
@@ -36,6 +38,8 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	kheap = kmalloc_early( sizeof( mheap_t ), 0 );
 	init_heap( kheap, kernel_dir, 0xc0000000, PAGE_SIZE * 8 );
 
+	//init_pitimer( 19 );
+
 	// Initialize module system
 	init_module_system( elfinfo );
 	load_init_modules((void *)modules );
@@ -43,5 +47,6 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	dump_aheap_blocks( kheap );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );
+	asm volatile( "sti" );
 	while( 1 ) asm volatile( "hlt" );
 }

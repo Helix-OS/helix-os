@@ -155,7 +155,6 @@ int load_module( Elf32_Ehdr *elf_obj ){
 	new_mod->address = mod_address;
 	new_mod->elf_head = elf_obj;
 	new_mod->def_symtab = strdup( ".dynsym" );
-	//new_mod->def_symtab = strdup( ".symtab" );
 
 	for ( i = 0; i < elf_obj->e_phnum; i++ ){
 		phdr = get_elf_phdr( elf_obj, i );
@@ -203,6 +202,7 @@ int load_module( Elf32_Ehdr *elf_obj ){
 		return -1;
 	}
 	kprintf( "Provides: 0x%x:%s\n", provides, *provides );
+	new_mod->name = *provides;
 
 	depends = get_real_symbol_address( new_mod, "depends" );
 	if ( !depends ){
@@ -226,13 +226,13 @@ int load_module( Elf32_Ehdr *elf_obj ){
 
 			temp = get_elf_sym_name( elf_obj, sym, new_mod->def_symtab );
 
-			kprintf( "symbol j: %d: %s(0x%x):", j, temp, temp );
+			//kprintf( "symbol j: %d: %s(0x%x):", j, temp, temp );
 			addr = get_real_symbol_address( new_mod, temp );
 			if ( !addr ){
-				kprintf( "[load_module] dumping current modules:\n" );
-				dump_modules( mod_list );
+				//kprintf( "[load_module] dumping current modules:\n" );
+				//dump_modules( mod_list );
 				for ( j = 0; depends[j] && !addr; j++ ){
-					kprintf( "[load_module] Trying next dependancy module \"%s\"\n", depends[j] );
+					//kprintf( "[load_module] Trying next dependancy module \"%s\"\n", depends[j] );
 					depmod = get_module( depends[j] );
 					addr = get_real_symbol_address( depmod, temp );
 				}
@@ -247,14 +247,15 @@ int load_module( Elf32_Ehdr *elf_obj ){
 			
 			if ( addr ){
 				calc = (unsigned *)( new_mod->address + rel->r_offset );
-				kprintf( "[load_module] Have relocation symbol of type R_386_32: 0x%x\n", calc );
 				if ( ELF32_R_TYPE( rel->r_info ) == R_386_32 ){
+					//kprintf( "[load_module] Have relocation symbol of type R_386_32: 0x%x\n", calc );
 					*calc = (unsigned)addr;
 				} else if ( ELF32_R_TYPE( rel->r_info ) == R_386_PC32 ){
+					//kprintf( "[load_module] Have relocation symbol of type R_386_PC32: 0x%x\n", calc );
 					*calc = ((unsigned)addr - new_mod->address) + *calc - rel->r_offset;
 				}
 
-				kprintf( "[load_module] Set relocation address to 0x%x\n", *calc );
+				//kprintf( "[load_module] Set relocation address to 0x%x\n", *calc );
 				could_load = 1;
 
 			}
@@ -271,12 +272,14 @@ int load_module( Elf32_Ehdr *elf_obj ){
 		kprintf( "[load_module] Launching init function at 0x%x\n", mod_init );
 		mod_init( );
 
-		new_mod->name = strdup( *provides );
+		//new_mod->name = strdup( *provides );
 		add_module( new_mod );
 	} else {
 		kfree( new_mod );
 		return -1;
 	}
+
+	dump_modules( mod_list );
 
 	return 0;
 }
