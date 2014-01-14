@@ -109,12 +109,15 @@ void *get_real_symbol_address( module_t *mod, char *name ){
 	void 		*ret = 0;
 
 	if ( mod && mod->elf_head ){
+		kprintf( "[get_real_symbol_address] head: 0x%x, name: 0x%x, symtab: 0x%x\n",
+			mod->elf_head, name, mod->def_symtab );
+				
 		sym = get_elf_sym_byname( mod->elf_head, name, mod->def_symtab );
 		if ( sym && sym->st_shndx != SHN_UNDEF )
 			ret = (void *)( mod->address + sym->st_value );
 		else
-			kprintf( "[get_real_symbol_address] have undefined symbol \"%s\" (sym: 0x%x, %s)\n",
-					name, sym, mod->def_symtab );
+			kprintf( "[get_real_symbol_address] have undefined symbol \"%s\" (sym: 0x%x:0x%x, %s)\n",
+					name, sym, sym? sym->st_shndx: 0, mod->def_symtab );
 	}
 
 	return ret;
@@ -152,6 +155,7 @@ int load_module( Elf32_Ehdr *elf_obj ){
 	}
 
 	new_mod = kmalloc( sizeof( module_t ));
+	memset( new_mod, 0, sizeof( module_t ));
 	new_mod->address = mod_address;
 	new_mod->elf_head = elf_obj;
 	new_mod->def_symtab = strdup( ".dynsym" );

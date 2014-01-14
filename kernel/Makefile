@@ -26,9 +26,12 @@ kernel: $(OBJS)
 kmodules:
 	@cd dummy; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
 	@cd pci; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
+	@cd ata; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
 
 clean:
 	-cd base; make clean
+	-cd pci; make clean
+	-cd ata; make clean
 	-cd dummy; make clean
 	-rm modules/*.o
 

@@ -6,7 +6,7 @@ static uint32_t current_freq = 0;
 
 static void pitimer_stub( ){
 	tick++;
-	kprintf( "[pitimer_stub] %d\n", tick );
+	//kprintf( "[pitimer_stub] %d\n", tick );
 
 	if ( pitimer_call )
 		pitimer_call( );
@@ -26,6 +26,13 @@ void init_pitimer( uint32_t freq ){
 	outb( 0x40, h );
 
 	kprintf( "[init_pitimer] programmable interrupt controller initialized\n" );
+}
+
+void usleep( uint32_t useconds ){
+	uint32_t timer = useconds * current_freq / 1000;
+	uint32_t start = tick;
+
+	while ( tick - start < timer );
 }
 
 void register_pitimer_call( void (*call)( )){

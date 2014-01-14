@@ -44,7 +44,9 @@ ktools:
 image:
 	@echo -e "[\033[0;34mGenerating image...\033[0;0m]"
 	@echo -e "[\033[0;32mMaking image\033[0;0m]"
-	tools/mkinitrd ./initrd.img kernel/modules/*
+	# The order of the files in kernel/modules is important, the modules
+	# are loaded in this order
+	@tools/mkinitrd ./initrd.img kernel/modules/{pci,ata,dummy}_mod.o
 	@sh ./mk_image.sh
 	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
 	@echo -e "[\033[0;32mdone\033[0;0m]"
@@ -71,8 +73,6 @@ clean:
 	@cd tools; $(MAKE) clean
 
 .PHONY: all
-dicks:
-	@echo -e "[\033[0;32mGenerating initrd\033[0;0m]"
-	@cd tools; $(NATIVECC) -o mkinitrd mkinitrd.c
-	@cd init; ../tools/mkinitrd ../initrd.img *
-	@echo -e "[\033[0;32mdone\033[0;0m]"
+
+meh:
+	tools/mkinitrd ./initrd.img kernel/modules/*

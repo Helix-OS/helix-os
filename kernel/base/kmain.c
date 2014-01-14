@@ -38,7 +38,8 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	kheap = kmalloc_early( sizeof( mheap_t ), 0 );
 	init_heap( kheap, kernel_dir, 0xc0000000, PAGE_SIZE * 8 );
 
-	//init_pitimer( 19 );
+	asm volatile( "sti" );
+	init_pitimer( 100 );
 
 	// Initialize module system
 	init_module_system( elfinfo );
@@ -47,6 +48,5 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	dump_aheap_blocks( kheap );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );
-	asm volatile( "sti" );
 	while( 1 ) asm volatile( "hlt" );
 }

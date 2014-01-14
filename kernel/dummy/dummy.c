@@ -5,6 +5,8 @@ char *provides = "dummy";
 
 int init( ){
 	kprintf( "[%s] Hello world!\n", provides );
+	kprintf( "[%s] This is module \"%s\", and I'm in yo kernelz\n",
+			provides, provides );
 	return 0;
 }
 
