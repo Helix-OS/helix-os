@@ -1,23 +1,23 @@
 MAKE=make
 PREFIX=$(shell pwd)
 TARGET=i586-elf
-BINUTILS=binutils-2.23.1
-GCC=gcc-4.7.2
-GMP=gmp-5.0.5
+BINUTILS=binutils-2.24
+GCC=gcc-4.8.2
+GMP=gmp-5.1.3
 MPC=mpc-1.0.1
-MPFR=mpfr-3.1.1
+MPFR=mpfr-3.1.2
 CHECKFILE=.cross_check
 
-CLEAN_DIRS=$(GCC) $(BINUTILS) $(GMP) $(MPC) $(MPFR)
+CLEAN_DIRS=$(BINUTILS) $(MPFR) $(MPC) $(GMP) $(GCC)
 
-all: check download binutils gmp mpfr mpc gcc test
+all: check download binutils mpfr gmp mpc gcc test
 
 check:
 	@if [ ! -e $(CHECKFILE) ]; then \
 		touch $(CHECKFILE); \
 	else \
 		echo -e "[\033[0;31mWarning\033[0;0m]";\
-		echo -e "Cross compiler already built, build again?\n[y/n] \c";\
+		echo -e "Cross compiler already built, build again?\n[y/N] \c";\
 		read input;\
 		if [ $$input != "y" ]; then \
 			echo "Abandon ship!";\
@@ -25,70 +25,56 @@ check:
 		fi;\
 	fi
 
-download: 
-	@if [ ! -e $(BINUTILS).tar.bz2 ]; then \
-		echo -e "[\033[0;32mDownloading binutils\033[0;0m]";\
-		wget http://ftp.gnu.org/gnu/binutils/$(BINUTILS).tar.bz2; \
-		echo -e "[\033[0;32mdone\033[0;0m]";\
-	fi
-	@if [ ! -e $(GMP).tar.bz2 ]; then \
-		echo -e "[\033[0;32mDownloading gmp\033[0;0m]";\
-		wget http://ftp.gnu.org/gnu/gmp/$(GMP).tar.bz2; \
-		echo -e "[\033[0;32mdone\033[0;0m]";\
-	fi
-	@if [ ! -e $(MPC).tar.gz ]; then \
-		echo -e "[\033[0;32mDownloading mpc\033[0;0m]";\
-		wget http://ftp.gnu.org/gnu/mpc/$(MPC).tar.gz; \
-		echo -e "[\033[0;32mdone\033[0;0m]";\
-	fi
-	@if [ ! -e $(MPFR).tar.bz2 ]; then \
-		echo -e "[\033[0;32mDownloading mpfr\033[0;0m]";\
-		wget http://ftp.gnu.org/gnu/mpfr/$(MPFR).tar.bz2; \
-		echo -e "[\033[0;32mdone\033[0;0m]";\
-	fi
-	@if [ ! -e $(GCC).tar.bz2 ]; then \
-		echo -e "[\033[0;32mDownloading gcc\033[0;0m]";\
-		wget http://ftp.gnu.org/gnu/gcc/gcc-4.7.2/$(GCC).tar.bz2; \
-		echo -e "[\033[0;32mdone\033[0;0m]";\
-	fi
+download: check
+	@for archive in $(CLEAN_DIRS); do \
+		if [ ! -e $$archive ]; then \
+			if [ ! -e $$archive.tar.gz ]; then\
+				echo -e "[\033[0;32mDownloading $$archive\033[0;0m]";\
+				_NAME=`echo $$archive | sed 's/-.*//g'`;\
+				if [ $$_NAME = "gcc" ]; then \
+					wget http://ftp.gnu.org/gnu/$$_NAME/$$archive/$$archive.tar.gz; \
+				else \
+					wget http://ftp.gnu.org/gnu/$$_NAME/$$archive.tar.gz; \
+				fi;\
+			fi;\
+			echo -e "[\033[0;32mExtracting $$archive\033[0;0m]";\
+			i=20; tar xvf $$archive.tar.gz | while read line; do\
+				if [ $$i -gt 20 ]; then echo -en "\r>> "; i=0; fi;\
+				echo -en ".  \b\b";\
+				((i++));\
+			done;\
+			echo;\
+			echo -e "[\033[0;32mdone\033[0;0m]";\
+		fi;\
+	done
 
-binutils:
+binutils: download
 	@echo -e "[\033[0;32mMaking $(BINUTILS)\033[0;0m]";
-	@echo Extracting...
-	@tar xf $(BINUTILS).tar.bz2
 	@cd $(BINUTILS); ./configure --prefix=$(PREFIX) --target=$(TARGET) --disable-nls; \
 	$(MAKE); $(MAKE) install;
 
-gmp:
-	@echo -e "[\033[0;32mMaking $(GMP)\033[0;0m]"
-	@echo Extracting...
-	@tar xf $(GMP).tar.bz2
-	@cd $(GMP); ./configure --prefix=$(PREFIX); \
-	$(MAKE); $(MAKE) install;
-
-mpc:
-	@echo -e "[\033[0;32mMaking $(MPC)\033[0;0m]";
-	@echo Extracting...
-	@tar xf $(MPC).tar.gz
-	@cd $(MPC); ./configure --prefix=$(PREFIX) --with-gmp=$(PREFIX); --with-mpfr=$(PREFIX)\
-	$(MAKE); $(MAKE) install;
-
-mpfr:
+mpfr: download
 	@echo -e "[\033[0;32mMaking $(MPFR)\033[0;0m]";
-	@echo Extracting...
-	@tar xf $(MPFR).tar.bz2
 	@cd $(MPFR); ./configure --prefix=$(PREFIX) --with-gmp=$(PREFIX);\
 	$(MAKE); $(MAKE) install;
 
-gcc:
+mpc: download
+	@echo -e "[\033[0;32mMaking $(MPC)\033[0;0m]";
+	@cd $(MPC); ./configure --prefix=$(PREFIX) --with-gmp=$(PREFIX) --with-mpfr=$(PREFIX);\
+	$(MAKE); $(MAKE) install;
+
+gmp: download mpfr
+	@echo -e "[\033[0;32mMaking $(GMP)\033[0;0m]"
+	@cd $(GMP); ./configure --prefix=$(PREFIX); \
+	$(MAKE); $(MAKE) install;
+
+gcc: download binutils mpfr mpc gmp
 	@echo -e "[\033[0;32mMaking $(GCC)\033[0;0m]";
-	@echo Extracting...
-	@tar xf $(GCC).tar.bz2
 	@cd $(GCC); export PATH="$$PATH:$(PREFIX)";\
 	./configure --prefix=$(PREFIX) --target=$(TARGET) --disable-nls --enable-languages=c --without-headers --with-gmp=$(PREFIX) --with-mpc=$(PREFIX) --with-mpfr=$(PREFIX);\
 	$(MAKE); $(MAKE) install;
 
-test:
+test: gcc
 	@echo -e "[\033[0;32mTesting build...\033[0;0m]";
 	@echo "int main(){return 0;}" > cross_test.c
 	@$(PREFIX)/bin/$(TARGET)-gcc -nostdlib -nodefaultlibs -o cross_test cross_test.c;\
@@ -100,13 +86,16 @@ test:
 	@rm cross_test*
 
 clean-build:
-	rm -rf $(CLEAN_DIRS)
-	rm $(CHECKFILE)
+	-rm -rf $(CLEAN_DIRS)
+	-rm $(CHECKFILE)
 
 clean-archives:
-	rm -rf *.tar.*
+	-rm -rf *.tar.*
 
-clean-all: clean-build clean-archives
-	rm -rf *.*
+clean-bin:
+	-rm -rf ./bin ./i586-elf ./include ./lib ./share ./libexec
+
+clean-all: clean-build clean-archives clean-bin
+	-rm -rf *.*
 	
 .PHONY: all

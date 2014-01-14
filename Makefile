@@ -60,7 +60,8 @@ test:
 
 cross-cc:
 	@echo -e "[\033[0;34mMaking cross-compiler...\033[0;0m]"
-	@cd cross; $(MAKE) MAKE=$(MAKE) TARGET=$(TARGET)
+	@#cd cross; $(MAKE) MAKE=$(MAKE) TARGET=$(TARGET) -j $$(( `cat /proc/cpuinfo | grep "^proc" | wc -l` * 2 ))
+	@cd cross; $(MAKE) MAKE=$(MAKE) TARGET=$(TARGET) 
 	@echo -e "[\033[0;34mdone\033[0;0m]"
 
 docs:
