@@ -24,6 +24,7 @@ kernel: $(OBJS)
 	@mv base/helix_kernel-$(ARCH) .
 
 kmodules:
+	@mkdir -p modules
 	@cd dummy; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
 	@cd pci; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
 	@cd ata; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
