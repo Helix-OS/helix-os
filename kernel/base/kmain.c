@@ -6,6 +6,7 @@
 #include <base/module.h>
 #include <base/kstd.h>
 #include <base/elf.h>
+#include <base/hal.h>
 
 #include <base/arch/i386/pitimer.h>
 
@@ -45,6 +46,7 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	init_module_system( elfinfo );
 	load_init_modules((void *)modules );
 
+	hal_dump_devices( );
 	dump_aheap_blocks( kheap );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );

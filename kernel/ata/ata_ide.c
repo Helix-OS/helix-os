@@ -5,6 +5,8 @@ static int ata_ide_irq_invoked = 0;
 void ata_initialize_ide( ata_device_t *device ){
 	pci_device_t *pci_device = &device->pci_device;
 	ide_control_t *new_ctrl = kmalloc( sizeof( ide_control_t ));
+	hal_device_t *hal_buf;
+
 	int needs_irq = 0,
 	    i, j, count;
 	uint32_t bar[5];
@@ -96,6 +98,19 @@ void ata_initialize_ide( ata_device_t *device ){
 			}
 			new_ctrl->devices[count].model[40] = 0;
 
+			hal_buf = kmalloc( sizeof( hal_device_t ));
+			hal_buf->read = ata_ide_hal_read;
+			hal_buf->write = ata_ide_hal_write;
+			hal_buf->dev = new_ctrl;
+			hal_buf->block_size = 512;
+			hal_buf->type = HAL_TYPE_STORAGE;
+			hal_buf->flags = HAL_FLAG_NULL;
+
+			hal_register_device( hal_buf );
+
+			new_ctrl->devices[count].hal_buf = hal_buf;
+			new_ctrl->devices[count].ctrl = new_ctrl;
+
 			kprintf( "[ata_initialize_ide] Found device %d, slot %d:%d: 0x%d sectors, model: \"%s\"\n",
 					count, i, j, new_ctrl->devices[count].size, new_ctrl->devices[count].model );
 
@@ -108,7 +123,7 @@ void ata_initialize_ide( ata_device_t *device ){
 	register_interrupt_handler( IRQ11, ide_irq_handler );
 	register_interrupt_handler( IRQ9,  ide_irq_handler );
 
-	ata_ide_read_sectors( new_ctrl, 0, 1, 0, 0, buf );
+	//ata_ide_read_sectors( new_ctrl, 0, 1, 0, 0, buf );
 	for ( i = 0; i < 512; i++ )
 		kprintf( "%c", buf[i] );
 
@@ -306,4 +321,36 @@ uint8_t ide_polling( ide_control_t *ctrl, uint8_t channel, uint8_t advanced_chec
 	while ( ide_reg_read( ctrl, channel, ATA_REG_STATUS ) & ATA_STATUS_BUSY );
 
 	return 0;
+}
+
+int ata_ide_hal_read( hal_device_t *dev, void *buf, unsigned count, unsigned offset ){
+	ide_device_t *ide_dev;
+	ide_control_t *ctrl;
+	int ret = 0;
+
+	if ( !dev )
+		return 0;
+
+	ide_dev = dev->dev;
+	ctrl = ide_dev->ctrl;
+
+	ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, buf );
+
+	return count;
+}
+
+int ata_ide_hal_write( hal_device_t *dev, void *buf, unsigned count, unsigned offset ){
+	ide_device_t *ide_dev;
+	ide_control_t *ctrl;
+	int ret = 0;
+
+	if ( !dev )
+		return 0;
+
+	ide_dev = dev->dev;
+	ctrl = ide_dev->ctrl;
+
+	ata_ide_write_sectors( ctrl, ide_dev->drive, offset, count, 0, buf );
+
+	return count;
 }

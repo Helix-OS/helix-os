@@ -1,5 +1,3 @@
-#include <base/stdio.h>
-#include <pci/pci.h>
 #include <ata/ata.h>
 
 char *depends[] = { "pci", "base", 0 };

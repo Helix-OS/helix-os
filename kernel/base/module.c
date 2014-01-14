@@ -109,9 +109,6 @@ void *get_real_symbol_address( module_t *mod, char *name ){
 	void 		*ret = 0;
 
 	if ( mod && mod->elf_head ){
-		kprintf( "[get_real_symbol_address] head: 0x%x, name: 0x%x, symtab: 0x%x\n",
-			mod->elf_head, name, mod->def_symtab );
-				
 		sym = get_elf_sym_byname( mod->elf_head, name, mod->def_symtab );
 		if ( sym && sym->st_shndx != SHN_UNDEF )
 			ret = (void *)( mod->address + sym->st_value );
