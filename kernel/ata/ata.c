@@ -59,8 +59,6 @@ void ata_initialize_devices( ){
 }
 
 int init( ){
-	pci_device_t *pci_list;
-
 	kprintf( "[%s] Hello world!\n", provides );
 	kprintf( "[%s] This is module \"%s\", and I'm in yo kernelz\n",
 			provides, provides );

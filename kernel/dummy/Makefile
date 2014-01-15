@@ -15,14 +15,16 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: dummy_mod
 
 %.o : %.c
-	$(CC) $(CFLAGS) -c $<
+	@$(CC) $(CFLAGS) -c $<
+	@echo CC $<
 
 %.o : %.s
-	$(AS) $(ASFLAGS) $<
+	@$(AS) $(ASFLAGS) $<
+	@echo AS $<
 
 dummy_mod: $(OBJS)
-	@echo *.o
-	$(LD) $(LDFLAGS) -o ../modules/dummy_mod.o *.o
+	@$(LD) $(LDFLAGS) -o ../modules/dummy_mod.o *.o
+	@echo LD $(LDFLAGS) -o ../modules/dummy_mod.o *.o
 
 clean:
 	rm *.o

@@ -1,4 +1,4 @@
-#include <base/stdio.h>
+#include <base/logger.h>
 
 char *depends[] = { "base", 0 };
 char *provides = "dummy";

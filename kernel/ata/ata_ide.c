@@ -7,8 +7,8 @@ void ata_initialize_ide( ata_device_t *device ){
 	ide_control_t *new_ctrl = kmalloc( sizeof( ide_control_t ));
 	hal_device_t *hal_buf;
 
-	int needs_irq = 0,
-	    i, j, count;
+	int i, j, //needs_irq = 0,
+	    count;
 	uint32_t bar[5];
 	char *buf = kmalloc( 2048 );
 	//char *what = kmalloc( 25 );
@@ -42,8 +42,8 @@ void ata_initialize_ide( ata_device_t *device ){
 	for ( count = i = 0; i < 2; i++ ){
 		for ( j = 0; j < 2; j++ ){	
 			char error = 0,
-			     status = 0,
-			     k;
+			     status = 0;
+			int k;
 
 			new_ctrl->devices[count].reserved = 0;
 
@@ -99,7 +99,7 @@ void ata_initialize_ide( ata_device_t *device ){
 			new_ctrl->devices[count].model[40] = 0;
 
 			hal_buf = kmalloc( sizeof( hal_device_t ));
-			hal_buf->read = ata_ide_hal_read;
+			hal_buf->read = (hal_device_read_block)ata_ide_hal_read;
 			hal_buf->write = ata_ide_hal_write;
 			hal_buf->dev = new_ctrl;
 			hal_buf->block_size = 512;
@@ -334,9 +334,10 @@ int ata_ide_hal_read( hal_device_t *dev, void *buf, unsigned count, unsigned off
 	ide_dev = dev->dev;
 	ctrl = ide_dev->ctrl;
 
-	ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, buf );
+	ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, (unsigned)buf );
 
-	return count;
+	ret = count;
+	return ret;
 }
 
 int ata_ide_hal_write( hal_device_t *dev, void *buf, unsigned count, unsigned offset ){
@@ -350,7 +351,8 @@ int ata_ide_hal_write( hal_device_t *dev, void *buf, unsigned count, unsigned of
 	ide_dev = dev->dev;
 	ctrl = ide_dev->ctrl;
 
-	ata_ide_write_sectors( ctrl, ide_dev->drive, offset, count, 0, buf );
+	ata_ide_write_sectors( ctrl, ide_dev->drive, offset, count, 0, (unsigned)buf );
 
-	return count;
+	ret = count;
+	return ret;
 }

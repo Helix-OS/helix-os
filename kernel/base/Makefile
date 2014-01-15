@@ -22,7 +22,8 @@ all: kernel
 	@$(AS) $(ASFLAGS) $<
 
 kernel: $(OBJS)
-	$(LD) $(LDFLAGS) -o helix_kernel-$(ARCH) *.o
+	@$(LD) $(LDFLAGS) -o helix_kernel-$(ARCH) *.o
+	@echo LD $(LDFLAGS) -o helix_kernel-$(ARCH) *.o
 
 clean:
 	-rm *.o

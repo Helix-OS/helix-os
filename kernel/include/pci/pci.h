@@ -1,6 +1,8 @@
 #ifndef _helix_pci_h
 #define _helix_pci_h
 #include <base/stdint.h>
+#include <base/logger.h>
+#include <base/mem/alloc.h>
 
 // PCI io ports
 enum {

@@ -2,6 +2,7 @@
 #define _helix_isr_h
 
 #include <base/stdint.h>
+#include <base/kstd.h>
 
 #define IRQ0 32
 #define IRQ1 33

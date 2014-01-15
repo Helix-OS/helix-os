@@ -62,12 +62,12 @@ void *amalloc( mheap_t *heap, int size, int align ){
 	// round blocks up to the nearest block
 	size += (sizeof( mblock_t ) - size % sizeof( mblock_t )) % sizeof( mblock_t );
 
-	kprintf( "Finding block of size 0x%x\n", size );
+	//kprintf( "Finding block of size 0x%x\n", size );
 
 	move = heap->first_free;
 	while ( !found ){
 		if ( move->type == MBL_FREE && move->size >= size && !align ){
-			kprintf( "Found free block, size=0x%x\n", move->size );
+			//kprintf( "Found free block, size=0x%x\n", move->size );
 
 			move->type = MBL_USED;
 			if ( move->size > size && move->size - size > sizeof( mblock_t )){
@@ -82,7 +82,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 
 				move->size = size;
 				move->next = temp;
-				kprintf( "Splitting block, move->next=0x%x\n", move->next );
+				//kprintf( "Splitting block, move->next=0x%x\n", move->next );
 			}
 
 			ret = (mblock_t *)((unsigned)move + sizeof( mblock_t ));
@@ -94,15 +94,15 @@ void *amalloc( mheap_t *heap, int size, int align ){
 			tsize = PAGE_SIZE - ((unsigned)move % PAGE_SIZE) - sizeof( mblock_t );
 
 			temp = (mblock_t *)((unsigned)move + tsize);
-			kprintf( "tsize: 0x%x, ", tsize );
+			//kprintf( "tsize: 0x%x, ", tsize );
 
 			if ( tsize > move->size || temp->type == MBL_USED ){
-				kprintf( "This ain't no good thang\n" );
+				//kprintf( "This ain't no good thang\n" );
 			} else {
 
 				temp->type = MBL_USED;
 
-				kprintf( "temp block: 0x%x, size: 0x%x\n", temp, tsize );
+				//kprintf( "temp block: 0x%x, size: 0x%x\n", temp, tsize );
 
 				if ( tsize ){
 					temp->prev = move;
@@ -111,7 +111,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 
 					move->next = temp;
 					move->size = tsize;
-					kprintf( "Split aligned block backwards\n" );
+					//kprintf( "Split aligned block backwards\n" );
 				}
 
 				if ( temp->size > size && temp->size - size > sizeof( mblock_t )){
@@ -126,7 +126,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 
 					temp->size = size;
 					temp->next = blarg;
-					kprintf( "Split aligned block forwards\n" );
+					//kprintf( "Split aligned block forwards\n" );
 				}
 
 				ret = (mblock_t *)((unsigned)temp + sizeof( mblock_t ));
@@ -135,7 +135,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 			}
 
 		} else if ( move->next == MBL_END ){
-			kprintf( "Getting more pages...\n" );
+			//kprintf( "Getting more pages...\n" );
 			buf = (unsigned)heap->blocks + heap->npages * PAGE_SIZE;
 			map_pages( heap->page_dir, buf, buf + heap->page_blocks * PAGE_SIZE, PAGE_WRITEABLE | PAGE_PRESENT );
 
@@ -149,7 +149,7 @@ void *amalloc( mheap_t *heap, int size, int align ){
 			move->next = temp;
 		}
 
-		kprintf( "Have block with size 0x%x, trying next block...\n", move->size );
+		//kprintf( "Have block with size 0x%x, trying next block...\n", move->size );
 		move = move->next;
 	}
 
@@ -161,21 +161,25 @@ void afree( mheap_t *heap, void *ptr ){
 
 	move = (mblock_t *)((unsigned)ptr - sizeof( mblock_t ));
 	if ( move->type == MBL_USED ){
-		kprintf( "Freeing 0x%x, size=0x%x, next=0x%x, prev=0x%x\n",
+		/*
+		 kprintf( "Freeing 0x%x, size=0x%x, next=0x%x, prev=0x%x\n",
 			move, move->size, move->next, move->prev );
+		*/
 		move->type = MBL_FREE;
 
 		while ( move->next != MBL_END && move->next->type == MBL_FREE ){
-			kprintf( "next... " );
+			//kprintf( "next... " );
 			move->size += move->next->size;
 			move->next->type = MBL_DIRTY;
 			move->next = move->next->next;
+			/*
 			kprintf( "Joining next block 0x%x(%d), size=0x%x\n",
 				move->next, move->next == MBL_END, move->size );
+			*/
 		}
 
 		while ( move->prev && move->prev->type == MBL_FREE ){
-			kprintf( "Previous... " );
+			//kprintf( "Previous... " );
 			move->prev->size += move->size;
 			move->prev->next = move->next;
 			move = move->prev;
@@ -183,7 +187,7 @@ void afree( mheap_t *heap, void *ptr ){
 			if ( move->next != MBL_END )
 				move->next->prev = move;
 
-			kprintf( "Joining previous block, size=0x%x \n", move->size );
+			//kprintf( "Joining previous block, size=0x%x \n", move->size );
 		}
 
 		if ( move < heap->first_free )
@@ -198,7 +202,7 @@ void *arealloc( mheap_t *heap, void *ptr, unsigned long size ){
 			*temp;
 	unsigned long 	nsize;
 
-	kprintf( "[krealloc] " );
+	//kprintf( "[krealloc] " );
 	move = (mblock_t *)((unsigned)ptr - sizeof( mblock_t ));
 	nsize = size + ((sizeof( mblock_t ) - size ) % sizeof( mblock_t )) % sizeof( mblock_t );
 
@@ -214,8 +218,10 @@ void *arealloc( mheap_t *heap, void *ptr, unsigned long size ){
 				temp->type = MBL_FREE;
 				temp->prev = move;
 
+				/*
 				kprintf( "[arealloc] Split next block forwards: 0x%x, 0x%x, 0x%x, 0x%x\n",
 						temp, temp->size, temp->prev, temp->next );
+				*/
 
 				if ( heap->first_free == move->next )
 					heap->first_free = temp;
@@ -225,7 +231,7 @@ void *arealloc( mheap_t *heap, void *ptr, unsigned long size ){
 
 				ret = ptr;
 			} else {
-				kprintf( "[arealloc] Allocating new block\n" );
+				//kprintf( "[arealloc] Allocating new block\n" );
 				buf = amalloc( heap, nsize, 0 );
 				if ( ptr ){
 					memcpy( buf, ptr, move->size );

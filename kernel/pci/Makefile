@@ -15,14 +15,16 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: pci_mod
 
 %.o : %.c
-	$(CC) $(CFLAGS) -c $<
+	@$(CC) $(CFLAGS) -c $<
+	@echo CC $<
 
 %.o : %.s
-	$(AS) $(ASFLAGS) $<
+	@$(AS) $(ASFLAGS) $<
+	@echo AS $<
 
 pci_mod: $(OBJS)
-	@echo *.o
-	$(LD) $(LDFLAGS) -o ../modules/pci_mod.o *.o
+	@$(LD) $(LDFLAGS) -o ../modules/pci_mod.o *.o
+	@echo LD $(LDFLAGS) -o ../modules/pci_mod.o *.o
 
 clean:
 	rm *.o

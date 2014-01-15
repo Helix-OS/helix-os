@@ -1,6 +1,7 @@
 #ifndef _helix_alloc_h
 #define _helix_alloc_h
 #include <base/arch/i386/paging.h>
+#include <base/logger.h>
 
 #define MBL_FREE 0x66726565
 #define MBL_USED 0x75736564
@@ -31,5 +32,7 @@ void  kfree( void *ptr );
 void *krealloc( void *ptr, unsigned long size );
 
 mheap_t *init_heap( mheap_t *heap, unsigned *p_dir, unsigned start, unsigned size );
+
+void dump_aheap_blocks( mheap_t * );
 
 #endif
