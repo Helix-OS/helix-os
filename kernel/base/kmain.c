@@ -37,7 +37,7 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	init_paging( mboot->mem_lower + mboot->mem_upper );
 
 	kheap = kmalloc_early( sizeof( mheap_t ), 0 );
-	init_heap( kheap, kernel_dir, 0xc0000000, PAGE_SIZE * 8 );
+	init_heap( kheap, kernel_dir, 0xd0000000, PAGE_SIZE * 8 );
 
 	asm volatile( "sti" );
 	init_pitimer( 100 );

@@ -42,7 +42,7 @@ void init_module_system( multiboot_elf_t *elfinfo ){
 		mod->def_symtab = strdup( ".symtab" );
 
 		mod_list 	= mod;
-		mod_address 	= 0xd0000000;
+		mod_address 	= 0xcf000000;
 
 		for ( i = 0 ; i < elfinfo->num; i++ ){
 			shdr = (Elf32_Shdr *)((unsigned long)buf +
