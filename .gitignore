@@ -1,0 +1,7 @@
+cross/*
+*.o
+*.ko
+*~
+*.img
+*.hdd
+helix_kernel-*
