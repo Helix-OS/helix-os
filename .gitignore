@@ -1,4 +1,6 @@
-cross/*
+cross/*.tar.gz
+cross/*/
+cross/.*
 *.o
 *.ko
 *~
