@@ -62,7 +62,12 @@ void load_init_modules( mhead_t *initmods ){
 	Elf32_Ehdr *elf_buf;
 	int i;
 
-	kprintf( "0x%x: 0x%x\n", initmods->entries, initmods->magic );
+	if ( !initmods ){
+		kprintf( "[load_init_modules] Was passed a null pointer! Can't load modules\n" );
+		return;
+	}
+
+	kprintf( "Initmods at 0x%x: 0x%x: 0x%x\n", initmods, initmods->entries, initmods->magic );
 
 	table = (mtable_t *)((unsigned)initmods + initmods->table_offset );
 	for ( i = 0; i < initmods->entries; i++ ){

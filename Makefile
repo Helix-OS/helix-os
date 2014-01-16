@@ -2,7 +2,7 @@ ARCH		= i586
 TARGET		= $(ARCH)-elf
 MAKE		= make
 EMULATOR	= qemu-system-i386
-EMU_FLAGS	= -hda vdrive.hdd -s -serial stdio -m 32 -nographic 
+EMU_FLAGS	= -hda helix.img -s -serial stdio -m 32 -nographic 
 #EMU_FLAGS	= -kernel kernel/helix_kernel-i586 -serial stdio -nographic -m 16 -s
 CROSS		= $(shell pwd)/cross
 
@@ -44,10 +44,11 @@ ktools:
 image:
 	@echo -e "[\033[0;34mGenerating image...\033[0;0m]"
 	@echo -e "[\033[0;32mMaking image\033[0;0m]"
-	# The order of the files in kernel/modules is important, the modules
-	# are loaded in this order
+	@# The order of the files in kernel/modules is important, the modules
+	@# are loaded in this order
 	@tools/mkinitrd ./initrd.img kernel/modules/{pci,ata,dummy}_mod.o
-	@sh ./mk_image.sh
+	@#tools/mkinitrd ./initrd.img kernel/modules/dummy_mod.o
+	@./mk_image.sh
 	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
 	@echo -e "[\033[0;32mdone\033[0;0m]"
 	@echo -e "[\033[0;34mdone\033[0;0m]";
@@ -72,6 +73,7 @@ docs:
 clean:
 	@cd kernel; $(MAKE) clean
 	@cd tools; $(MAKE) clean
+	@-rm *.img
 
 .PHONY: all
 
