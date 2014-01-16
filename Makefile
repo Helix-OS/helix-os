@@ -16,23 +16,24 @@ OBJCOPY		= $(CROSS)/bin/$(TARGET)-objcopy
 STRIP		= $(CROSS)/bin/$(TARGET)-strip
 CONFIG_C_FLAGS	= -g
 
-all: helix-kernel ktools image
+all: check helix-kernel ktools image
 dev-all: check helix-kernel userland image docs test
 
 debug:
 	@gdb -x gdbscript
 
 check:
-	@if [ ! -e cross/.check-$(ARCH)-elf ]; then \
-		echo "-----=[Note]=-----";\
+	@if [ ! -e cross/.cross_check ]; then \
+		echo "-----=[ Warning ]=-----";\
 		echo "It is recommended that you build a cross compiler using"; \
 		echo "    \"$(MAKE) cross-cc\""; \
 		echo "if you haven't done so already, for best results."; \
 		echo;\
 		echo "Your native compiler may work, but if it refuses to boot or compile,";\
-		echo "try a cross compiler before assuming bugs. ;)";\
+		echo "try the cross compiler before assuming it's a bug.";\
 		echo;\
 	fi
+	@./tools/check_depends.sh
 
 helix-kernel:
 	@cd kernel; $(MAKE) KNAME=$(KNAME) CONFIG_C_FLAGS="$(CONFIG_C_FLAGS)" \
@@ -47,8 +48,7 @@ image:
 	@# The order of the files in kernel/modules is important, the modules
 	@# are loaded in this order
 	@tools/mkinitrd ./initrd.img kernel/modules/{pci,ata,dummy}_mod.o
-	@#tools/mkinitrd ./initrd.img kernel/modules/dummy_mod.o
-	@./mk_image.sh
+	@./tools/mk_image.sh
 	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
 	@echo -e "[\033[0;32mdone\033[0;0m]"
 	@echo -e "[\033[0;34mdone\033[0;0m]";
