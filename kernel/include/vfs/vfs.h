@@ -65,6 +65,7 @@ typedef struct file_system {
 
 typedef struct file_driver {
 	void 	*driver;
+	char 	*name;
 
 	file_create_fs 	*create;
 	file_remove_fs 	*remove;
