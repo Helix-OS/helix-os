@@ -8,24 +8,26 @@ CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DARCH=$(ARC
 ASFLAGS		= -f elf
 LDFLAGS		= -T linker.ld
 
-OBJS		= $(patsubst %.c, %.o, $(wildcard *c))
-OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
+#OBJS		= $(patsubst %.c, %.o, $(wildcard *c))
+#OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
+OBJS 		=  $(patsubst %.c, %.o, $(shell find . -name "*.c" ))
+OBJS 		+= $(patsubst %.s, %.o, $(shell find . -name "*.s" ))
 
 all: kernel
 
 %.o : %.c
 	@echo CC $<
-	@$(CC) $(CFLAGS) -c $<
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 %.o : %.s
 	@echo AS $<
-	@$(AS) $(ASFLAGS) $<
+	@$(AS) $(ASFLAGS) $< -o $@
 
 kernel: $(OBJS)
-	@$(LD) $(LDFLAGS) -o helix_kernel-$(ARCH) *.o
-	@echo LD $(LDFLAGS) -o helix_kernel-$(ARCH) *.o
+	@$(LD) $(LDFLAGS) -o helix_kernel-$(ARCH) $(OBJS)
+	@echo LD $(LDFLAGS) -o helix_kernel-$(ARCH) $(OBJS)
 
 clean:
-	-rm *.o
+	-rm $(OBJS)
 
 .PHONY: all
