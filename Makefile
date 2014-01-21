@@ -48,6 +48,7 @@ image:
 	@# The order of the files in kernel/modules is important, the modules
 	@# are loaded in this order
 	@tools/mkinitrd ./initrd.img kernel/modules/{pci,ata,vga,dummy}_mod.o
+	@tools/mkinitrd ./initrd.img kernel/modules/{vfs,pci,ata,vga,dummy}_mod.o
 	@./tools/mk_image.sh
 	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
 	@echo -e "[\033[0;32mdone\033[0;0m]"
