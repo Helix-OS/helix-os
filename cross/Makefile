@@ -53,26 +53,29 @@ binutils: download
 	@cd $(BINUTILS); ./configure --prefix=$(PREFIX) --target=$(TARGET) --disable-nls; \
 	$(MAKE); $(MAKE) install;
 
-mpfr: download
-	@echo -e "[\033[0;32mMaking $(MPFR)\033[0;0m]";
-	@cd $(MPFR); ./configure --prefix=$(PREFIX) --with-gmp=$(PREFIX);\
-	$(MAKE); $(MAKE) install;
-
-mpc: download
-	@echo -e "[\033[0;32mMaking $(MPC)\033[0;0m]";
-	@cd $(MPC); ./configure --prefix=$(PREFIX) --with-gmp=$(PREFIX) --with-mpfr=$(PREFIX);\
-	$(MAKE); $(MAKE) install;
-
-gmp: download mpfr
+gmp: download
 	@echo -e "[\033[0;32mMaking $(GMP)\033[0;0m]"
 	@cd $(GMP); ./configure --prefix=$(PREFIX); \
 	$(MAKE); $(MAKE) install;
 
-gcc: download binutils mpfr mpc gmp
+mpfr: download gmp
+	@echo -e "[\033[0;32mMaking $(MPFR)\033[0;0m]";
+	@cd $(MPFR); ./configure --prefix=$(PREFIX) --with-gmp=$(PREFIX);\
+	$(MAKE); $(MAKE) install;
+
+mpc: download gmp mpfr
+	@echo -e "[\033[0;32mMaking $(MPC)\033[0;0m]";
+	@cd $(MPC); ./configure --prefix=$(PREFIX) --with-gmp=$(PREFIX) --with-mpfr=$(PREFIX);\
+	$(MAKE); $(MAKE) install;
+
+gcc: download binutils gmp mpfr mpc
 	@echo -e "[\033[0;32mMaking $(GCC)\033[0;0m]";
 	@cd $(GCC); export PATH="$$PATH:$(PREFIX)";\
-	./configure --prefix=$(PREFIX) --target=$(TARGET) --disable-nls --enable-languages=c --without-headers --with-gmp=$(PREFIX) --with-mpc=$(PREFIX) --with-mpfr=$(PREFIX);\
-	$(MAKE); $(MAKE) install;
+	./configure --prefix=$(PREFIX) --target=$(TARGET) --disable-nls --enable-languages=c,c++ \
+	--disable-install-libiberty \
+	--without-headers --with-gmp=$(PREFIX) --with-mpc=$(PREFIX) --with-mpfr=$(PREFIX);\
+	$(MAKE) all-gcc; $(MAKE) all-target-gcc; 
+	$(MAKE) install-gcc; $(MAKE) install-target-gcc;
 
 test: gcc
 	@echo -e "[\033[0;32mTesting build...\033[0;0m]";
@@ -97,5 +100,5 @@ clean-bin:
 
 clean-all: clean-build clean-archives clean-bin
 	-rm -rf *.*
-	
+
 .PHONY: all
