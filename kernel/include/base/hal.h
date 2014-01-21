@@ -4,7 +4,9 @@
 
 enum {
 	HAL_TYPE_NULL,
+	HAL_TYPE_GENERAL,
 	HAL_TYPE_STORAGE,
+	HAL_TYPE_VIDEO,
 };
 
 enum {
