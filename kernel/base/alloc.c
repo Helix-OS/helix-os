@@ -159,6 +159,11 @@ void *amalloc( mheap_t *heap, int size, int align ){
 void afree( mheap_t *heap, void *ptr ){
 	mblock_t	*move;
 
+	if ( !ptr ){
+		kprintf( "[afree] Warning! Caught null pointer, bailing out now\n" );
+		return ptr;
+	}
+
 	move = (mblock_t *)((unsigned)ptr - sizeof( mblock_t ));
 	if ( move->type == MBL_USED ){
 		/*
@@ -202,13 +207,17 @@ void *arealloc( mheap_t *heap, void *ptr, unsigned long size ){
 			*temp;
 	unsigned long 	nsize;
 
-	//kprintf( "[krealloc] " );
+	if ( !ptr ){
+		kprintf( "[arealloc] Warning! Caught null pointer, bailing out now\n" );
+		return ptr;
+	}
+
 	move = (mblock_t *)((unsigned)ptr - sizeof( mblock_t ));
 	nsize = size + ((sizeof( mblock_t ) - size ) % sizeof( mblock_t )) % sizeof( mblock_t );
 
 	if ( move->type == MBL_USED ){
 		if ( nsize > move->size - sizeof( mblock_t )){
-			if ( ptr && move->next != MBL_END && move->next->type == MBL_FREE &&
+			if ( move->next != MBL_END && move->next->type == MBL_FREE &&
 					move->size + move->next->size > nsize + sizeof( mblock_t )){
 
 				nsize += sizeof( mblock_t );
@@ -240,6 +249,8 @@ void *arealloc( mheap_t *heap, void *ptr, unsigned long size ){
 
 				ret = buf;
 			}
+		} else {
+			ret = ptr;
 		}
 	}
 
