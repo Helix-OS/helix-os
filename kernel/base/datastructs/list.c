@@ -51,8 +51,6 @@ list_node_t *list_add_data_node( list_node_t *list, void *data ){
 	return ret;
 }
 
-// type-generic list_add_node defined in include/base/datastructs/list.h
-
 list_node_t *list_remove_node( list_node_t *node ){
 	list_node_t *ret = 0;
 
@@ -100,3 +98,15 @@ list_node_t *list_get_index( list_node_t *node, int i ){
 
 	return ret;
 }
+
+void list_free( list_node_t *node ){
+	list_node_t *move,
+		    *temp;
+
+	for ( move = node; move->prev; move = move->prev );
+	for ( ; move; move = temp ){
+		temp = move->next;
+		kfree( move );
+	}
+}
+
