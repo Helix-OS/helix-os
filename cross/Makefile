@@ -38,12 +38,8 @@ download: check
 				fi;\
 			fi;\
 			echo -e "[\033[0;32mExtracting $$archive\033[0;0m]";\
-			i=20; tar xvf $$archive.tar.gz | while read line; do\
-				if [ $$i -gt 20 ]; then echo -en "\r>> "; i=0; fi;\
-				echo -en ".  \b\b";\
-				((i++));\
-			done;\
-			echo;\
+			nfiles="`tar vft $$archive.tar.gz | wc -l`";\
+			tar xvf $$archive.tar.gz | perl pretty.pl $$nfiles; \
 			echo -e "[\033[0;32mdone\033[0;0m]";\
 		fi;\
 	done
@@ -99,6 +95,5 @@ clean-bin:
 	-rm -rf ./bin ./i586-elf ./include ./lib ./share ./libexec
 
 clean-all: clean-build clean-archives clean-bin
-	-rm -rf *.*
 
 .PHONY: all
