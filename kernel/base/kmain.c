@@ -9,10 +9,19 @@
 #include <base/hal.h>
 
 #include <base/arch/i386/pitimer.h>
+#include <base/tasking/task.h>
 
 extern unsigned int *kernel_dir;
 extern mheap_t *kheap;
 extern unsigned int early_placement;
+
+void sometest( ){
+	int counter = 0;
+	while( 1 ){
+		kprintf( "%d... ", counter++ );
+		usleep( 1000 );
+	}
+}
 
 void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	int *modules;
@@ -41,6 +50,9 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 
 	asm volatile( "sti" );
 	init_pitimer( 100 );
+	init_tasking( );
+
+	create_thread( sometest );
 
 	// Initialize module system
 	init_module_system( elfinfo );
