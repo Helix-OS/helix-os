@@ -161,7 +161,7 @@ void afree( mheap_t *heap, void *ptr ){
 
 	if ( !ptr ){
 		kprintf( "[afree] Warning! Caught null pointer, bailing out now\n" );
-		return ptr;
+		return;
 	}
 
 	move = (mblock_t *)((unsigned)ptr - sizeof( mblock_t ));
