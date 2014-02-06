@@ -28,7 +28,7 @@ void init_pitimer( uint32_t freq ){
 	kprintf( "[init_pitimer] programmable interrupt controller initialized\n" );
 }
 
-void usleep( uint32_t useconds ){
+void poll_usleep( uint32_t useconds ){
 	uint32_t timer = useconds * current_freq / 1000;
 	uint32_t start = tick;
 
@@ -41,4 +41,8 @@ void register_pitimer_call( void (*call)( )){
 
 void unregister_pitimer_call( void (*call)( )){
 	pitimer_call = 0;
+}
+
+unsigned long get_tick( ){
+	return tick;
 }

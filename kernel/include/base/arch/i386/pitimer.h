@@ -10,6 +10,7 @@
 void init_pitimer( uint32_t freq );
 void register_pitimer_call( void (*call)( ));
 void unregister_pitimer_call( void (*call)( ));
-void usleep( uint32_t );
+void pollusleep( uint32_t );
+unsigned long get_tick( );
 
 #endif
