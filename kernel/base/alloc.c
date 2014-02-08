@@ -1,12 +1,16 @@
 #ifndef _helix_alloc_c
 #define _helix_alloc_c
+
 #include <base/mem/alloc.h>
 #include <base/string.h>
+#include <base/tasking/semaphore.h>
 
-extern unsigned int end;
 unsigned int early_placement = 0;
-struct mheap *kheap = 0;
+extern unsigned int end;
 extern unsigned int *kernel_dir;
+struct mheap *kheap = 0;
+
+static semaphore_t heap_semaphore = 1;
 
 void *kmalloc_early( int size, int align ){
 	void *ret;
@@ -260,25 +264,37 @@ void *arealloc( mheap_t *heap, void *ptr, unsigned long size ){
 void *kmalloc( int size ){
 	void *ret = (void *)0;
 
+	enter_semaphore( &heap_semaphore );
 	ret = amalloc( kheap, size, 0 );
-	
+	leave_semaphore( &heap_semaphore );
+
 	return ret;
 }
 
 void *kmalloca( int size ){
 	void *ret;
 
+	enter_semaphore( &heap_semaphore );
 	ret = amalloc( kheap, size, 1 );
+	leave_semaphore( &heap_semaphore );
 
 	return ret;
 }
 
 void kfree( void *ptr ){
+	enter_semaphore( &heap_semaphore );
 	afree( kheap, ptr );
+	leave_semaphore( &heap_semaphore );
 }
 
 void *krealloc( void *ptr, unsigned long size ){
-	return arealloc( kheap, ptr, size );
+	void *ret = 0;
+
+	enter_semaphore( &heap_semaphore );
+	ret = arealloc( kheap, ptr, size );
+	leave_semaphore( &heap_semaphore );
+
+	return ret;
 }
 
 void kfree_early( void *ptr ){	
