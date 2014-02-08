@@ -1,21 +1,31 @@
 #ifndef _helix_tasking_h
 #define _helix_tasking_h
+
+#include <base/arch/i386/pitimer.h> /* TODO: remove this, implement generic timer */
 #include <base/datastructs/list.h>
 #include <base/logger.h>
 #include <base/string.h>
-#include <base/arch/i386/pitimer.h> /* TODO: remove this, implement generic timer */
+#include <base/tasking/semaphore.h>
+
+enum {
+	TASK_STATE_RUNNING,
+	TASK_STATE_SLEEPING,
+	TASK_STATE_WAITING,
+};
 
 typedef struct task {
-	unsigned long 	eip,
-			esp,
-			ebp;
+	unsigned long 		state;
+	unsigned long 		eip,
+				esp,
+				ebp;
 
-	unsigned long 	pid;
-	unsigned long 	tid;
-	unsigned long 	sleep;
-	unsigned long 	stack;
+	unsigned long 		pid;
+	unsigned long 		tid;
+	unsigned long 		sleep;
+	unsigned long 		stack;
 
-	unsigned long 	*pagedir;
+	unsigned long 		*pagedir;
+	semaphore_t 	 	*sem;
 } task_t;
 
 extern unsigned long get_instruct_ptr( );

@@ -42,15 +42,16 @@ void rrschedule_call( void ){
 	do {
 		next_node = next_node->next? next_node->next : get_task_list( );
 		move = next_node->data;
-	} while ( move->sleep > get_tick( ));
+	} while (( move->state == TASK_STATE_SLEEPING && move->sleep > get_tick( )) ||
+			( move->state == TASK_STATE_WAITING && !*move->sem ));
+
+	move->state = TASK_STATE_RUNNING;
 
 	set_current_task_node( next_node );
 
 	eip = move->eip;
 	esp = move->esp;
 	ebp = move->ebp;
-
-	//kprintf( "Got here: eip: 0x%x, esp: 0x%x, ebp: 0x%x\n", eip, esp, ebp );
 
 	unblock_tasks( );
 	asm volatile( "\

@@ -42,6 +42,7 @@ int create_thread( void (*start)( )){
 	new_task->stack = (unsigned long)(kmalloc( 0x800 ));
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = 0;
+	new_task->state = TASK_STATE_RUNNING;
 	add_task( new_task );
 
 	return new_task->pid;
@@ -143,11 +144,13 @@ void set_current_task_node( list_node_t *node ){
 }
 
 void usleep( unsigned long useconds ){
-	task_blocked = 1;
+	block_tasks( );
 	task_t *task = get_current_task( );
 
 	task->sleep = get_tick( ) + (useconds * 100 / 1000);
-	task_blocked = 0;
+	task->state = TASK_STATE_SLEEPING;
+
+	unblock_tasks( );
 	rrschedule_call( );
 }
 
