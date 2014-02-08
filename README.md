@@ -8,17 +8,17 @@ It currently supports:
 
 - Module loading and linking
 - PCI and IDE disks
+- Kernel multithreading
 
 Next steps:
 
-- VFS and FAT32 driver (And eventually an ext2 driver)
-- Multitasking
 - VGA framebuffer
+- VFS and FAT32 driver (And eventually an ext2 driver)
+- Start working on the userland
 - TCP/IP stack
 
 After that:
 
-- Start working on the userland
 - Port development tools
 - Be self-hosting
 
