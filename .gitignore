@@ -1,6 +1,7 @@
 cross/*.tar.gz
 cross/*/
 cross/.*
+reference/*
 tools/mkinitrd
 *.o
 *.ko
