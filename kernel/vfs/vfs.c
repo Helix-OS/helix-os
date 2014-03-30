@@ -131,19 +131,27 @@ int file_lookup_absolute( char *path, file_node_t *buf, int flags ){
 }
 
 int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int flags ){
-	int ret = 0;
-	int found = 0;
-	int i;
+	int ret = 0,
+	    found = 0,
+	    i,
+	    lastbuf = 1,
+	    vfs_function_ret;
 	char *namebuf,
 	     *pathptr = path;
 	bool expecting_dir;
 
-	file_node_t *move = node;
+	file_node_t *move = node,
+		    *nodebufs = knew( file_node_t[2] ),
+		    *current_buf = nodebufs;
 
+	kprintf( "[%s] Looking up \"%s\"\n", __func__, path );
 	if ( path && buf ){
 		namebuf = knew( char[MAX_FILENAME_SIZE] );
 
+		// Iterate through directories in path, searching for the next level down
+		// until the given path is found or there's an error
 		while ( !ret && !found && *pathptr ){
+
 			// Copy first directory from path into buffer
 			for ( i = 0; i < 256 && pathptr[i] && pathptr[i] != '/'; i++ )
 				namebuf[i] = pathptr[i];
@@ -152,20 +160,48 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 			pathptr += i;
 			expecting_dir = false;
 
+			kprintf( "[%s] Looking for \"%s\"\n", __func__, namebuf );
+
 			if ( *pathptr == '/' ){
 				pathptr++;
 				expecting_dir = true;
 			}
 
-			VFS_FUNCTION( move, lookup, buf, namebuf, flags );
-			kprintf( "[%s] have directory name 0x%x:\"%s\", expecting directory: %d\n", __func__, *pathptr, namebuf, expecting_dir );
+			kprintf( "[%s] move: 0x%x, fs: 0x%x, functions: 0x%x, lookup: 0x%x, current_buf: 0x%x\n", 
+				__func__, move, move->fs,
+				/*move->fs->functions*/0, /*move->fs->functions->lookup*/0, current_buf );
+
+			vfs_function_ret = VFS_FUNCTION( move, lookup, current_buf, namebuf, flags );
+			if ( vfs_function_ret ){
+				kprintf( "[%s] Oops we got an error, %d\n", __func__, -vfs_function_ret );
+				ret = vfs_function_ret;
+				break;
+			}
+
+			move = current_buf;
+			kprintf( "[%s] have directory name 0x%x:\"%s\", expecting directory: %d\n",
+					__func__, *pathptr, namebuf, expecting_dir );
+
+			/* This is probably obtuse enough to deserve a comment, so...
+			 * There's two file node buffers which are alternated between during lookups.
+			 * This is because of `move = current_buf`. With one buffer
+			 * `move` will point to itself after one iteration, which means
+			 * it'll be overwritten while still in use by the lookup function.
+			 */
+			current_buf = nodebufs + lastbuf;
+			lastbuf = !lastbuf;
 		}
+
+		if ( !ret )
+			memcpy( buf, move, sizeof( file_node_t ));
 
 		kfree( namebuf );
 
 	} else {
 		ret = -ERROR_INVALID_PATH;
 	}
+
+	kfree( nodebufs );
 
 	return ret;
 }
@@ -207,8 +243,18 @@ int init( ){
 
 		VFS_FUNCTION( blarg, get_info, infos );
 		kprintf( "[%s] Have root node info: type = %d\n", provides, infos->type );
-		file_lookup_absolute( "/usr/bin/pacman", blarg, 0 );
-		file_lookup_relative( "pacman/asdf", blarg, blarg, 0 );
+
+		{ 
+			file_node_t filebuf;
+
+			file_lookup_absolute( "/usr/bin/pacman", &filebuf, 0 );
+			file_lookup_relative( "pacman/asdf", blarg, &filebuf, 0 );
+			memset( &filebuf, 0, sizeof( filebuf ));
+			stuff = file_lookup_absolute( "/test", &filebuf, 0 );
+			stuff = file_lookup_absolute( "/test/asdf", &filebuf, 0 );
+
+			kprintf( "[%s] Have file \"/test/asdf\" at inode %d, return value %d.\n", provides, filebuf.inode, -stuff );
+		}
 
 		kfree( infos );
 	}
