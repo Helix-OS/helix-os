@@ -12,7 +12,7 @@ LDFLAGS		= -fPIC -shared
 OBJS		= $(patsubst %.c, %.o, $(wildcard *c))
 OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 
-all: vfs_mod
+all: ramfs_mod vfs_mod
 
 %.o : %.c
 	@$(CC) $(CFLAGS) -c $<
@@ -22,11 +22,15 @@ all: vfs_mod
 	@$(AS) $(ASFLAGS) $<
 	@echo AS $<
 
+ramfs_mod:
+	@cd ramfs; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
+
 vfs_mod: $(OBJS)
 	@$(LD) $(LDFLAGS) -o ../modules/vfs_mod.o *.o
 	@echo LD $(LDFLAGS) -o ../modules/vfs_mod.o *.o
 
 clean:
-	rm *.o
+	@cd ramfs; make clean
+	@-rm *.o
 
 .PHONY: all
