@@ -281,6 +281,19 @@ void *kmalloca( int size ){
 	return ret;
 }
 
+void *kcalloc( unsigned nmemb, unsigned memsize ){
+	unsigned size;
+	void *ret;
+
+	size = nmemb * memsize;
+
+	ret = kmalloc( size );
+	if ( ret )
+		memset( ret, 0, size );
+
+	return ret;
+}
+
 void kfree( void *ptr ){
 	enter_semaphore( &heap_semaphore );
 	afree( kheap, ptr );

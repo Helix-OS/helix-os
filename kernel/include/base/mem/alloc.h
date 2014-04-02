@@ -30,6 +30,7 @@ void *kmalloc( int size );
 void *kmalloca( int size );
 void  kfree( void *ptr );
 void *krealloc( void *ptr, unsigned long size );
+void *kcalloc( unsigned nmemb, unsigned size );
 
 mheap_t *init_heap( mheap_t *heap, unsigned *p_dir, unsigned start, unsigned size );
 
