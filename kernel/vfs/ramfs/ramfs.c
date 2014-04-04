@@ -11,6 +11,7 @@ static int ramfs_node_lookup( struct file_node *node, struct file_node *buf, cha
 static int ramfs_open_node( struct file_node *node, char *path, int flags );
 static int ramfs_write_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
 static int ramfs_read_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
+static int ramfs_close_node( struct file_node *node );
 
 // Internal functions for use by ramfs
 static int ramfs_get_node( ramfs_head_t *head, file_node_t *buf, int inode );
@@ -22,6 +23,7 @@ static file_funcs_t ramfs_functions = {
 	.lookup   	= ramfs_node_lookup,
 
 	.open 		= ramfs_open_node,
+	.close 		= ramfs_close_node,
 	.write 		= ramfs_write_node,
 	.read 		= ramfs_read_node,
 };
@@ -237,6 +239,10 @@ static int ramfs_open_node( struct file_node *node, char *path, int flags ){
 	}
 
 	return ret;
+}
+
+static int ramfs_close_node( struct file_node *node ){
+	return 0;
 }
 
 static int ramfs_write_node( struct file_node *node, void *buffer,
