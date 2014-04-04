@@ -35,6 +35,10 @@ dynstring_t *dstring_set_char( dynstring_t *string, unsigned pos, char newchar )
 				( pos % string->block_size );
 		
 		string->string = krealloc( string->string, string->alloced * string->block_size );
+
+	} else if ( pos > string->length ){
+		string->length = pos;
+
 	}
 
 	string->string[pos] = newchar;

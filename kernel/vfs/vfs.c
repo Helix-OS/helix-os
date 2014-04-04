@@ -261,6 +261,16 @@ int init( ){
 			file_lookup_absolute( "/test", &filebuf, 0 );
 			kprintf( "[%s] open function returned %d\n", provides,
 					VFS_FUNCTION(( &filebuf ), open, "blarg", FILE_CREATE | FILE_WRITE ));
+
+			char *teststr = "Testing this stuff";
+			kprintf( "[%s] write function returned %d\n", provides,
+					VFS_FUNCTION(( &filebuf ), write, teststr, strlen( teststr ), 0 ));
+
+			char testbuf[20];
+			kprintf( "[%s] read function returned %d\n", provides,
+					VFS_FUNCTION(( &filebuf ), read, testbuf, strlen( teststr ), 0 ));
+
+			kprintf( "[%s] read \"%s\"\n", provides, testbuf );
 		}
 
 		kfree( infos );

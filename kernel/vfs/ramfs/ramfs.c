@@ -3,11 +3,14 @@
 #include <base/mem/alloc.h>
 #include <base/string.h>
 #include <base/lib/stdbool.h>
+#include <base/datastructs/dynstring.h>
 
 // functions to be used in file_funcs_t
 static int ramfs_node_get_info( struct file_node *node, struct file_info *buf );
 static int ramfs_node_lookup( struct file_node *node, struct file_node *buf, char *name, int flags );
 static int ramfs_open_node( struct file_node *node, char *path, int flags );
+static int ramfs_write_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
+static int ramfs_read_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
 
 // Internal functions for use by ramfs
 static int ramfs_get_node( ramfs_head_t *head, file_node_t *buf, int inode );
@@ -19,6 +22,8 @@ static file_funcs_t ramfs_functions = {
 	.lookup   	= ramfs_node_lookup,
 
 	.open 		= ramfs_open_node,
+	.write 		= ramfs_write_node,
+	.read 		= ramfs_read_node,
 };
 
 file_system_t *create_ramfs( struct file_driver *driver,
@@ -29,7 +34,7 @@ file_system_t *create_ramfs( struct file_driver *driver,
 		     *test_node;
 	file_system_t *ret;
 	file_node_t *fs_root;
-	ramfs_dirent_t *dirbuf;
+	//ramfs_dirent_t *dirbuf;
 
 	new_ramfs = knew( ramfs_head_t );
 	new_ramfs->nodes = dlist_create( 0, 0 );
@@ -57,6 +62,7 @@ file_system_t *create_ramfs( struct file_driver *driver,
 	test_node->data = dlist_create( 0, 0 );
 
 	test_node = ramfs_add_node( new_ramfs, test_node, "asdf" );
+	test_node->data = dstring_create( "" );
 
 	ret = knew( file_system_t );
 	ret->devstruct = new_ramfs;
@@ -219,6 +225,7 @@ static int ramfs_open_node( struct file_node *node, char *path, int flags ){
 		} else if ( flags & FILE_CREATE ){
 			ramfs_get_internal_node( node->fs->devstruct, &rfoo, node->inode );
 			rnode = ramfs_add_node( node->fs->devstruct, rfoo, path );
+			rnode->data = dstring_create( "" );
 			ret = rnode->info.inode;
 
 		} else {
@@ -227,6 +234,53 @@ static int ramfs_open_node( struct file_node *node, char *path, int flags ){
 
 	} else {
 		ret = -ERROR_NOT_DIRECTORY;
+	}
+
+	return ret;
+}
+
+static int ramfs_write_node( struct file_node *node, void *buffer,
+		unsigned long length, unsigned long offset )
+{
+	int ret = 0;
+	char *foo = buffer;
+	ramfs_node_t *rnode;
+
+	ret = ramfs_get_internal_node( node->fs->devstruct, &rnode, node->inode );
+
+	if ( ret == 0 ){
+		int place;
+
+		for ( place = 0; place < length; place++ )
+			dstring_set_char( rnode->data, offset + place, foo[place] );
+
+		ret = place;
+	}
+
+	return ret;
+}
+
+static int ramfs_read_node( struct file_node *node, void *buffer,
+		unsigned long length, unsigned long offset )
+{
+	int ret = 0;
+	char *foo = buffer;
+	char *dstr;
+
+	ramfs_node_t *rnode;
+	dynstring_t *dstrbuf;
+
+	ret = ramfs_get_internal_node( node->fs->devstruct, &rnode, node->inode );
+
+	if ( ret == 0 ){
+		int place;
+		dstrbuf = rnode->data;
+		dstr = dstring_get_string( dstrbuf );
+
+		for ( place = 0; place < length && place + offset <= dstrbuf->length; place++ )
+			foo[place] = dstr[place + offset];
+
+		ret = place;
 	}
 
 	return ret;
