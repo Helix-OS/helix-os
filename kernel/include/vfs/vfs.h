@@ -12,6 +12,7 @@
 
 // Flags
 // File system flags
+// TODO: Rename these, currently might be confused with general flags
 enum {
 	FILE_FLAG_NULL 		= 0,
 	FILE_FLAG_READ  	= 1,
@@ -39,6 +40,15 @@ enum {
 	FILE_NODE_NULL 		= 0,
 	FILE_NODE_CACHED 	= 1,
 }; 
+
+// General file flags, passed to open, mknod, etc
+enum { 
+	FILE_NULL,
+	FILE_READ,
+	FILE_WRITE,
+	FILE_CREATE,
+	FILE_TRUNCATE,
+};
 
 typedef enum {
 	FILE_TYPE_NULL,

@@ -4,14 +4,21 @@
 #include <base/string.h>
 #include <base/lib/stdbool.h>
 
-static int ramfs_get_node( ramfs_head_t *head, file_node_t *buf, int inode );
+// functions to be used in file_funcs_t
 static int ramfs_node_get_info( struct file_node *node, struct file_info *buf );
 static int ramfs_node_lookup( struct file_node *node, struct file_node *buf, char *name, int flags );
+static int ramfs_open_node( struct file_node *node, char *path, int flags );
+
+// Internal functions for use by ramfs
+static int ramfs_get_node( ramfs_head_t *head, file_node_t *buf, int inode );
 static ramfs_node_t *ramfs_add_node( ramfs_head_t *head, ramfs_node_t *dir, char *name );
+static int ramfs_get_internal_node( ramfs_head_t *head, ramfs_node_t **buf, int inode );
 
 static file_funcs_t ramfs_functions = {
-	.get_info = ramfs_node_get_info,
-	.lookup   = ramfs_node_lookup,
+	.get_info 	= ramfs_node_get_info,
+	.lookup   	= ramfs_node_lookup,
+
+	.open 		= ramfs_open_node,
 };
 
 file_system_t *create_ramfs( struct file_driver *driver,
@@ -129,6 +136,35 @@ static int ramfs_node_get_info( struct file_node *node, struct file_info *buf ){
 	return ret;
 }
 
+static int ramfs_dir_findnode( struct file_node *node, char *name ){
+	dlist_container_t *dlist;
+	ramfs_node_t *rnodebuf;
+	ramfs_dirent_t *dirbuf;
+	int ret = -1;
+	int listptr;
+
+	//kprintf( "[%s] Looking up %s... ", __func__, name );
+	ramfs_get_internal_node( node->fs->devstruct, &rnodebuf, node->inode );
+	dlist = rnodebuf->data;
+	/*
+	kprintf( "[%s] Have data pointer at 0x%x in struct 0x%x, node->fs: 0x%x\n",
+			__func__, dlist, rnodebuf, node->fs );
+			*/
+
+	for ( listptr = 0; listptr < dlist->alloced; listptr++ ){
+		if ( dlist->entries[listptr] ){
+			dirbuf = dlist->entries[listptr];
+
+			if ( strcmp( name, dirbuf->name ) == 0 ){
+				ret = dirbuf->inode;
+				break;
+			}
+		}
+	}
+
+	return ret;
+}
+
 /** \brief Looks up an entry with the given name in the directory, and returns a file node for it
  *  @param node The node to search
  *  @param buf  The output buffer
@@ -137,46 +173,60 @@ static int ramfs_node_get_info( struct file_node *node, struct file_info *buf ){
  */
 static int ramfs_node_lookup( struct file_node *node, struct file_node *buf, char *name, int flags ){
 
-	ramfs_node_t *rnodebuf;
-	ramfs_dirent_t *dirbuf;
 	file_info_t infobuf;
-	dlist_container_t *dlist;
-	int listptr;
 	int ret = -1;
-	bool found = false;
+	int inode;
 
 	ramfs_node_get_info( node, &infobuf );
 
 	if ( infobuf.type == FILE_TYPE_DIR ){
-		kprintf( "[%s] Looking up %s... ", __func__, name );
-		ramfs_get_internal_node( node->fs->devstruct, &rnodebuf, node->inode );
-		dlist = rnodebuf->data;
-		kprintf( "[%s] Have data pointer at 0x%x in struct 0x%x, node->fs: 0x%x\n",
-				__func__, dlist, rnodebuf, node->fs );
 
-		ret = -ERROR_NOT_FOUND;
+		inode = ramfs_dir_findnode( node, name );
 
-		for ( listptr = 0; listptr < dlist->alloced && !found; listptr++ ){
-			if ( dlist->entries[listptr] ){
-				dirbuf = dlist->entries[listptr];
-				if ( strcmp( name, dirbuf->name ) == 0 ){
-					kprintf( "[%s] Found file %s at inode %d, cool\n",
-							__func__, name, dirbuf->inode );
-					ramfs_get_node( node->fs->devstruct, buf, dirbuf->inode );
+		if ( inode >= 0 ){
+			kprintf( "[%s] Found file %s at inode %d, cool\n",
+					__func__, name, inode );
 
-					found = true;
-					ret = 0;
-				}
-			}
-		}
+			ramfs_get_node( node->fs->devstruct, buf, inode );
+			ret = 0;
 
-		if ( ret == -ERROR_NOT_FOUND )
+		} else {
+			ret = -ERROR_NOT_FOUND;
 			kprintf( "[%s] Couldn't find %s...\n", __func__, name );
+		}
 
 	} else {
 		ret = -ERROR_NOT_DIRECTORY;
-		kprintf( "[%s] lolwut\n", __func__ );
+	}
 
+	return ret;
+}
+
+static int ramfs_open_node( struct file_node *node, char *path, int flags ){
+	file_info_t infobuf;
+	ramfs_node_t *rnode, *rfoo;
+	int ret = 0;
+	int inode;
+
+	ramfs_node_get_info( node, &infobuf );
+
+	if ( infobuf.type == FILE_TYPE_DIR ){
+		inode = ramfs_dir_findnode( node, path );
+
+		if ( inode >= 0 ){
+			ret = inode;
+
+		} else if ( flags & FILE_CREATE ){
+			ramfs_get_internal_node( node->fs->devstruct, &rfoo, node->inode );
+			rnode = ramfs_add_node( node->fs->devstruct, rfoo, path );
+			ret = rnode->info.inode;
+
+		} else {
+			ret = -ERROR_NOT_FOUND;
+		}
+
+	} else {
+		ret = -ERROR_NOT_DIRECTORY;
 	}
 
 	return ret;

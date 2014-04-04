@@ -141,12 +141,13 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 	bool expecting_dir;
 
 	file_node_t *move = node,
-		    *nodebufs = knew( file_node_t[2] ),
-		    *current_buf = nodebufs;
+		    *nodebufs,
+		    *current_buf;
 
 	kprintf( "[%s] Looking up \"%s\"\n", __func__, path );
 	if ( path && buf ){
 		namebuf = knew( char[MAX_FILENAME_SIZE] );
+		current_buf = nodebufs = knew( file_node_t[2] );
 
 		// Iterate through directories in path, searching for the next level down
 		// until the given path is found or there's an error
@@ -167,9 +168,11 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 				expecting_dir = true;
 			}
 
+			/*
 			kprintf( "[%s] move: 0x%x, fs: 0x%x, functions: 0x%x, lookup: 0x%x, current_buf: 0x%x\n", 
 				__func__, move, move->fs,
-				/*move->fs->functions*/0, /*move->fs->functions->lookup*/0, current_buf );
+				move->fs->functions, move->fs->functions->lookup, current_buf );
+			*/
 
 			vfs_function_ret = VFS_FUNCTION( move, lookup, current_buf, namebuf, flags );
 			if ( vfs_function_ret ){
@@ -195,13 +198,12 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 		if ( !ret )
 			memcpy( buf, move, sizeof( file_node_t ));
 
+		kfree( nodebufs );
 		kfree( namebuf );
 
 	} else {
 		ret = -ERROR_INVALID_PATH;
 	}
-
-	kfree( nodebufs );
 
 	return ret;
 }
@@ -253,7 +255,12 @@ int init( ){
 			stuff = file_lookup_absolute( "/test", &filebuf, 0 );
 			stuff = file_lookup_absolute( "/test/asdf", &filebuf, 0 );
 
-			kprintf( "[%s] Have file \"/test/asdf\" at inode %d, return value %d.\n", provides, filebuf.inode, -stuff );
+			kprintf( "[%s] Have file \"/test/asdf\" at inode %d, return value %d.\n",
+					provides, filebuf.inode, -stuff );
+
+			file_lookup_absolute( "/test", &filebuf, 0 );
+			kprintf( "[%s] open function returned %d\n", provides,
+					VFS_FUNCTION(( &filebuf ), open, "blarg", FILE_CREATE | FILE_WRITE ));
 		}
 
 		kfree( infos );
