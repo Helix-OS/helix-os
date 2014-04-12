@@ -12,7 +12,7 @@ LDFLAGS		= -fPIC -shared
 OBJS		= $(patsubst %.c, %.o, $(wildcard *c))
 OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 
-all: dummy_mod
+all: pci_mod
 
 %.o : %.c
 	@$(CC) $(CFLAGS) -c $<
@@ -22,9 +22,9 @@ all: dummy_mod
 	@$(AS) $(ASFLAGS) $<
 	@echo AS $<
 
-dummy_mod: $(OBJS)
-	@$(LD) $(LDFLAGS) -o ../modules/dummy_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../modules/dummy_mod.o *.o
+pci_mod: $(OBJS)
+	@$(LD) $(LDFLAGS) -o ../../modobjs/pci_mod.o *.o
+	@echo LD $(LDFLAGS) -o ../../modobjs/pci_mod.o *.o
 
 clean:
 	rm *.o

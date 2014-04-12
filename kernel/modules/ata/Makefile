@@ -22,8 +22,8 @@ all: ata_mod
 	@echo AS $<
 
 ata_mod: $(OBJS)
-	@$(LD) $(LDFLAGS) -o ../modules/ata_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../modules/ata_mod.o *.o
+	@$(LD) $(LDFLAGS) -o ../../modobjs/ata_mod.o *.o
+	@echo LD $(LDFLAGS) -o ../../modobjs/ata_mod.o *.o
 
 clean:
 	rm *.o

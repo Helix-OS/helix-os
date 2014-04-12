@@ -11,6 +11,8 @@ LDFLAGS		= -T linker.ld
 OBJS		= $(patsubst %.c, %.o, $(wildcard *c))
 OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 
+MODULES 	= $(wildcard modules/*)
+
 all: kernel kmodules
 
 %.o : %.c
@@ -24,19 +26,20 @@ kernel: $(OBJS)
 	@mv base/helix_kernel-$(ARCH) .
 
 kmodules:
-	@mkdir -p modules
-	@cd dummy; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
-	@cd pci; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
-	@cd ata; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
-	@cd vga; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
-	@cd vfs; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
+	@echo $(MODULES)
+	@mkdir -p modobjs
+	@for module in $(MODULES); do\
+		cd $$module;\
+		make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE);\
+		cd ../..;\
+	done;
+
 clean:
-	-cd base; make clean
-	-cd pci; make clean
-	-cd ata; make clean
-	-cd vga; make clean
-	-cd vfs; make clean
-	-cd dummy; make clean
-	-rm modules/*.o
+	-@for module in $(MODULES); do\
+		cd $$module;\
+		make clean;\
+		cd ../..;\
+	done;
+	-rm modobjs/*.o
 
 .PHONY: all

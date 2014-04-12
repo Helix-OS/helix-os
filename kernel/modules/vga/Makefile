@@ -12,7 +12,7 @@ LDFLAGS		= -fPIC -shared
 OBJS		= $(patsubst %.c, %.o, $(wildcard *c))
 OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 
-all: pci_mod
+all: vga_mod
 
 %.o : %.c
 	@$(CC) $(CFLAGS) -c $<
@@ -22,9 +22,9 @@ all: pci_mod
 	@$(AS) $(ASFLAGS) $<
 	@echo AS $<
 
-pci_mod: $(OBJS)
-	@$(LD) $(LDFLAGS) -o ../modules/pci_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../modules/pci_mod.o *.o
+vga_mod: $(OBJS)
+	@$(LD) $(LDFLAGS) -o ../../modobjs/vga_mod.o *.o
+	@echo LD $(LDFLAGS) -o ../../modobjs/vga_mod.o *.o
 
 clean:
 	rm *.o

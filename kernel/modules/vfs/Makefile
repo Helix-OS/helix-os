@@ -26,8 +26,8 @@ ramfs_mod:
 	@cd ramfs; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
 
 vfs_mod: $(OBJS)
-	@$(LD) $(LDFLAGS) -o ../modules/vfs_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../modules/vfs_mod.o *.o
+	@$(LD) $(LDFLAGS) -o ../../modobjs/vfs_mod.o *.o
+	@echo LD $(LDFLAGS) -o ../../modobjs/vfs_mod.o *.o
 
 clean:
 	@cd ramfs; make clean
