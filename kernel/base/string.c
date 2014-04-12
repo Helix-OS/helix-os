@@ -41,6 +41,30 @@ char *strdup( char *s ){
 	return memcpy( ret, s, strlen( s ));
 }
 
+char *strcpy( char *dest, char *src ){
+	char *ret = dest;
+	int i;
+
+	for ( i = 0; src[i]; i++ )
+		dest[i] = src[i];
+
+	dest[i] = 0;
+
+	return ret;
+}
+
+char *strncpy( char *dest, char *src, unsigned len ){
+	char *ret = dest;
+	int i;
+
+	for ( i = 0; src[i] && i < len; i++ )
+		dest[i] = src[i];
+
+	dest[i] = 0;
+
+	return ret;
+}
+
 /* Basic memory stuff */
 void *memset( void *dest, unsigned char value, unsigned count ){
 	char *ret_dest = dest;

@@ -67,7 +67,7 @@ void *dlist_get( dlist_container_t *list, int index ){
 void *dlist_set( dlist_container_t *list, int index, void *data ){
 	void *ret = 0;
 
-	if ( index < list->alloced && list->entries[index] )
+	if ( index < list->alloced /* && list->entries[index] */ )
 		ret = list->entries[index] = data;
 
 	return ret;

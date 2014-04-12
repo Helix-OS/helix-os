@@ -11,6 +11,14 @@ typedef struct list_node {
 	void *data;
 } list_node_t;
 
+typedef struct list_head {
+	struct list_node *base;
+	struct list_node *last;
+
+	unsigned length;
+	unsigned flags;
+} list_head_t;
+
 list_node_t *list_add_int_node( list_node_t *list, int val );
 list_node_t *list_add_data_node( list_node_t *list, void *data );
 list_node_t *list_remove_node( list_node_t *node );
