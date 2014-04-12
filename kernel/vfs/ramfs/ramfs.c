@@ -1,3 +1,4 @@
+/* TODO: Implement mount function */
 #include <vfs/ramfs/ramfs.h>
 #include <base/kstd.h>
 #include <base/mem/alloc.h>
@@ -8,15 +9,19 @@
 // functions to be used in file_funcs_t
 static int ramfs_node_get_info( struct file_node *node, struct file_info *buf );
 static int ramfs_node_lookup( struct file_node *node, struct file_node *buf, char *name, int flags );
+
 static int ramfs_open_node( struct file_node *node, char *path, int flags );
-static int ramfs_write_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
-static int ramfs_read_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
 static int ramfs_close_node( struct file_node *node );
+static int ramfs_read_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
+static int ramfs_write_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
+
+static int ramfs_readdir_node( struct file_node *node, struct dirent *dirp, int entry );
+static int ramfs_mkdir_node( struct file_node *node, char *name, int flags );
 
 // Internal functions for use by ramfs
 static int ramfs_get_node( ramfs_head_t *head, file_node_t *buf, int inode );
-static ramfs_node_t *ramfs_add_node( ramfs_head_t *head, ramfs_node_t *dir, char *name );
 static int ramfs_get_internal_node( ramfs_head_t *head, ramfs_node_t **buf, int inode );
+static ramfs_node_t *ramfs_add_node( ramfs_head_t *head, ramfs_node_t *dir, char *name );
 
 static file_funcs_t ramfs_functions = {
 	.get_info 	= ramfs_node_get_info,
@@ -26,6 +31,13 @@ static file_funcs_t ramfs_functions = {
 	.close 		= ramfs_close_node,
 	.write 		= ramfs_write_node,
 	.read 		= ramfs_read_node,
+
+	.mknod 		= 0,
+	.link 		= 0,
+	.unlink 	= 0,
+
+	.readdir 	= ramfs_readdir_node,
+	.mkdir 		= ramfs_mkdir_node,
 };
 
 file_system_t *create_ramfs( struct file_driver *driver,
@@ -36,7 +48,6 @@ file_system_t *create_ramfs( struct file_driver *driver,
 		     *test_node;
 	file_system_t *ret;
 	file_node_t *fs_root;
-	//ramfs_dirent_t *dirbuf;
 
 	new_ramfs = knew( ramfs_head_t );
 	new_ramfs->nodes = dlist_create( 0, 0 );
@@ -56,15 +67,8 @@ file_system_t *create_ramfs( struct file_driver *driver,
 
 	dlist_set( new_ramfs->nodes, 0, root_node );
 
-	// Initialize the root node directory entries
+	// Initialize the root node directory
 	root_node->data = dlist_create( 0, 0 );
-
-	test_node = ramfs_add_node( new_ramfs, root_node, "test" );
-	test_node->info.type = FILE_TYPE_DIR;
-	test_node->data = dlist_create( 0, 0 );
-
-	test_node = ramfs_add_node( new_ramfs, test_node, "asdf" );
-	test_node->data = dstring_create( "" );
 
 	ret = knew( file_system_t );
 	ret->devstruct = new_ramfs;
@@ -77,6 +81,8 @@ file_system_t *create_ramfs( struct file_driver *driver,
 	fs_root->references++;
 	fs_root->fs = ret;
 
+	ramfs_mkdir_node( fs_root, "test", 0 );
+
 	return ret;
 }
 
@@ -88,7 +94,6 @@ file_system_t *create_ramfs( struct file_driver *driver,
 static int ramfs_get_node( ramfs_head_t *head, file_node_t *buf, int inode ){
 	ramfs_node_t *temp;
 	int ret = -ERROR_NOT_FOUND;
-
 
 	temp = dlist_get( head->nodes, inode );
 	if ( temp ){
@@ -161,6 +166,7 @@ static int ramfs_dir_findnode( struct file_node *node, char *name ){
 
 	for ( listptr = 0; listptr < dlist->alloced; listptr++ ){
 		if ( dlist->entries[listptr] ){
+			// TODO: use dlist_get instead of going through the array manually
 			dirbuf = dlist->entries[listptr];
 
 			if ( strcmp( name, dirbuf->name ) == 0 ){
@@ -287,6 +293,62 @@ static int ramfs_read_node( struct file_node *node, void *buffer,
 			foo[place] = dstr[place + offset];
 
 		ret = place;
+	}
+
+	return ret;
+}
+
+static int ramfs_readdir_node( struct file_node *node, struct dirent *dirp, int entry ){
+	int ret = -ERROR_NOT_FOUND;
+	int foo;
+	ramfs_node_t *rnode;
+	ramfs_dirent_t *dirbuf;
+	dlist_container_t *dlist;
+
+
+	foo = ramfs_get_internal_node( node->fs->devstruct, &rnode, node->inode );
+
+	if ( foo >= 0 ){
+		dlist = rnode->data;
+		dirbuf = dlist_get( dlist, entry );
+
+		if ( dirbuf ){
+			strncpy( dirp->name, dirbuf->name, 256 );
+			dirp->inode = dirbuf->inode;
+			dirp->offset = entry;
+			dirp->length = sizeof( dirent_t );
+
+			ret = 1;
+
+		} else {
+			ret = 0;
+		}
+	}
+
+	return ret;
+}
+
+static int ramfs_mkdir_node( struct file_node *node, char *name, int flags ){
+	int ret = 0;
+	ramfs_node_t *rnode;
+	file_info_t infobuf;
+
+	ramfs_node_get_info( node, &infobuf );
+
+	if ( infobuf.type == FILE_TYPE_DIR ){
+		if ( node ){
+			ramfs_get_internal_node( node->fs->devstruct, &rnode, node->inode );
+
+			rnode = ramfs_add_node( node->fs->devstruct, rnode, name );
+			rnode->data = dlist_create( 0, 0 );
+			rnode->info.type = FILE_TYPE_DIR;
+
+		} else {
+			ret = -ERROR_NOT_FOUND;
+		}
+
+	} else {
+		ret = -ERROR_NOT_DIRECTORY;
 	}
 
 	return ret;

@@ -69,16 +69,12 @@ typedef int (*file_get_info)( struct file_node *node, struct file_info *buf );
 typedef int (*open_func)( struct file_node *, char *, int );
 typedef int (*write_func)( struct file_node *, void *, unsigned long, unsigned long );
 typedef int (*read_func)( struct file_node *, void *, unsigned long, unsigned long );
-typedef int (*opendir_func)( struct file_node *, struct dirent *dirp );
-typedef int (*closedir_func)( struct file_node * );
 typedef int (*close_func)( struct file_node * );
 
 typedef int (*mkdir_func)( struct file_node *, char *, int );
 typedef int (*mknod_func)( struct file_node *, char *, int, int );
 typedef int (*link_func)( struct file_node *, struct file_node * );
 typedef int (*unlink_func)( struct file_node * );
-typedef int (*getdents_func)( struct file_node *, struct dirent *dirp,
-		unsigned long count, unsigned long offset );
 typedef int (*readdir_func)( struct file_node *, struct dirent *dirp, int entry );
 typedef int (*mount_func)( struct file_node *, struct file_node *, int flags );
 typedef int (*lookup_func)( struct file_node *, struct file_node *, char *name, int flags );
@@ -161,6 +157,16 @@ typedef struct file_info {
 	unsigned	dev_id;
 
 } file_info_t;
+
+/* Similar to linux's old struct dirent, for simplicity */
+typedef struct dirent {
+	unsigned 	inode;
+	unsigned 	offset; // Unused for now
+	unsigned 	length;
+	file_type_t 	type;
+
+	char 		name[256];
+} dirent_t;
 
 int file_register_driver( file_driver_t *driver );
 int file_register_mount( file_system_t *fs );

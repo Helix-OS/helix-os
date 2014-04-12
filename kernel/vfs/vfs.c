@@ -248,20 +248,30 @@ int init( ){
 
 		{ 
 			file_node_t filebuf;
+			dirent_t dir;
+			int foobar;
 
 			file_lookup_absolute( "/usr/bin/pacman", &filebuf, 0 );
 			file_lookup_relative( "pacman/asdf", blarg, &filebuf, 0 );
 			memset( &filebuf, 0, sizeof( filebuf ));
 			stuff = file_lookup_absolute( "/test", &filebuf, 0 );
-			stuff = file_lookup_absolute( "/test/asdf", &filebuf, 0 );
-
-			kprintf( "[%s] Have file \"/test/asdf\" at inode %d, return value %d.\n",
-					provides, filebuf.inode, -stuff );
 
 			file_lookup_absolute( "/test", &filebuf, 0 );
+
+			kprintf( "[%s] Directory test has the following entries:\n", provides );
+			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
+				kprintf( "[%s]\t%d:%s\n", provides, dir.inode, dir.name );
+
+			file_lookup_absolute( "/test", &filebuf, 0 );
+			VFS_FUNCTION(( &filebuf ), mkdir, "somedir", 0 );
+
 			kprintf( "[%s] open function returned %d\n", provides,
 					VFS_FUNCTION(( &filebuf ), open, "blarg", FILE_CREATE | FILE_WRITE ));
 
+			kprintf( "[%s] open function returned %d\n", provides,
+					VFS_FUNCTION(( &filebuf ), open, "asdf", FILE_CREATE | FILE_WRITE ));
+
+			file_lookup_absolute( "/test/blarg", &filebuf, 0 );
 			char *teststr = "Testing this stuff";
 			kprintf( "[%s] write function returned %d\n", provides,
 					VFS_FUNCTION(( &filebuf ), write, teststr, strlen( teststr ), 0 ));
@@ -271,6 +281,12 @@ int init( ){
 					VFS_FUNCTION(( &filebuf ), read, testbuf, strlen( teststr ), 0 ));
 
 			kprintf( "[%s] read \"%s\"\n", provides, testbuf );
+
+			file_lookup_absolute( "/test", &filebuf, 0 );
+
+			kprintf( "[%s] Directory test has the following entries:\n", provides );
+			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
+				kprintf( "[%s]\t%d:%s\n", provides, dir.inode, dir.name );
 		}
 
 		kfree( infos );
