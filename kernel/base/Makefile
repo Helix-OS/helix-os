@@ -8,8 +8,6 @@ CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DARCH=$(ARC
 ASFLAGS		= -f elf
 LDFLAGS		= -T linker.ld
 
-#OBJS		= $(patsubst %.c, %.o, $(wildcard *c))
-#OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 OBJS 		=  $(patsubst %.c, %.o, $(shell find . -name "*.c" ))
 OBJS 		+= $(patsubst %.s, %.o, $(shell find . -name "*.s" ))
 

@@ -40,6 +40,7 @@ clean:
 		make clean;\
 		cd ../..;\
 	done;
+	-cd base; make clean
 	-rm modobjs/*.o
 
 .PHONY: all
