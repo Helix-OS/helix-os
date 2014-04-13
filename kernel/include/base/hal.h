@@ -1,6 +1,8 @@
 #ifndef _helix_hal_h
 #define _helix_hal_h
 #include <base/string.h>
+#include <base/datastructs/list.h>
+#include <base/tasking/semaphore.h>
 
 enum {
 	HAL_TYPE_NULL,
@@ -29,16 +31,14 @@ typedef struct hal_device {
 	unsigned block_size;
 	unsigned type;
 	unsigned flags;
-
-	struct hal_device *next;
-	struct hal_device *prev;
 } hal_device_t;
 
 int hal_register_device( hal_device_t *device );
 int hal_unregister_device( hal_device_t *device );
-hal_device_t *hal_get_device( hal_device_t *dev, unsigned type );
-hal_device_t *hal_get_device_list( );
+hal_device_t *hal_get_device( unsigned devnum );
+list_head_t *hal_get_device_list( );
 
 void hal_dump_devices( );
+void init_hal( );
 
 #endif

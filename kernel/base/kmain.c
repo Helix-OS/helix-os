@@ -54,6 +54,7 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 
 	create_thread( sometest );
 
+	init_hal( );
 	// Initialize module system
 	init_module_system( elfinfo );
 	load_init_modules((void *)modules );
