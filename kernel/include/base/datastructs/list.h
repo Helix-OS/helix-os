@@ -19,12 +19,20 @@ typedef struct list_head {
 	unsigned flags;
 } list_head_t;
 
+// General purpose list functions
+list_head_t *list_create( int flags );
+list_node_t *list_add_int( list_head_t *list, int val );
+list_node_t *list_add_data( list_head_t *list, void *data );
+list_node_t *list_remove_index( list_head_t *list, int index );
+list_node_t *list_get_index( list_head_t *list, int i );
+
+// List node functions, intended for use by the list datastructure
 list_node_t *list_add_int_node( list_node_t *list, int val );
 list_node_t *list_add_data_node( list_node_t *list, void *data );
 list_node_t *list_remove_node( list_node_t *node );
 
-list_node_t *list_get_index( list_node_t *node, int i );
 unsigned listlen( list_node_t *node );
-void list_free( list_node_t *node );
+void list_free_nodes( list_node_t *node );
+void list_free( list_head_t *list );
 
 #endif

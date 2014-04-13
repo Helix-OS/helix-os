@@ -1,5 +1,70 @@
 #include <base/datastructs/list.h>
 #include <base/mem/alloc.h>
+#include <base/string.h>
+
+list_head_t *list_create( int flags ){
+	list_head_t *ret = 0;
+	ret = kmalloc( sizeof( list_head_t ));
+	memset( ret, 0, sizeof( list_head_t ));
+	ret->flags = flags;
+
+	return ret;
+}
+
+list_node_t *list_add_int( list_head_t *list, int val ){
+	list_node_t *ret;
+
+	ret = list->last = list_add_int_node( list->last, val );
+	if ( !list->base )
+		list->base = list->last;
+	
+	return ret;
+}
+
+list_node_t *list_add_data( list_head_t *list, void *data ){
+	list_node_t *ret;
+
+	ret = list->last = list_add_data_node( list->last, data );
+	if ( !list->base )
+		list->base = list->last;
+	
+	return ret;
+}
+
+list_node_t *list_remove_index( list_head_t *list, int index ){
+	list_node_t *ret = 0,
+		    *move;
+
+	move = list_get_index( list, index );
+	if ( move ){
+		ret = list_remove_node( move );
+	}
+
+	return ret;
+}
+
+list_node_t *list_get_index( list_head_t *list, int i ){
+	list_node_t *ret = list->base,
+		    *move = 0;
+	int n = 0;
+
+	if ( i > 0 )
+		move = list->base;
+	else if ( i < 0 )
+		move = list->last;
+
+	while ( move && n != i ){
+		if ( i > 0 ){
+			n++;
+			ret = move = move->next;
+		} else if ( i < 0 ){
+			n--;
+			ret = move = move->prev;
+		}
+	}
+
+	return ret;
+}
 
 list_node_t *list_add_int_node( list_node_t *list, int val ){
 	list_node_t *ret = 0,
@@ -17,6 +82,7 @@ list_node_t *list_add_int_node( list_node_t *list, int val ){
 		move->next = temp;
 		move->next->prev = move;
 		move->next->next = 0;
+
 	} else {
 		move = temp;
 		move->next = 0;
@@ -71,6 +137,7 @@ list_node_t *list_remove_node( list_node_t *node ){
 	return ret;
 }
 
+
 unsigned listlen( list_node_t *node ){
 	list_node_t *move = node;
 	unsigned i;
@@ -81,25 +148,7 @@ unsigned listlen( list_node_t *node ){
 	return i;
 }
 
-list_node_t *list_get_index( list_node_t *node, int i ){
-	list_node_t *ret = node,
-		    *move = node;
-	int n = 0;
-
-	while ( move && n != i ){
-		if ( i > 0 ){
-			i++;
-			ret = move = move->next;
-		} else if ( i < 0 ){
-			i--;
-			ret = move = move->prev;
-		}
-	}
-
-	return ret;
-}
-
-void list_free( list_node_t *node ){
+void list_free_nodes( list_node_t *node ){
 	list_node_t *move,
 		    *temp;
 
