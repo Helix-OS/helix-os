@@ -25,8 +25,8 @@ enum {
 // Flags passed when doing node lookups
 enum {
 	FILE_LOOKUP_NULL 	= 0,
-	FILE_LOOKUP_LINKS 	= 1, // follow symlinks
-	FILE_LOOKUP_MOUNT 	= 2  // follow mount points
+	FILE_LOOKUP_NOLINKS 	= 1, // don't follow symlinks
+	FILE_LOOKUP_NOMOUNT 	= 2  // don't follow mount points
 };
 
 // File driver flags
@@ -92,6 +92,7 @@ typedef struct file_funcs {
 
 	mkdir_func	mkdir;
 	mknod_func	mknod;
+	mount_func 	mount;
 	link_func	link;
 	unlink_func	unlink;
 	readdir_func	readdir;
@@ -169,7 +170,8 @@ typedef struct dirent {
 } dirent_t;
 
 int file_register_driver( file_driver_t *driver );
-int file_register_mount( file_system_t *fs );
+//int file_register_mount( file_system_t *fs );
+file_mount_t *file_register_mount( file_system_t *fs );
 int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int flags );
 file_driver_t *file_get_driver( char *name );
 int file_lookup( char *path, file_node_t *buf, int flags );

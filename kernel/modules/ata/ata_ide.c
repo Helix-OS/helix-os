@@ -101,11 +101,12 @@ void ata_initialize_ide( ata_device_t *device ){
 			hal_buf = kmalloc( sizeof( hal_device_t ));
 			hal_buf->read = (hal_device_read_block)ata_ide_hal_read;
 			hal_buf->write = ata_ide_hal_write;
-			hal_buf->dev = new_ctrl;
+			hal_buf->dev = new_ctrl->devices + count;
 			hal_buf->block_size = 512;
 			hal_buf->type = HAL_TYPE_STORAGE;
 			hal_buf->flags = HAL_FLAG_NULL;
 
+			kprintf( "[%s] Have hal_buf->dev at 0x%x, new_ctrl at 0x%x\n", __func__, hal_buf->dev, new_ctrl );
 			hal_register_device( hal_buf );
 
 			new_ctrl->devices[count].hal_buf = hal_buf;
@@ -124,6 +125,8 @@ void ata_initialize_ide( ata_device_t *device ){
 	register_interrupt_handler( IRQ9,  ide_irq_handler );
 
 	//ata_ide_read_sectors( new_ctrl, 0, 1, 0, 0, buf );
+	//ata_ide_hal_read( hal_buf, buf, 1, 0 );
+	hal_buf->read( hal_buf, buf, 1, 0 );
 	for ( i = 0; i < 512; i++ )
 		kprintf( "%c", buf[i] );
 
@@ -226,8 +229,10 @@ char ata_ide_pio_access( ide_control_t *ctrl, char direction, uint8_t drive, uns
 char ata_ide_read_sectors( ide_control_t *ctrl, uint8_t drive, uint8_t numsects,
 		uint32_t lba, uint16_t es, uint32_t edi )
 {
-	if ( drive > 3 || ctrl->devices[drive].reserved == 0 )
+	if ( drive > 3 || ctrl->devices[drive].reserved == 0 ){
+		kprintf( "[%s] Don't have drive %d\n", __func__, drive );
 		return 1;
+	}
 
 	if (( lba + numsects > ctrl->devices[drive].size ))
 		return 2;
@@ -334,9 +339,18 @@ int ata_ide_hal_read( hal_device_t *dev, void *buf, unsigned count, unsigned off
 	ide_dev = dev->dev;
 	ctrl = ide_dev->ctrl;
 
-	ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, (unsigned)buf );
+	kprintf( "[%s] Got here, like a boss. ctrl at 0x%x\n", __func__, ctrl );
+	ret = ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, (unsigned)buf );
 
-	ret = count;
+	{
+		char *meh = buf;
+		int i;
+
+		for ( i = 0; i < 512; i++ )
+			kprintf( "%c", meh[i] );
+	}
+
+	//ret = count;
 	return ret;
 }
 

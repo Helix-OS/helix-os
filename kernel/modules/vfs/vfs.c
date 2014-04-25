@@ -36,7 +36,7 @@ int file_register_driver( file_driver_t *driver ){
 	return 0;
 }
 
-int file_register_mount( file_system_t *fs ){
+file_mount_t *file_register_mount( file_system_t *fs ){
 	list_node_t *mounts;
 	file_mount_t *new_mount;
 
@@ -54,7 +54,7 @@ int file_register_mount( file_system_t *fs ){
 
 	leave_protected_var( p_mount_list );
 
-	return 0;
+	return new_mount;
 }
 
 file_driver_t *file_get_driver( char *name ){
@@ -84,8 +84,10 @@ file_node_t *get_global_vfs_root( ){
 int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int flags ){
 	file_driver_t *driver;
 	file_system_t *fs;
-	file_node_t *mount = 0;
-	int ret = 0;
+	file_node_t *mount = 0,
+		    *devnode;
+	int ret = 0,
+	    foo;
 
 	driver = file_get_driver( filesystem );
 
@@ -106,8 +108,14 @@ int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int
 		set_global_vfs_root( fs->root_node );
 
 	} else {
-		; //TODO Look up mount_path node
+		mount = knew( file_node_t );
+		foo = file_lookup_absolute( mount_path, mount, 0 );
 
+		if ( foo >= 0 ){
+			ret = VFS_FUNCTION( mount, mount, fs->root_node, flags );
+		}
+
+		kfree( mount );
 	}
 
 done:
@@ -181,7 +189,15 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 				break;
 			}
 
-			move = current_buf;
+			//if ( current_buf->mount && (flags & FILE_LOOKUP_NOMOUNT) == 0 ){
+			if ( current_buf->mount ){
+				move = current_buf->mount->fs->root_node;
+				kprintf( "[%s] Followed mountpoint\n", __func__ );
+			} else {
+				move = current_buf;
+				kprintf( "[%s] Did not follow a mountpoint\n", __func__ );
+			}
+
 			kprintf( "[%s] have directory name 0x%x:\"%s\", expecting directory: %d\n",
 					__func__, *pathptr, namebuf, expecting_dir );
 
@@ -208,33 +224,13 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 	return ret;
 }
 
-int init( ){
-	kprintf( "[%s] Initializing virtual file system...", provides );
-
-	driver_list = list_add_data_node( driver_list, 0 );
-	mount_list = list_add_data_node( mount_list, 0 );
-
-	p_driver_list = create_protected_var( 1, driver_list );
-	p_mount_list = create_protected_var( 1, mount_list );
-
-	init_ramfs( );
-
-	list_node_t *temp = driver_list;
-	file_driver_t *drv;
-	foreach_in_list( temp ){
-		drv = temp->data;
-		kprintf( "[%s] Have driver \"%s\"\n", provides, drv->name );
-	}
-
-	drv = file_get_driver( "ramfs" );
-	kprintf( "[%s] Have ramfs at 0x%x\n", provides, drv );
-
-	int stuff = file_mount_filesystem( "/", NULL, "ramfs", 0 );
+int test( ){
 	file_node_t *blarg = get_global_vfs_root( );
 	file_info_t *infos;
+	int stuff;
 
-	if ( stuff < 0 || !blarg ){
-		kprintf( "[%s] Could not get set file root...\n", provides );
+	if ( !blarg ){
+		kprintf( "[%s] Could not get file root...\n", provides );
 
 	} else {
 		infos = knew( file_info_t );
@@ -258,12 +254,18 @@ int init( ){
 
 			file_lookup_absolute( "/test", &filebuf, 0 );
 
-			kprintf( "[%s] Directory test has the following entries:\n", provides );
+			kprintf( "[%s] Directory /test has the following entries:\n", provides );
 			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
 				kprintf( "[%s]\t%d:%s\n", provides, dir.inode, dir.name );
 
-			file_lookup_absolute( "/test", &filebuf, 0 );
-			VFS_FUNCTION(( &filebuf ), mkdir, "somedir", 0 );
+			file_lookup_absolute( "/test/somedir", &filebuf, 0 );
+
+			kprintf( "[%s] Directory /test/somedir has the following entries:\n", provides );
+			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
+				kprintf( "[%s]\t%d:%s\n", provides, dir.inode, dir.name );
+
+			file_lookup_absolute( "/test/somedir", &filebuf, 0 );
+			VFS_FUNCTION(( &filebuf ), mkdir, "asdf", 0 );
 
 			kprintf( "[%s] open function returned %d\n", provides,
 					VFS_FUNCTION(( &filebuf ), open, "blarg", FILE_CREATE | FILE_WRITE ));
@@ -271,7 +273,7 @@ int init( ){
 			kprintf( "[%s] open function returned %d\n", provides,
 					VFS_FUNCTION(( &filebuf ), open, "asdf", FILE_CREATE | FILE_WRITE ));
 
-			file_lookup_absolute( "/test/blarg", &filebuf, 0 );
+			file_lookup_absolute( "/test/somedir/blarg", &filebuf, 0 );
 			char *teststr = "Testing this stuff";
 			kprintf( "[%s] write function returned %d\n", provides,
 					VFS_FUNCTION(( &filebuf ), write, teststr, strlen( teststr ), 0 ));
@@ -282,7 +284,7 @@ int init( ){
 
 			kprintf( "[%s] read \"%s\"\n", provides, testbuf );
 
-			file_lookup_absolute( "/test", &filebuf, 0 );
+			file_lookup_absolute( "/test/somedir", &filebuf, 0 );
 
 			kprintf( "[%s] Directory test has the following entries:\n", provides );
 			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
@@ -290,6 +292,58 @@ int init( ){
 		}
 
 		kfree( infos );
+	}
+
+	return 0;
+}
+
+int init( ){
+	kprintf( "[%s] Initializing virtual file system...", provides );
+
+	driver_list = list_add_data_node( driver_list, 0 );
+	mount_list = list_add_data_node( mount_list, 0 );
+
+	p_driver_list = create_protected_var( 1, driver_list );
+	p_mount_list = create_protected_var( 1, mount_list );
+
+	init_ramfs( );
+
+	list_node_t *temp = driver_list;
+	file_driver_t *drv;
+	foreach_in_list( temp ){
+		drv = temp->data;
+		kprintf( "[%s] Have driver \"%s\"\n", provides, drv->name );
+	}
+
+	drv = file_get_driver( "ramfs" );
+	kprintf( "[%s] Have ramfs at 0x%x\n", provides, drv );
+
+	int stuff = file_mount_filesystem( "/", NULL, "ramfs", 0 );
+
+	if ( stuff < 0 ){
+		kprintf( "[%s] Could not set file root...\n", provides );
+	} else {
+		{
+			file_node_t filebuf;
+			dirent_t dir;
+			int foobar;
+
+			file_lookup_absolute( "/test", &filebuf, 0 );
+			VFS_FUNCTION(( &filebuf ), mkdir, "devices", 0 );
+			VFS_FUNCTION(( &filebuf ), mkdir, "somedir", 0 );
+			foobar = file_mount_filesystem( "/test/somedir", NULL, "ramfs", 0 );
+
+			if ( foobar >= 0 ){
+				file_lookup_absolute( "/test/somedir", &filebuf, 0 );
+				VFS_FUNCTION(( &filebuf ), mkdir, "wut", 0 );
+
+			} else {
+				kprintf( "[%s] Could not mount filesystem on /test/somedir\n" );
+			}
+
+		}
+
+		test( );
 	}
 
 	return 0;

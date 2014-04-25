@@ -17,13 +17,11 @@ static int ramfs_write_node( struct file_node *node, void *buffer, unsigned long
 
 static int ramfs_readdir_node( struct file_node *node, struct dirent *dirp, int entry );
 static int ramfs_mkdir_node( struct file_node *node, char *name, int flags );
-static int ramfs_mount_node( struct file_node *node, struct file_node *mount, int flags );
 
 // Internal functions for use by ramfs
 static int ramfs_get_node( ramfs_head_t *head, file_node_t *buf, int inode );
 static int ramfs_get_internal_node( ramfs_head_t *head, ramfs_node_t **buf, int inode );
 static ramfs_node_t *ramfs_add_node( ramfs_head_t *head, ramfs_node_t *dir, char *name );
-
 
 static file_funcs_t ramfs_functions = {
 	.get_info 	= ramfs_node_get_info,
@@ -40,14 +38,14 @@ static file_funcs_t ramfs_functions = {
 
 	.readdir 	= ramfs_readdir_node,
 	.mkdir 		= ramfs_mkdir_node,
-	.mount 		= ramfs_mount_node,
 };
 
 file_system_t *create_ramfs( struct file_driver *driver,
 		struct file_system *unused, char *path, unsigned flags )
 {
 	ramfs_head_t *new_ramfs;
-	ramfs_node_t *root_node; //, *test_node;
+	ramfs_node_t *root_node,
+		     *test_node;
 	file_system_t *ret;
 	file_node_t *fs_root;
 
@@ -103,7 +101,7 @@ static int ramfs_get_node( ramfs_head_t *head, file_node_t *buf, int inode ){
 		buf->inode = temp->info.inode;
 		buf->flags = 0;
 		buf->references = 0;
-		buf->mount = temp->mount;
+		buf->mount = 0;
 		buf->fs = head->fs;
 
 		ret = 0;
@@ -263,17 +261,12 @@ static int ramfs_write_node( struct file_node *node, void *buffer,
 	ret = ramfs_get_internal_node( node->fs->devstruct, &rnode, node->inode );
 
 	if ( ret == 0 ){
-		if ( rnode->info.type != FILE_TYPE_DIR ){
-			int place;
+		int place;
 
-			for ( place = 0; place < length; place++ )
-				dstring_set_char( rnode->data, offset + place, foo[place] );
+		for ( place = 0; place < length; place++ )
+			dstring_set_char( rnode->data, offset + place, foo[place] );
 
-			ret = place;
-
-		} else {
-			ret = -ERROR_IS_DIRECTORY;
-		}
+		ret = place;
 	}
 
 	return ret;
@@ -316,23 +309,19 @@ static int ramfs_readdir_node( struct file_node *node, struct dirent *dirp, int 
 	foo = ramfs_get_internal_node( node->fs->devstruct, &rnode, node->inode );
 
 	if ( foo >= 0 ){
-		if ( rnode->info.type == FILE_TYPE_DIR ){
-			dlist = rnode->data;
-			dirbuf = dlist_get( dlist, entry );
+		dlist = rnode->data;
+		dirbuf = dlist_get( dlist, entry );
 
-			if ( dirbuf ){
-				strncpy( dirp->name, dirbuf->name, 256 );
-				dirp->inode = dirbuf->inode;
-				dirp->offset = entry;
-				dirp->length = sizeof( dirent_t );
+		if ( dirbuf ){
+			strncpy( dirp->name, dirbuf->name, 256 );
+			dirp->inode = dirbuf->inode;
+			dirp->offset = entry;
+			dirp->length = sizeof( dirent_t );
 
-				ret = 1;
+			ret = 1;
 
-			} else {
-				ret = 0;
-			}
 		} else {
-			ret = -ERROR_NOT_DIRECTORY;
+			ret = 0;
 		}
 	}
 
@@ -360,20 +349,6 @@ static int ramfs_mkdir_node( struct file_node *node, char *name, int flags ){
 
 	} else {
 		ret = -ERROR_NOT_DIRECTORY;
-	}
-
-	return ret;
-}
-
-static int ramfs_mount_node( struct file_node *node, struct file_node *mount, int flags ){
-	int ret = 0;
-	ramfs_node_t *rfsbuf;
-
-	if ( node && mount ){
-		ramfs_get_internal_node( node->fs->devstruct, &rfsbuf, node->inode );
-		rfsbuf->mount = file_register_mount( mount->fs );
-	} else {
-		ret = -ERROR_INVALID_ARGUMENT;
 	}
 
 	return ret;

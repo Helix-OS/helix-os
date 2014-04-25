@@ -37,8 +37,11 @@ hal_device_t *hal_get_device( unsigned devnum ){
 	list_node_t *devnode;
 
 	device_list = access_protected_var( p_hal_device_list );
+
 	devnode = list_get_index( device_list, devnum );
-	ret = devnode->data;
+	if ( devnode )
+		ret = devnode->data;
+
 	leave_protected_var( p_hal_device_list );
 
 	return ret;
