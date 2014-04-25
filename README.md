@@ -7,13 +7,16 @@ The end goal is to be a versatile kernel which is easily modifiable by a program
 It currently supports:
 
 - Module loading and linking
-- PCI and IDE disks
 - Kernel multithreading
+- VFS with multiple file systems
+- PCI devices 
+- IDE disks
+- VGA text mode
 
 Next steps:
 
 - VGA framebuffer
-- VFS and FAT32 driver (And eventually an ext2 driver)
+- FAT32 driver (And eventually an ext2 driver)
 - Start working on the userland
 - TCP/IP stack
 
