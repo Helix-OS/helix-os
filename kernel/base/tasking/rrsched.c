@@ -52,6 +52,7 @@ void rrschedule_call( void ){
 	eip = move->eip;
 	esp = move->esp;
 	ebp = move->ebp;
+	set_kernel_stack( move->stack );
 
 	unblock_tasks( );
 	asm volatile( "\

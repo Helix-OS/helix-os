@@ -32,7 +32,7 @@ void *kmalloc_early( int size, int align ){
 mheap_t *init_heap( mheap_t *heap, unsigned *p_dir, unsigned start, unsigned size ){
 	memset( heap, 0, sizeof( mheap_t ));
 
-	map_pages( p_dir, start, start + size, PAGE_WRITEABLE | PAGE_PRESENT );
+	map_pages( p_dir, start, start + size, PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
 	flush_tlb( );
 	heap->blocks = (mblock_t *)start;
 	heap->first_free = heap->blocks;

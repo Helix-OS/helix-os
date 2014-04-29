@@ -7,9 +7,11 @@
 #include <base/kstd.h>
 #include <base/elf.h>
 #include <base/hal.h>
+#include <base/syscalls.h>
 
 #include <base/arch/i386/pitimer.h>
 #include <base/tasking/task.h>
+#include <base/tasking/userspace.h>
 
 extern unsigned int *kernel_dir;
 extern mheap_t *kheap;
@@ -21,6 +23,13 @@ void sometest( ){
 		kprintf( "%d... ", counter++ );
 		usleep( 1000 );
 	}
+}
+
+void userspace_test( ){
+	switch_to_usermode( );
+	syscall_syscall_test( );
+
+	while( 1 );
 }
 
 void kmain( multiboot_header_t *mboot, int blarg, int magic ){
@@ -49,6 +58,7 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	init_heap( kheap, kernel_dir, 0xd0000000, PAGE_SIZE * 8 );
 
 	asm volatile( "sti" );
+	init_syscalls( );
 	init_pitimer( 100 );
 	init_tasking( );
 
@@ -63,5 +73,8 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	dump_aheap_blocks( kheap );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );
+
+	create_thread( userspace_test );
+	
 	while( 1 ) asm volatile( "hlt" );
 }
