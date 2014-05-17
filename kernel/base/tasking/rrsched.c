@@ -7,7 +7,9 @@ void rrschedule_call( void ){
 	if ( is_task_blocked( ))
 		return;
 
+	//asm volatile( "sti" );
 	block_tasks( );
+
 	unsigned long volatile 	esp = 0,
 			      	eip = 0,
 			      	ebp = 0,
@@ -37,6 +39,7 @@ void rrschedule_call( void ){
 	current->eip = eip;
 	current->esp = esp;
 	current->ebp = ebp;
+	current->pagedir = get_current_page_dir( );
 
 	next_node = current_node;
 	do {
@@ -52,9 +55,16 @@ void rrschedule_call( void ){
 	eip = move->eip;
 	esp = move->esp;
 	ebp = move->ebp;
-	set_kernel_stack( move->stack );
 
+	if ( move->pagedir != get_current_page_dir( )){
+		kprintf( "[%s] Setting new page dir 0x%x\n", __func__, move->pagedir );
+		set_page_dir( move->pagedir );
+	}
+	//set_kernel_stack( move->stack );
+
+	//asm volatile( "cli" );
 	unblock_tasks( );
+
 	asm volatile( "\
 		cli;           \
 		mov %0, %%esi; \

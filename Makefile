@@ -47,7 +47,7 @@ image:
 	@echo -e "[\033[0;32mMaking image\033[0;0m]"
 	@# The order of the files in kernel/modules is important, the modules
 	@# are loaded in this order
-	@tools/mkinitrd ./initrd.img kernel/modobjs/{vfs,pci,ata,vga,devfs,dummy}_mod.o
+	@tools/mkinitrd ./initrd.img kernel/modobjs/{pci,ata,vga,devfs,dummy}_mod.o
 	@./tools/mk_image.sh
 	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
 	@echo -e "[\033[0;32mdone\033[0;0m]"

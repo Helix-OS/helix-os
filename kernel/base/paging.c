@@ -148,6 +148,10 @@ unsigned get_free_page( ){
 	return ret;
 }
 
+page_dir_t *get_current_page_dir( ){
+	return current_dir;
+}
+
 void set_page_dir( unsigned *dir ){
 	unsigned	address = 0,
 			cr0;
@@ -161,12 +165,27 @@ void set_page_dir( unsigned *dir ){
 		kprintf( "Got bad address [panic here]\n" );
 	}
 
+	address = address | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT;
 	kprintf( "Setting page dir to 0x%x... ", address );
 
 	current_dir = dir;
 	asm volatile( "mov %0, %%cr3":: "r"( address ));
 	asm volatile( "mov %%cr0, %0": "=r"( cr0 ));
 	asm volatile( "mov %0, %%cr0":: "r"( cr0 | 0x80000000 ));
+}
+
+unsigned *clone_page_dir( unsigned *dir ){
+	unsigned *ret;
+	unsigned i;
+
+	ret = kmalloca( PAGE_SIZE );
+	kprintf( "[%s] allocated new page dir at 0x%x, physical location 0x%x\n", __func__, ret,
+			get_page( current_dir, (unsigned)ret ));
+
+	for( i = 0; i < PAGE_SIZE / 4; i++ )
+		ret[i] = dir[i];
+
+	return ret;
 }
 
 void flush_tlb( ){

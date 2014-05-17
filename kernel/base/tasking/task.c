@@ -25,6 +25,7 @@ void init_tasking( void ){
 	memset( root_task, 0, sizeof( task_t ));
 
 	current_task = task_list = list_add_data_node( task_list, root_task );
+	root_task->pagedir = get_current_page_dir( );
 	tasking_initialized = 1;
 
 	register_pitimer_call( rrschedule_call );
@@ -34,18 +35,60 @@ void init_tasking( void ){
 int create_thread( void (*start)( )){
 	task_t *new_task = 0;
 
+	block_tasks( );
+
 	new_task = kmalloc( sizeof( task_t ));
 	memset( new_task, 0, sizeof( task_t ));
 
 	new_task->pid = ++pidcount;
-	new_task->eip = (unsigned long)start;
+	new_task->group = get_current_task( )->group;
+	new_task->state = TASK_STATE_RUNNING;
+
+	new_task->pagedir = get_current_page_dir( );
 	new_task->stack = (unsigned long)(kmalloc( 0x800 ));
+	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = 0;
-	new_task->state = TASK_STATE_RUNNING;
 	add_task( new_task );
 
+	unblock_tasks( );
+
 	return new_task->pid;
+}
+
+int create_process( void (*start)( ), char *argv[], char *envp[] ){
+	task_t *new_task;
+
+	block_tasks( );
+
+	new_task = kmalloc( sizeof( task_t ));
+	memset( new_task, 0, sizeof( task_t ));
+
+	new_task->pid = ++pidcount;
+	new_task->group = new_task->pid;
+	new_task->state = TASK_STATE_RUNNING;
+
+	new_task->stack = (unsigned long)(kmalloc( 0x800 ));
+	new_task->eip = (unsigned long)start;
+	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
+	new_task->ebp = 0;
+	add_task( new_task );
+
+	new_task->pagedir = clone_page_dir( get_current_page_dir( ));
+
+	unblock_tasks( );
+
+	return new_task->pid;
+}
+
+void exit_thread( ){
+	int pid = get_current_pid( );
+
+	if ( pid ){ // Don't remove task if it's the main kernel thread
+		remove_task_by_pid( pid );
+	}
+
+	rrschedule_call( );
 }
 
 unsigned long get_current_pid( ){
@@ -133,6 +176,7 @@ int remove_task_by_pid( int pid ){
 
 	kfree( task );
 	unblock_tasks( );
+	rrschedule_call( );
 
 	return 0;
 }

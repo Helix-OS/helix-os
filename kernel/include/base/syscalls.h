@@ -43,9 +43,15 @@ int syscall_##fn(P1 p1, P2 p2, P3 p3, P4 p4){ \
 	return a; \
 }
 
-DECL_SYSCALL0( syscall_test );
+typedef enum {
+	SYSCALL_TEST,
+	SYSCALL_EXIT_THREAD,
+} syscall_t;
 
-int syscall_test( );
+DECL_SYSCALL0( test );
+
+int syscall_tester( );
 void init_syscalls( );
+void register_syscall( syscall_t n, void *call );
 
 #endif

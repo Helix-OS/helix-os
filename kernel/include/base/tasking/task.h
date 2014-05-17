@@ -1,11 +1,12 @@
 #ifndef _helix_tasking_h
 #define _helix_tasking_h
 
-#include <base/arch/i386/pitimer.h> /* TODO: remove this, implement generic timer */
 #include <base/datastructs/list.h>
 #include <base/logger.h>
 #include <base/string.h>
 #include <base/tasking/semaphore.h>
+#include <base/arch/i386/pitimer.h> /* TODO: remove this, implement generic timer */
+#include <base/arch/i386/paging.h> 
 
 enum {
 	TASK_STATE_RUNNING,
@@ -20,12 +21,15 @@ typedef struct task {
 				ebp;
 
 	unsigned long 		pid;
-	unsigned long 		tid;
+	unsigned long 		group; /* Process group, possibly switch with 'pid' and rename
+					  current uses of 'pid' to use 'tid' (thread id) */
 	unsigned long 		sleep;
 	unsigned long 		stack;
 
-	unsigned long 		*pagedir;
+	page_dir_t 		*pagedir;
 	semaphore_t 	 	*sem;
+
+	int 			*waiting;
 } task_t;
 
 extern unsigned long get_instruct_ptr( );
@@ -36,8 +40,9 @@ void block_tasks( );
 void unblock_tasks( );
 void usleep( unsigned long useconds );
 
-task_t *add_task( task_t *new_task );
 int create_thread( void (*start)( ));
+void exit_thread( );
+task_t *add_task( task_t *new_task );
 task_t *init_task( task_t *buffer );
 int remove_task_by_pid( int pid );
 

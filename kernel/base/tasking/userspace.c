@@ -1,6 +1,8 @@
 #include <base/tasking/task.h>
 
 void switch_to_usermode( void ){
+	set_kernel_stack( get_current_task( )->stack );
+
 	asm volatile(	" 			\
 			cli;			\
 			mov $0x23, %ax; 	\

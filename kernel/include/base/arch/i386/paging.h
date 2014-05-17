@@ -7,6 +7,8 @@
 #define PAGE_PRESENT	1
 #define PAGE_SIZE	0x1000
 
+typedef unsigned page_dir_t;
+
 int map_page(	unsigned *dir, unsigned vaddress );
 int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress );
 int map_pages(	unsigned *dir, unsigned start, unsigned end, unsigned permissions );
@@ -16,7 +18,8 @@ unsigned get_page( unsigned *dir, unsigned vaddress );
 
 void set_page_dir( unsigned *dir );
 void flush_tlb( );
-unsigned *get_current_page_dir( );
+unsigned *clone_page_dir( unsigned *dir );
+page_dir_t *get_current_page_dir( );
 
 int init_paging( unsigned max_mem );
 void page_fault_handler( registers_t *regs );

@@ -19,15 +19,20 @@ extern unsigned int early_placement;
 
 void sometest( ){
 	int counter = 0;
-	while( 1 ){
+	extern unsigned *current_dir;
+	set_page_dir( clone_page_dir( current_dir ));
+	while( counter < 10 ){
 		kprintf( "%d... ", counter++ );
 		usleep( 1000 );
 	}
+
+	exit_thread( );
+	//while( 1 );
 }
 
 void userspace_test( ){
-	switch_to_usermode( );
-	syscall_syscall_test( );
+	//switch_to_usermode( );
+	syscall_test( );
 
 	while( 1 );
 }
@@ -65,16 +70,22 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	create_thread( sometest );
 
 	init_hal( );
+	init_vfs( );
 	// Initialize module system
 	init_module_system( elfinfo );
 	load_init_modules((void *)modules );
+
+	/*
+	extern unsigned *current_dir;
+	set_page_dir( clone_page_dir( current_dir ));
+	*/
 
 	hal_dump_devices( );
 	dump_aheap_blocks( kheap );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );
-
+	asm volatile( "int $0x30" );
 	create_thread( userspace_test );
-	
+
 	while( 1 ) asm volatile( "hlt" );
 }

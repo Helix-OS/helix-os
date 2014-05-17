@@ -10,16 +10,22 @@ static void *syscall_table[CHANGEME_MAX_SYSCALLS] = {
 	0,
 };
 
-DEFN_SYSCALL0( syscall_test, 0 );
+DEFN_SYSCALL0( test, 0 );
 
 void init_syscalls( ){
+	register_syscall( SYSCALL_TEST, syscall_tester );
 	register_interrupt_handler( 0x50, syscall_handler );
 }
 
-int syscall_test( ){
+int syscall_tester( ){
 	kprintf( "[%s] Aw yus, syscalls be workin'\n", __func__ );
 
 	return 0;
+}
+
+void register_syscall( syscall_t n, void *call ){
+	if ( n < CHANGEME_MAX_SYSCALLS )
+		syscall_table[n] = call;
 }
 
 static void syscall_handler( registers_t *regs ){
