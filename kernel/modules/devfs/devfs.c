@@ -3,7 +3,7 @@
 #include <base/string.h>
 #include <base/hal.h>
 
-char *depends[] = { "base", "vfs", 0 };
+char *depends[] = { "base", 0 };
 char *provides = "devfs";
 
 static int devfs_get_info_node( struct file_node *node, struct file_info *buf );

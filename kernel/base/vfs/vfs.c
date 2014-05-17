@@ -6,7 +6,9 @@
 #include <base/logger.h>
 #include <base/string.h>
 
+/*
 char *depends[] = { "base", 0 };
+*/
 char *provides = "vfs";
 
 static list_node_t *driver_list = 0;
@@ -297,7 +299,8 @@ int test( ){
 	return 0;
 }
 
-int init( ){
+//int init( ){
+int init_vfs( ){
 	kprintf( "[%s] Initializing virtual file system...", provides );
 
 	driver_list = list_add_data_node( driver_list, 0 );
@@ -349,7 +352,9 @@ int init( ){
 	return 0;
 }
 
+/*
 void remove( ){
 	kprintf( "[%s] Mkkay, I'm out.\n", provides ); 
 
 }
+*/
