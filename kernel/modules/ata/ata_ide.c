@@ -45,6 +45,8 @@ void ata_initialize_ide( ata_device_t *device ){
 			     status = 0;
 			int k;
 
+			count = i * 2 + j;
+
 			new_ctrl->devices[count].reserved = 0;
 
 			ide_reg_write( new_ctrl, i, ATA_REG_HD_DEV_SELECT, 0xa0 | ( j << 4 ));
@@ -53,8 +55,10 @@ void ata_initialize_ide( ata_device_t *device ){
 			ide_reg_write( new_ctrl, i, ATA_REG_COMMAND, ATA_CMD_IDENT );
 			usleep( 400 );
 			
-			if ( ide_reg_read( new_ctrl, i, ATA_REG_STATUS ) == 0 )
+			if ( ide_reg_read( new_ctrl, i, ATA_REG_STATUS ) == 0 ){
+				//count++;
 				continue;
+			}
 
 			while ( 1 ){
 				status = ide_reg_read( new_ctrl, i, ATA_REG_STATUS );
@@ -70,6 +74,7 @@ void ata_initialize_ide( ata_device_t *device ){
 
 			if ( error ){
 				// ATAPI detection to be added later
+				//count++;
 				continue;
 			}
 
@@ -101,7 +106,8 @@ void ata_initialize_ide( ata_device_t *device ){
 			hal_buf = kmalloc( sizeof( hal_device_t ));
 			hal_buf->read = (hal_device_read_block)ata_ide_hal_read;
 			hal_buf->write = ata_ide_hal_write;
-			hal_buf->dev = new_ctrl->devices + count;
+			//hal_buf->dev = new_ctrl->devices + count;
+			hal_buf->dev = &new_ctrl->devices[count];
 			hal_buf->block_size = 512;
 			hal_buf->type = HAL_TYPE_STORAGE;
 			hal_buf->flags = HAL_FLAG_NULL;
@@ -132,8 +138,8 @@ void ata_initialize_ide( ata_device_t *device ){
 
 	// Beware, there's heap corruption going on somewhere, can't pinpoint exactly where
 	// Adding this memset seemed to "fix" it, TODO: actually fix this
-	memset( buf, 0, 2048 );
-	kfree( buf );
+	//memset( buf, 0, 2048 );
+	//kfree( buf );
 }
 
 void ide_wait_irq( ){
@@ -151,7 +157,8 @@ char ata_ide_pio_access( ide_control_t *ctrl, char direction, uint8_t drive, uns
 {
 	uint32_t channel = ctrl->devices[drive].channel,
 		 slavebit = ctrl->devices[drive].drive,
-		 bus = ctrl->channels[drive].base,
+		 //bus = ctrl->channels[drive].base,
+		 bus = ctrl->channels[channel].base,
 		 words = 256;
 	uint16_t i;
 	uint8_t cmd, mode = 1,
@@ -229,6 +236,7 @@ char ata_ide_pio_access( ide_control_t *ctrl, char direction, uint8_t drive, uns
 char ata_ide_read_sectors( ide_control_t *ctrl, uint8_t drive, uint8_t numsects,
 		uint32_t lba, uint16_t es, uint32_t edi )
 {
+	kprintf( "[%s] Have ctrl at 0x%x\n", __func__, ctrl );
 	if ( drive > 3 || ctrl->devices[drive].reserved == 0 ){
 		kprintf( "[%s] Don't have drive %d\n", __func__, drive );
 		return 1;
@@ -332,6 +340,7 @@ int ata_ide_hal_read( hal_device_t *dev, void *buf, unsigned count, unsigned off
 	ide_device_t *ide_dev;
 	ide_control_t *ctrl;
 	int ret = 0;
+	int drive;
 
 	if ( !dev )
 		return 0;
@@ -339,8 +348,12 @@ int ata_ide_hal_read( hal_device_t *dev, void *buf, unsigned count, unsigned off
 	ide_dev = dev->dev;
 	ctrl = ide_dev->ctrl;
 
-	kprintf( "[%s] Got here, like a boss. ctrl at 0x%x\n", __func__, ctrl );
-	ret = ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, (unsigned)buf );
+	drive = ide_dev->drive + ide_dev->channel * 2;
+
+	kprintf( "[%s] Got here, like a boss. reading drive %d, ctrl at 0x%x\n", __func__, drive, ctrl );
+	//ret = ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, buf );
+	ret = ata_ide_read_sectors( ctrl, drive, count, offset, 0, buf );
+	//ret = ata_ide_read_sectors( ctrl, 0, 1, 0, 0, buf );
 
 	{
 		char *meh = buf;
