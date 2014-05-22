@@ -334,6 +334,7 @@ int init_vfs( ){
 			file_lookup_absolute( "/test", &filebuf, 0 );
 			VFS_FUNCTION(( &filebuf ), mkdir, "devices", 0 );
 			VFS_FUNCTION(( &filebuf ), mkdir, "somedir", 0 );
+			VFS_FUNCTION(( &filebuf ), mkdir, "fatdir", 0 );
 			foobar = file_mount_filesystem( "/test/somedir", NULL, "ramfs", 0 );
 
 			if ( foobar >= 0 ){

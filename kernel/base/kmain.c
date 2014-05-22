@@ -8,6 +8,7 @@
 #include <base/elf.h>
 #include <base/hal.h>
 #include <base/syscalls.h>
+#include <vfs/vfs.h> // TODO: Move this to the base tree
 
 #include <base/arch/i386/pitimer.h>
 #include <base/tasking/task.h>
@@ -27,11 +28,9 @@ void sometest( ){
 	}
 
 	exit_thread( );
-	//while( 1 );
 }
 
 void userspace_test( ){
-	//switch_to_usermode( );
 	syscall_test( );
 
 	while( 1 );
@@ -71,14 +70,10 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 
 	init_hal( );
 	init_vfs( );
+
 	// Initialize module system
 	init_module_system( elfinfo );
 	load_init_modules((void *)modules );
-
-	/*
-	extern unsigned *current_dir;
-	set_page_dir( clone_page_dir( current_dir ));
-	*/
 
 	hal_dump_devices( );
 	dump_aheap_blocks( kheap );

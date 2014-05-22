@@ -118,8 +118,8 @@ typedef struct file_driver {
 	unsigned 	references;
 	unsigned 	flags;
 
-	void 		*driver;
-	char 		*name;
+	void 		*driver; // Reserved for private use by the driver
+	char 		*name; 
 
 	file_create_fs 	create;
 	file_remove_fs 	remove;
