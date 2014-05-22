@@ -45,7 +45,7 @@ void ata_initialize_ide( ata_device_t *device ){
 			     status = 0;
 			int k;
 
-			count = i * 2 + j;
+			//count = i * 2 + j;
 
 			new_ctrl->devices[count].reserved = 0;
 
@@ -74,7 +74,7 @@ void ata_initialize_ide( ata_device_t *device ){
 
 			if ( error ){
 				// ATAPI detection to be added later
-				//count++;
+				count++;
 				continue;
 			}
 
@@ -132,14 +132,16 @@ void ata_initialize_ide( ata_device_t *device ){
 
 	//ata_ide_read_sectors( new_ctrl, 0, 1, 0, 0, buf );
 	//ata_ide_hal_read( hal_buf, buf, 1, 0 );
+	/*
 	hal_buf->read( hal_buf, buf, 1, 0 );
 	for ( i = 0; i < 512; i++ )
 		kprintf( "%c", buf[i] );
+		*/
 
 	// Beware, there's heap corruption going on somewhere, can't pinpoint exactly where
 	// Adding this memset seemed to "fix" it, TODO: actually fix this
-	//memset( buf, 0, 2048 );
-	//kfree( buf );
+	memset( buf, 0, 2048 );
+	kfree( buf );
 }
 
 void ide_wait_irq( ){
@@ -352,9 +354,10 @@ int ata_ide_hal_read( hal_device_t *dev, void *buf, unsigned count, unsigned off
 
 	kprintf( "[%s] Got here, like a boss. reading drive %d, ctrl at 0x%x\n", __func__, drive, ctrl );
 	//ret = ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, buf );
-	ret = ata_ide_read_sectors( ctrl, drive, count, offset, 0, buf );
+	ret = ata_ide_read_sectors( ctrl, drive, count, offset, 0, (unsigned)buf );
 	//ret = ata_ide_read_sectors( ctrl, 0, 1, 0, 0, buf );
 
+	/*
 	{
 		char *meh = buf;
 		int i;
@@ -362,6 +365,7 @@ int ata_ide_hal_read( hal_device_t *dev, void *buf, unsigned count, unsigned off
 		for ( i = 0; i < 512; i++ )
 			kprintf( "%c", meh[i] );
 	}
+	*/
 
 	//ret = count;
 	return ret;

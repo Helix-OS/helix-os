@@ -65,7 +65,6 @@ static int devfs_get_info_node( struct file_node *node, struct file_info *buf ){
 }
 
 static int devfs_lookup_node( struct file_node *node, struct file_node *buf, char *name, int flags ){
-	hal_device_t *devbuf;
 	dirent_t *dirbuf;
 	int ret = -ERROR_NOT_FOUND,
 	    i;
@@ -118,37 +117,38 @@ static int devfs_read_node( struct file_node *node, void *buffer,
 		unsigned long length, unsigned long offset )
 {
 	int ret = -ERROR_INVALID_PATH;
-	char *out = buffer;
 	hal_device_t *devbuf;
 
 	devbuf = hal_get_device( node->inode - 128 );
 
 	if ( devbuf ){
-		unsigned i;
-		char *readbuf = knew( char[ devbuf->block_size ]);
+		if ( devbuf->read ){
+			kprintf( "[%s] Got here, devbuf: 0x%x, dev: 0x%x, read: 0x%x\n", __func__, devbuf, devbuf->dev, devbuf->read );
+			// TODO: Properly handle reads not align on devbuf->block_size
+			ret = devbuf->read( devbuf, buffer, length / devbuf->block_size, offset / devbuf->block_size );
 
-		//ret = devbuf->read( devbuf, buffer, length / devbuf->block_size, offset / devbuf->block_size );
-		ret = devbuf->read( devbuf, buffer, 1, 0 );
-		kprintf( "[%s] Got here, 0x%x\n", __func__, devbuf->dev );
-
-		kfree( readbuf );
-		//ret = i;
+		} else {
+			ret = -ERROR_NO_FUNC;
+		}
 	}
 
 	return ret;
 }
 
 int test( ){
-	dirent_t testdir;
 	file_node_t fnode;
 	int ret = 0;
+	/*
+	dirent_t testdir;
 	int i;
 
 	char *blargbuf = knew( char[512] );
+	*/
 
 	file_mount_filesystem( "/test/devices", NULL, "devfs", 0 );
 	file_lookup_absolute( "/test/devices", &fnode, 0 );
 	
+	/*
 	for ( i = 0; VFS_FUNCTION(( &fnode ), readdir, &testdir, i ); i++ )
 		kprintf( "[devfs.test] Have device file \"%s\" with inode %d\n", testdir.name, testdir.inode );
 
@@ -164,6 +164,7 @@ int test( ){
 
 	kprintf( "\n" );
 	kfree( blargbuf );
+	*/
 
 	return ret;
 }
