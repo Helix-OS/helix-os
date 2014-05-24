@@ -12,13 +12,14 @@ It currently supports:
 - PCI devices 
 - IDE disks
 - VGA text mode
+- FAT12 filesystem
 
 Next steps:
 
-- VGA framebuffer
-- FAT32 driver (And eventually an ext2 driver)
 - Start working on the userland
+- VGA framebuffer
 - TCP/IP stack
+- More filesystem drivers, e.g. EXT2
 
 After that:
 
