@@ -25,8 +25,10 @@ list_node_t *list_add_int( list_head_t *list, int val );
 list_node_t *list_add_data( list_head_t *list, void *data );
 list_node_t *list_remove_index( list_head_t *list, int index );
 list_node_t *list_get_index( list_head_t *list, int i );
+list_node_t *list_get_val( list_head_t *list, int val );
 
 // List node functions, intended for use by the list datastructure
+list_node_t *list_add_node( list_node_t *list, int val, void *data );
 list_node_t *list_add_int_node( list_node_t *list, int val );
 list_node_t *list_add_data_node( list_node_t *list, void *data );
 list_node_t *list_remove_node( list_node_t *node );

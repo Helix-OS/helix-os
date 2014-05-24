@@ -66,14 +66,29 @@ list_node_t *list_get_index( list_head_t *list, int i ){
 	return ret;
 }
 
-list_node_t *list_add_int_node( list_node_t *list, int val ){
+list_node_t *list_get_val( list_head_t *list, int val ){
+	list_node_t *ret = 0,
+		    *move;
+
+	move = list->base;
+	foreach_in_list( move ){
+		if ( move->val == val ){
+			ret = move;
+			break;
+		}
+	}
+
+	return ret;
+}
+
+list_node_t *list_add_node( list_node_t *list, int val, void *data ){
 	list_node_t *ret = 0,
 		    *temp,
 		    *move;
 
 	temp = kmalloc( sizeof( list_node_t ));
 	temp->val = val;
-	temp->data = 0;
+	temp->data = data;
 	ret = temp;
 
 	if ( list ){
@@ -92,29 +107,12 @@ list_node_t *list_add_int_node( list_node_t *list, int val ){
 	return ret;
 }
 
+list_node_t *list_add_int_node( list_node_t *list, int val ){
+	return list_add_node( list, val, 0 );
+}
+
 list_node_t *list_add_data_node( list_node_t *list, void *data ){
-	list_node_t *ret = 0,
-		    *temp,
-		    *move;
-
-	temp = kmalloc( sizeof( list_node_t ));
-	temp->val = 0;
-	temp->data = data;
-	ret = temp;
-
-	if ( list ){
-		for ( move = list; move->next; move = move->next );
-
-		move->next = temp;
-		move->next->prev = move;
-		move->next->next = 0;
-	} else {
-		move = temp;
-		move->next = 0;
-		move->prev = 0;
-	}
-
-	return ret;
+	return list_add_node( list, 0, data );
 }
 
 list_node_t *list_remove_node( list_node_t *node ){
