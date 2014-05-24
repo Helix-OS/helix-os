@@ -9,7 +9,7 @@ char *provides = "fatfs";
 static void dump_root_entries( fatfs_device_t *dev );
 
 static file_funcs_t fatfs_functions = {
-	.lookup = 0,
+	.lookup = fatfs_vfs_lookup,
 };
 
 struct file_system *fatfs_create( struct file_driver *device, struct file_system *unused,
@@ -19,6 +19,7 @@ struct file_system *fatfs_create( struct file_driver *device, struct file_system
 	fatfs_device_t *dev;
 	file_node_t *root;
 	unsigned first_data_sector;
+	fatfs_dirent_t *root_dir;
 
 	ret = knew( file_system_t );
 	dev = ret->devstruct = knew( fatfs_device_t );
@@ -28,14 +29,22 @@ struct file_system *fatfs_create( struct file_driver *device, struct file_system
 		ret->root_node = root = knew( file_node_t );
 		ret->functions = &fatfs_functions;
 		dev->bpb = knew( uint8_t[512] );
+		root_dir = knew( fatfs_dirent_t );
 
 		VFS_FUNCTION(( &dev->device_node ), read, dev->bpb, 512, 0 );
 
-		dev->type = fatfs_get_type( dev->bpb );
-		root->fs = ret;
 		first_data_sector = dev->bpb->reserved_sects + dev->bpb->fats * dev->bpb->sects_per_fat;
+
+		dev->type = fatfs_get_type( dev->bpb );
+		dev->inode_map = hashmap_create( 32 );
+
+		root->fs = ret;
 		root->inode = first_data_sector;
 		root->references = 1;
+
+		root_dir->attributes = FAT_ATTR_DIRECTORY;
+		root_dir->cluster_low = 2;
+		hashmap_add( dev->inode_map, first_data_sector, root_dir );
 
 		kprintf( "[%s] FAT%d fs \"%s\" has %d bytes per sector, %d sectors per cluster,"
 				"%d reserved sectors\n", __func__, dev->type,
@@ -78,25 +87,19 @@ static void dump_root_entries( fatfs_device_t *dev ){
 			continue;
 
 		if ( dirbuf[i].attributes == FAT_ATTR_LONGNAME ){
-			int j, index;
+			longentbuf = (void *)(dirbuf + i);
+			fatfs_apply_longname( longentbuf, namebuf, 256 );
 			has_longname = 1;
 
-			longentbuf = (void *)(dirbuf + i);
-
 			kprintf( "[%s] Have long name entry at %d, name index %d\n", __func__,
-					i, longentbuf->name_index  );
-
-			index = longentbuf->name_index - 'A';
-
-			for ( j = 0; j < 5; j++ ) namebuf[ index * 13 + j      ] = (char)longentbuf->name_first[j];
-			for ( j = 0; j < 6; j++ ) namebuf[ index * 13 + 5  + j ] = (char)longentbuf->name_second[j];
-			for ( j = 0; j < 2; j++ ) namebuf[ index * 13 + 11 + j ] = (char)longentbuf->name_third[j];
+					i, longentbuf->name_index );
 
 		} else {
 			char *fname = has_longname? namebuf : (char *)dirbuf[i].name;
-			kprintf( "[%s] Have regular entry \"%s\" at %d with attributes %x, cluster at %d, size = %d bytes, at sector %d\n",
+			kprintf( "[%s] Have regular entry \"%s\" at %d with attributes %x, cluster at %d, size = %d bytes, at sector %d, next cluster: 0x%x\n",
 					__func__, fname, i, dirbuf[i].attributes, dirbuf[i].cluster_low, dirbuf[i].size,
-					fatfs_relclus_to_sect( dev, dirbuf[i].cluster_low ));
+					fatfs_relclus_to_sect( dev, dirbuf[i].cluster_low ),
+					fatfs_get_next_cluster( dev, dirbuf[i].cluster_low ));
 
 			has_longname = 0;
 			namebuf[0] = 0;
@@ -104,6 +107,21 @@ static void dump_root_entries( fatfs_device_t *dev ){
 	}
 
 	kfree( sectbuf );
+}
+
+char *fatfs_apply_longname( fatfs_longname_ent_t *longname, char *namebuf, int maxlen ){
+	char *ret = namebuf;
+	int j, index;
+
+	index = longname->name_index - 'A';
+	if ( index + 13 > maxlen )
+		return ret;
+
+	for ( j = 0; j < 5; j++ ) namebuf[ index * 13 + j      ] = (char)longname->name_first[j];
+	for ( j = 0; j < 6; j++ ) namebuf[ index * 13 + 5  + j ] = (char)longname->name_second[j];
+	for ( j = 0; j < 2; j++ ) namebuf[ index * 13 + 11 + j ] = (char)longname->name_third[j];
+
+	return ret;
 }
 
 fat_type_t fatfs_get_type( fatfs_bpb_t *bpb ){
@@ -126,27 +144,18 @@ fat_type_t fatfs_get_type( fatfs_bpb_t *bpb ){
 	return ret;
 }
 
-unsigned fatfs_relclus_to_sect( fatfs_device_t *dev, unsigned cluster ){
-	unsigned first_data_sector;
-	unsigned root_cluster = 2;
-	unsigned ret; // Return sector
-
-	first_data_sector = dev->bpb->reserved_sects + dev->bpb->fats * dev->bpb->sects_per_fat;
-
-	if ( cluster > root_cluster ){
-		ret  = (cluster - root_cluster) * dev->bpb->sect_per_clus + first_data_sector;
-		ret += dev->bpb->dirents * 32 / dev->bpb->bytes_per_sect; // Add sectors for the root directory
-
-	} else { // cluster given /is/ the root directory
-		ret = first_data_sector;
-	}
-
-	return ret;
-}
-
 int test( ){
-	//file_node_t fnode;
+	file_node_t fnode;
+	int lookup;
+
 	file_mount_filesystem( "/test/fatdir", "/test/devices/device1", "fatfs", 0 );
+	lookup = file_lookup_absolute( "/test/fatdir/README.md", &fnode, 0 );
+
+	if ( lookup == 0 ){
+		kprintf( "[fatfs_test] Cool, found README.md at inode %d\n", fnode.inode );
+	} else {
+		kprintf( "[fatfs_test] Didn't find test inode, ret = %d\n", lookup );
+	}
 
 	return 0;
 }

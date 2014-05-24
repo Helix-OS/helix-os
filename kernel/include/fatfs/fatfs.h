@@ -2,6 +2,7 @@
 #define _helix_fatfs_module_h
 #include <base/stdint.h>
 #include <vfs/vfs.h>
+#include <base/datastructs/hashmap.h>
 
 typedef enum {
 	FAT_TYPE_NULL,
@@ -20,6 +21,10 @@ typedef enum {
 	FAT_ATTR_DIRECTORY 	= 0x10,
 	FAT_ATTR_ARCHIVE 	= 0X20,
 } fat_attr_t;
+
+enum {
+	FAT_CLUSTER_END = 0xff8,
+};
 
 // BIOS Parameter Block
 typedef struct fatfs_bpb {
@@ -82,6 +87,7 @@ typedef struct fatfs_longname_ent {
 typedef struct fatfs_device {
 	file_node_t 	device_node; 
 	fat_type_t 	type;
+	hashmap_t 	*inode_map;
 
 	union {
 		fatfs_bpb_t 	*bpb;
@@ -92,5 +98,15 @@ typedef struct fatfs_device {
 
 fat_type_t fatfs_get_type( fatfs_bpb_t *bpb );
 unsigned fatfs_relclus_to_sect( fatfs_device_t *dev, unsigned cluster );
+
+unsigned fatfs_get_next_cluster( fatfs_device_t *dev, unsigned cluster );
+unsigned fatfs_get_next_cluster_fat12( fatfs_device_t *dev, unsigned cluster );
+unsigned fatfs_get_next_cluster_fat16( fatfs_device_t *dev, unsigned cluster );
+unsigned fatfs_get_next_cluster_fat32( fatfs_device_t *dev, unsigned cluster );
+
+int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name, int flags );
+int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry );
+
+char *fatfs_apply_longname( fatfs_longname_ent_t *longname, char *namebuf, int maxlen );
 
 #endif
