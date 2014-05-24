@@ -11,6 +11,9 @@ static void dump_root_entries( fatfs_device_t *dev );
 static file_funcs_t fatfs_functions = {
 	.lookup = fatfs_vfs_lookup,
 	.read	= fatfs_vfs_read,
+
+	.open 	= fatfs_vfs_open,
+	.close	= fatfs_vfs_close,
 };
 
 struct file_system *fatfs_create( struct file_driver *device, struct file_system *unused,
@@ -150,15 +153,15 @@ fat_type_t fatfs_get_type( fatfs_bpb_t *bpb ){
 int test( ){
 	file_node_t fnode;
 	int lookup;
-	char *testbuf = knew( char[2000] );
+	char *testbuf = knew( char[2300] );
 	int i;
 
 	file_mount_filesystem( "/test/fatdir", "/test/devices/device1", "fatfs", 0 );
-	lookup = file_lookup_absolute( "/test/fatdir/README.md", &fnode, 0 );
+	lookup = file_lookup_absolute( "/test/fatdir/Makefile", &fnode, 0 );
 
 	if ( lookup == 0 ){
 		kprintf( "[fatfs_test] Cool, found Makefile at inode %d\n", fnode.inode );
-		lookup = VFS_FUNCTION(( &fnode ), read, testbuf, 2000, 0 );
+		lookup = VFS_FUNCTION(( &fnode ), read, testbuf, 2300, 0 );
 		kprintf( "[fatfs_test] Read returned %d\n", lookup );
 
 		for ( i = 0; i < lookup; i++ )
