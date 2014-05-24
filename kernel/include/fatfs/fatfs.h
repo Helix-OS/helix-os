@@ -3,6 +3,24 @@
 #include <base/stdint.h>
 #include <vfs/vfs.h>
 
+typedef enum {
+	FAT_TYPE_NULL,
+	FAT_TYPE_12 		= 12,
+	FAT_TYPE_16 		= 16,
+	FAT_TYPE_32 		= 32,
+} fat_type_t;
+
+typedef enum {
+	FAT_ATTR_NULL,
+	FAT_ATTR_READ_ONLY 	= 1,
+	FAT_ATTR_HIDDEN 	= 2,
+	FAT_ATTR_SYSTEM 	= 4,
+	FAT_ATTR_VOLUME_ID 	= 8,
+	FAT_ATTR_LONGNAME 	= 0x0f,
+	FAT_ATTR_DIRECTORY 	= 0x10,
+	FAT_ATTR_ARCHIVE 	= 0X20,
+} fat_attr_t;
+
 // BIOS Parameter Block
 typedef struct fatfs_bpb {
 	uint8_t 	jumpcode[3];
@@ -32,13 +50,47 @@ typedef struct fatfs_12_ebr {
 } __attribute__((packed)) fatfs_12_ebr;
 
 typedef struct fatfs_32_ebr {
-	// tbd
+	fatfs_bpb_t 	bpb;
 } __attribute__((packed)) fatfs_32_ebr;
+
+typedef struct fatfs_dirent {
+	uint8_t 	name[11];
+	uint8_t 	attributes;
+	uint8_t 	nt_reserved;
+	uint8_t 	time_created_tenths;
+	uint16_t 	time_created;
+	uint16_t 	date_created;
+	uint16_t 	date_accessed;
+	uint16_t 	cluster_high;
+	uint16_t 	time_modified;
+	uint16_t 	date_modified;
+	uint16_t 	cluster_low;
+	uint32_t 	size;
+} __attribute__((packed)) fatfs_dirent_t;
+
+typedef struct fatfs_longname_ent {
+	uint8_t 	name_index;
+	uint16_t 	name_first[5];
+	uint8_t 	attributes;
+	uint8_t 	longent_type;
+	uint8_t 	checksum;
+	uint16_t 	name_second[6];
+	uint16_t 	unused;
+	uint16_t 	name_third[2];
+} __attribute__((packed)) fatfs_longname_ent_t;
 
 typedef struct fatfs_device {
 	file_node_t 	device_node; 
+	fat_type_t 	type;
 
-	fatfs_bpb_t 	*bpb;
+	union {
+		fatfs_bpb_t 	*bpb;
+		fatfs_12_ebr 	*fat12;
+		fatfs_32_ebr 	*fat32;
+	};
 } fatfs_device_t;
+
+fat_type_t fatfs_get_type( fatfs_bpb_t *bpb );
+unsigned fatfs_relclus_to_sect( fatfs_device_t *dev, unsigned cluster );
 
 #endif
