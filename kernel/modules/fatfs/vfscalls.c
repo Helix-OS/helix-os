@@ -181,7 +181,33 @@ int fatfs_vfs_close( struct file_node *node ){
 	return ret;
 }
 
-//int fatfs_vfs_get_info( struct file_node *node, struct file_info *buf ){
+int fatfs_vfs_get_info( struct file_node *node, struct file_info *buf ){
+	int ret = 0;
+	fatfs_dircache_t *cache;
+	fatfs_device_t *dev;
+
+	dev = node->fs->devstruct;
+	cache = hashmap_get( dev->inode_map, node->inode );
+
+	if ( cache ){
+		if ( cache->dir.attributes & FAT_ATTR_DIRECTORY )
+			buf->type = FILE_TYPE_DIR;
+		else
+			buf->type = FILE_TYPE_REG;
+
+		buf->mask = 0555;
+		buf->uid = buf->gid = 0;
+		buf->inode = node->inode;
+		buf->links = 1;
+		buf->flags = 0;
+		buf->dev_id = 0;
+
+	} else {
+		ret = -ERROR_NOT_FOUND;
+	}
+
+	return ret;
+}
 
 int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 	int ret = 0;

@@ -9,11 +9,12 @@ char *provides = "fatfs";
 static void dump_root_entries( fatfs_device_t *dev );
 
 static file_funcs_t fatfs_functions = {
-	.lookup = fatfs_vfs_lookup,
-	.read	= fatfs_vfs_read,
+	.get_info	= fatfs_vfs_get_info,
+	.lookup 	= fatfs_vfs_lookup,
+	.read		= fatfs_vfs_read,
 
-	.open 	= fatfs_vfs_open,
-	.close	= fatfs_vfs_close,
+	.open 		= fatfs_vfs_open,
+	.close		= fatfs_vfs_close,
 };
 
 struct file_system *fatfs_create( struct file_driver *device, struct file_system *unused,
