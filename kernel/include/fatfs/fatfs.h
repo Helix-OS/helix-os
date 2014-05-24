@@ -23,6 +23,7 @@ typedef enum {
 } fat_attr_t;
 
 enum {
+	FAT_CLUSTER_BAD = 0xff7,
 	FAT_CLUSTER_END = 0xff8,
 };
 
@@ -96,6 +97,11 @@ typedef struct fatfs_device {
 	};
 } fatfs_device_t;
 
+typedef struct fatfs_dircache {
+	fatfs_dirent_t dir;
+	unsigned references;
+} fatfs_dircache_t;
+
 fat_type_t fatfs_get_type( fatfs_bpb_t *bpb );
 unsigned fatfs_relclus_to_sect( fatfs_device_t *dev, unsigned cluster );
 
@@ -106,6 +112,7 @@ unsigned fatfs_get_next_cluster_fat32( fatfs_device_t *dev, unsigned cluster );
 
 int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name, int flags );
 int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry );
+int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, unsigned long offset );
 
 char *fatfs_apply_longname( fatfs_longname_ent_t *longname, char *namebuf, int maxlen );
 

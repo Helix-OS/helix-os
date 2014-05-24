@@ -10,6 +10,7 @@ static void dump_root_entries( fatfs_device_t *dev );
 
 static file_funcs_t fatfs_functions = {
 	.lookup = fatfs_vfs_lookup,
+	.read	= fatfs_vfs_read,
 };
 
 struct file_system *fatfs_create( struct file_driver *device, struct file_system *unused,
@@ -19,7 +20,7 @@ struct file_system *fatfs_create( struct file_driver *device, struct file_system
 	fatfs_device_t *dev;
 	file_node_t *root;
 	unsigned first_data_sector;
-	fatfs_dirent_t *root_dir;
+	fatfs_dircache_t *root_cache;
 
 	ret = knew( file_system_t );
 	dev = ret->devstruct = knew( fatfs_device_t );
@@ -29,7 +30,7 @@ struct file_system *fatfs_create( struct file_driver *device, struct file_system
 		ret->root_node = root = knew( file_node_t );
 		ret->functions = &fatfs_functions;
 		dev->bpb = knew( uint8_t[512] );
-		root_dir = knew( fatfs_dirent_t );
+		root_cache = knew( fatfs_dircache_t );
 
 		VFS_FUNCTION(( &dev->device_node ), read, dev->bpb, 512, 0 );
 
@@ -42,9 +43,10 @@ struct file_system *fatfs_create( struct file_driver *device, struct file_system
 		root->inode = first_data_sector;
 		root->references = 1;
 
-		root_dir->attributes = FAT_ATTR_DIRECTORY;
-		root_dir->cluster_low = 2;
-		hashmap_add( dev->inode_map, first_data_sector, root_dir );
+		root_cache->dir.attributes = FAT_ATTR_DIRECTORY;
+		root_cache->dir.cluster_low = 2;
+		root_cache->references = 1;
+		hashmap_add( dev->inode_map, first_data_sector, root_cache );
 
 		kprintf( "[%s] FAT%d fs \"%s\" has %d bytes per sector, %d sectors per cluster,"
 				"%d reserved sectors\n", __func__, dev->type,
@@ -96,7 +98,8 @@ static void dump_root_entries( fatfs_device_t *dev ){
 
 		} else {
 			char *fname = has_longname? namebuf : (char *)dirbuf[i].name;
-			kprintf( "[%s] Have regular entry \"%s\" at %d with attributes %x, cluster at %d, size = %d bytes, at sector %d, next cluster: 0x%x\n",
+			kprintf( "[%s] Have regular entry \"%s\" at %d with attributes %x, cluster at %d, size = %d bytes,"
+					"at sector %d, next cluster: 0x%x\n",
 					__func__, fname, i, dirbuf[i].attributes, dirbuf[i].cluster_low, dirbuf[i].size,
 					fatfs_relclus_to_sect( dev, dirbuf[i].cluster_low ),
 					fatfs_get_next_cluster( dev, dirbuf[i].cluster_low ));
@@ -147,15 +150,30 @@ fat_type_t fatfs_get_type( fatfs_bpb_t *bpb ){
 int test( ){
 	file_node_t fnode;
 	int lookup;
+	char *testbuf = knew( char[2000] );
+	int i;
 
 	file_mount_filesystem( "/test/fatdir", "/test/devices/device1", "fatfs", 0 );
 	lookup = file_lookup_absolute( "/test/fatdir/README.md", &fnode, 0 );
 
 	if ( lookup == 0 ){
-		kprintf( "[fatfs_test] Cool, found README.md at inode %d\n", fnode.inode );
+		kprintf( "[fatfs_test] Cool, found Makefile at inode %d\n", fnode.inode );
+		lookup = VFS_FUNCTION(( &fnode ), read, testbuf, 2000, 0 );
+		kprintf( "[fatfs_test] Read returned %d\n", lookup );
+
+		for ( i = 0; i < lookup; i++ )
+			kprintf( "%c", testbuf[i] );
+
+		kprintf( "\n" );
+
 	} else {
 		kprintf( "[fatfs_test] Didn't find test inode, ret = %d\n", lookup );
 	}
+
+	// TODO: Another example of large buffers crashing later when freed if not zeroed, 
+	//       check allocator correctness
+	memset( testbuf, 0, 2000 );
+	kfree( testbuf );
 
 	return 0;
 }
