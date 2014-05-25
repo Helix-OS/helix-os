@@ -36,7 +36,6 @@ int vfs_open( char *path, int flags ){
 }
 
 int vfs_close( int pnode ){
-	//file_node_t *node;
 	file_pobj_t *nodeobj;
 	task_t *cur_task;
 	int ret;
@@ -58,7 +57,27 @@ int vfs_close( int pnode ){
 }
 
 int vfs_read( int pnode, void *buf, int length ){
+	file_pobj_t *nodeobj;
+	task_t *cur_task;
 	int ret = 0;
+
+	cur_task = get_current_task( );
+	nodeobj = dlist_get( cur_task->pobjects, pnode );
+
+	if ( nodeobj ){
+		if ( nodeobj->type == FILE_POBJ ){
+			ret = VFS_FUNCTION( &nodeobj->node, read, buf,
+					length, nodeobj->read_offset );
+
+			nodeobj->read_offset += ret;
+
+		} else {
+			ret = -ERROR_NOT_FILE;
+		}
+
+	} else {
+		ret = -ERROR_NOT_FOUND; 
+	}
 
 	return ret;
 }
