@@ -3,12 +3,13 @@
 #include <base/errors.h>
 
 // Defines
-#define MAX_FILENAME_SIZE 256
+#define MAX_FILENAME_SIZE 	256
+#define FILE_POBJ 		0xf11e
 
 // Macros
 #define VFS_FUNCTION( node, func, ... )\
-	(!( node->fs->functions && node->fs->functions->func )? -ERROR_NO_FUNC :\
-	 node->fs->functions->func( node, __VA_ARGS__ ))
+	(!((node)->fs->functions && (node)->fs->functions->func )? -ERROR_NO_FUNC :\
+	(node)->fs->functions->func((node), __VA_ARGS__ ))
 
 // Flags
 // File system flags
@@ -69,7 +70,7 @@ typedef int (*file_get_info)( struct file_node *node, struct file_info *buf );
 typedef int (*open_func)( struct file_node *, char *, int );
 typedef int (*write_func)( struct file_node *, void *, unsigned long, unsigned long );
 typedef int (*read_func)( struct file_node *, void *, unsigned long, unsigned long );
-typedef int (*close_func)( struct file_node * );
+typedef int (*close_func)( struct file_node *, int flags );
 
 typedef int (*mkdir_func)( struct file_node *, char *, int );
 typedef int (*mknod_func)( struct file_node *, char *, int, int );
@@ -169,6 +170,14 @@ typedef struct dirent {
 	char 		name[256];
 } dirent_t;
 
+typedef struct file_pobj {
+	unsigned type;
+	file_node_t node;
+
+	unsigned read_offset;
+	unsigned write_offset;
+} file_pobj_t;
+
 int file_register_driver( file_driver_t *driver );
 //int file_register_mount( file_system_t *fs );
 file_mount_t *file_register_mount( file_system_t *fs );
@@ -181,5 +190,12 @@ int file_lookup_absolute( char *path, file_node_t *buf, int flags );
 
 void set_global_vfs_root( file_node_t *root );
 file_node_t *get_global_vfs_root( );
+
+// Syscalls exposed to userland
+int vfs_open( char *path, int flags );
+int vfs_close( int pnode );
+int vfs_read( int pnode, void *buf, int length );
+int vfs_write( int pnode, void *buf, int length );
+int vfs_spawn( int pnode, char *args[], char *envp[], int flags );
 
 #endif

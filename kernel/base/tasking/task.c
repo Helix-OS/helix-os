@@ -26,6 +26,7 @@ void init_tasking( void ){
 
 	current_task = task_list = list_add_data_node( task_list, root_task );
 	root_task->pagedir = get_current_page_dir( );
+	root_task->pobjects = dlist_create( 0, 0 );
 	tasking_initialized = 1;
 
 	register_pitimer_call( rrschedule_call );
@@ -51,6 +52,8 @@ int create_thread( void (*start)( )){
 	new_task->ebp = 0;
 	add_task( new_task );
 
+	new_task->pobjects = dlist_create( 0, 0 );
+
 	unblock_tasks( );
 
 	return new_task->pid;
@@ -75,6 +78,7 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 	add_task( new_task );
 
 	new_task->pagedir = clone_page_dir( get_current_page_dir( ));
+	new_task->pobjects = dlist_create( 0, 0 );
 
 	unblock_tasks( );
 
@@ -159,21 +163,35 @@ task_t *add_task( task_t *new_task ){
 int remove_task_by_pid( int pid ){
 	list_node_t *node = 0;
 	task_t *task;
+	int i, nobjs;
+	void *objptr;
+
 	block_tasks( );
-
 	node = get_task_node_by_pid( pid );
-
 	if ( !node )
 		return -1;
 
+	// Remove node from scheduler
 	task = node->data;
 	list_remove_node( node );
 
+	// Clean up stack
 	if ( task->stack ){
 		kprintf( "[remove_task_by_pid] freeing thread stack at 0x%x\n", task->stack );
 		kfree((void *)( task->stack ));
 	}
 
+	// Clean up process objects
+	nobjs = dlist_allocated( task->pobjects );
+	for ( i = 0; i < nobjs; i++ ){
+		objptr = dlist_get( task->pobjects, i );
+		if ( objptr )
+			kfree( objptr );
+	}
+
+	kfree( task->pobjects );
+
+	// And done
 	kfree( task );
 	unblock_tasks( );
 	rrschedule_call( );

@@ -114,7 +114,7 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry );
 int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, unsigned long offset );
 int fatfs_vfs_open( struct file_node *node, char *path, int flags );
-int fatfs_vfs_close( struct file_node *node );
+int fatfs_vfs_close( struct file_node *node, int flags );
 int fatfs_vfs_get_info( struct file_node *node, struct file_info *buf );
 
 char *fatfs_apply_longname( fatfs_longname_ent_t *longname, char *namebuf, int maxlen );

@@ -11,7 +11,7 @@ static int ramfs_node_get_info( struct file_node *node, struct file_info *buf );
 static int ramfs_node_lookup( struct file_node *node, struct file_node *buf, char *name, int flags );
 
 static int ramfs_open_node( struct file_node *node, char *path, int flags );
-static int ramfs_close_node( struct file_node *node );
+static int ramfs_close_node( struct file_node *node, int flags );
 static int ramfs_read_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
 static int ramfs_write_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
 
@@ -249,7 +249,7 @@ static int ramfs_open_node( struct file_node *node, char *path, int flags ){
 	return ret;
 }
 
-static int ramfs_close_node( struct file_node *node ){
+static int ramfs_close_node( struct file_node *node, int flags ){
 	return 0;
 }
 

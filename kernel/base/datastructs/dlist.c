@@ -72,3 +72,11 @@ void *dlist_set( dlist_container_t *list, int index, void *data ){
 
 	return ret;
 }
+
+unsigned dlist_allocated( dlist_container_t *list ){
+	return list->alloced;
+}
+
+unsigned dlist_used( dlist_container_t *list ){
+	return list->used;
+}

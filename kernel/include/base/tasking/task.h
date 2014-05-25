@@ -2,6 +2,7 @@
 #define _helix_tasking_h
 
 #include <base/datastructs/list.h>
+#include <base/datastructs/dlist.h>
 #include <base/logger.h>
 #include <base/string.h>
 #include <base/tasking/semaphore.h>
@@ -30,6 +31,7 @@ typedef struct task {
 	semaphore_t 	 	*sem;
 
 	int 			*waiting;
+	dlist_container_t 	*pobjects;
 } task_t;
 
 extern unsigned long get_instruct_ptr( );

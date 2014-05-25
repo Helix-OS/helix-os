@@ -157,7 +157,7 @@ int fatfs_vfs_open( struct file_node *node, char *path, int flags ){
 	return ret;
 }
 
-int fatfs_vfs_close( struct file_node *node ){
+int fatfs_vfs_close( struct file_node *node, int flags ){
 	fatfs_dircache_t *cache;
 	fatfs_device_t *dev;
 	int ret = 0;

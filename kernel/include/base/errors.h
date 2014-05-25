@@ -11,6 +11,7 @@ typedef enum error_number {
 	/* VFS errors */
 	ERROR_NOT_DIRECTORY,
 	ERROR_IS_DIRECTORY,
+	ERROR_NOT_FILE,
 	ERROR_NOT_FOUND,
 	ERROR_INVALID_PATH,
 } error_number_t;

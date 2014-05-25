@@ -244,6 +244,7 @@ int test( ){
 		VFS_FUNCTION( blarg, get_info, infos );
 		kprintf( "[%s] Have root node info: type = %d\n", provides, infos->type );
 
+		/*
 		{ 
 			file_node_t filebuf;
 			dirent_t dir;
@@ -292,6 +293,13 @@ int test( ){
 			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
 				kprintf( "[%s]\t%d:%s\n", provides, dir.inode, dir.name );
 		}
+		*/
+
+		stuff = vfs_open( "/test/fatdir", FILE_READ );
+		kprintf( "[%s_test] open function returned %d\n", provides, stuff );
+
+		stuff = vfs_close( stuff );
+		kprintf( "[%s_test] close function returned %d\n", provides, stuff );
 
 		kfree( infos );
 	}
@@ -325,6 +333,7 @@ int init_vfs( ){
 
 	if ( stuff < 0 ){
 		kprintf( "[%s] Could not set file root...\n", provides );
+
 	} else {
 		{
 			file_node_t filebuf;
