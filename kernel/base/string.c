@@ -37,8 +37,8 @@ int strncmp( char *s1, char *s2, int len ){
 }
 
 char *strdup( char *s ){
-	char *ret = kmalloc( strlen( s ));
-	return memcpy( ret, s, strlen( s ));
+	char *ret = kmalloc( strlen( s ) + 1 );
+	return memcpy( ret, s, strlen( s ) + 1 );
 }
 
 char *strcpy( char *dest, char *src ){

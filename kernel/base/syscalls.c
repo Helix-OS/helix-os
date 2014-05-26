@@ -10,7 +10,12 @@ static void *syscall_table[CHANGEME_MAX_SYSCALLS] = {
 	0,
 };
 
-DEFN_SYSCALL0( test, 0 );
+DEFN_SYSCALL0( test, SYSCALL_TEST );
+DEFN_SYSCALL1( exit, SYSCALL_EXIT, int );
+DEFN_SYSCALL2( open, SYSCALL_OPEN, char *, int );
+DEFN_SYSCALL1( close, SYSCALL_CLOSE, int );
+DEFN_SYSCALL3( read, SYSCALL_READ, int, void *, int );
+DEFN_SYSCALL3( write, SYSCALL_WRITE, int, void *, int );
 
 void init_syscalls( ){
 	register_syscall( SYSCALL_TEST, syscall_tester );

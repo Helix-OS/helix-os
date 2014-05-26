@@ -31,7 +31,19 @@ void sometest( ){
 }
 
 void userspace_test( ){
+	int fd;
+	char meh[512];
 	syscall_test( );
+
+	//fd = syscall_open( "/test/devices/device0", FILE_READ );
+	fd = syscall_open( "/test/fatdir/README.md", FILE_READ );
+	if ( fd >= 0 ){
+		syscall_read( fd, meh, 512 );
+		syscall_close( fd );
+
+		fd = syscall_open( "/test/devices/device2", FILE_WRITE );
+		syscall_write( fd, meh, 512 );
+	}
 
 	while( 1 );
 }
@@ -63,10 +75,10 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 
 	asm volatile( "sti" );
 	init_syscalls( );
-	init_pitimer( 100 );
+	init_pitimer( 1000 );
 	init_tasking( );
 
-	create_thread( sometest );
+	//create_thread( sometest );
 
 	init_hal( );
 	init_vfs( );
@@ -74,6 +86,30 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	// Initialize module system
 	init_module_system( elfinfo );
 	load_init_modules((void *)modules );
+
+	{
+		/*
+		int fd;
+		char *mehstr = "Testing this thing";
+		syscall_test( );
+
+		fd = syscall_open( "/test/devices/device2", FILE_WRITE );
+		syscall_write( fd, mehstr, strlen( mehstr ));
+
+		char meh[512];
+
+		fd = syscall_open( "/test/meh.txt", FILE_READ );
+		if ( fd >= 0 ){
+			syscall_read( fd, meh, 512 );
+			syscall_close( fd );
+
+			kprintf( "[%s] get %s\n", __func__, meh );
+
+			fd = syscall_open( "/test/devices/device2", FILE_WRITE );
+			syscall_write( fd, meh, 512 );
+		}
+		*/
+	}
 
 	hal_dump_devices( );
 	dump_aheap_blocks( kheap );

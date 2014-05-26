@@ -10,6 +10,8 @@ static int devfs_get_info_node( struct file_node *node, struct file_info *buf );
 static int devfs_readdir_node( struct file_node *node, struct dirent *dirp, int entry );
 static int devfs_lookup_node( struct file_node *node, struct file_node *buf, char *name, int flags );
 static int devfs_read_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
+static int devfs_open_node( struct file_node *node, char *path, int flags );
+static int devfs_write_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
 
 static file_system_t *devfs = 0;
 static file_funcs_t devfs_functions = {
@@ -18,8 +20,9 @@ static file_funcs_t devfs_functions = {
 
 	.readdir 	= devfs_readdir_node,
 
+	.open		= devfs_open_node,
 	.read  		= devfs_read_node,
-	.write 		= 0,
+	.write 		= devfs_write_node,
 };
 
 static file_system_t *create_devfs( struct file_driver *driver,
@@ -131,6 +134,38 @@ static int devfs_read_node( struct file_node *node, void *buffer,
 			ret = -ERROR_NO_FUNC;
 		}
 	}
+
+	return ret;
+}
+
+static int devfs_write_node( struct file_node *node, void *buffer,
+		unsigned long length, unsigned long offset )
+{
+	int ret = -ERROR_INVALID_PATH;
+	hal_device_t *devbuf;
+
+	devbuf = hal_get_device( node->inode - 128 );
+
+	if ( devbuf ){
+		if ( devbuf->write ){
+			kprintf( "[%s] Got here, devbuf: 0x%x, dev: 0x%x, write: 0x%x\n", __func__, devbuf, devbuf->dev, devbuf->write );
+			// TODO: Properly handle writes not aligned on devbuf->block_size
+			ret = devbuf->write( devbuf, buffer, length / devbuf->block_size, offset / devbuf->block_size );
+
+		} else {
+			ret = -ERROR_NO_FUNC;
+		}
+	}
+
+	return ret;
+}
+
+static int devfs_open_node( struct file_node *node, char *path, int flags ){
+	int ret = -ERROR_NOT_FOUND;
+	file_node_t meh;
+
+	if ( file_lookup_relative( path, node, &meh, 0 ) == 0 )
+		ret = meh.inode;
 
 	return ret;
 }

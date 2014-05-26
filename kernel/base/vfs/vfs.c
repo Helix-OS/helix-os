@@ -5,6 +5,7 @@
 #include <base/lib/stdbool.h>
 #include <base/logger.h>
 #include <base/string.h>
+#include <base/syscalls.h>
 
 /*
 char *depends[] = { "base", 0 };
@@ -270,8 +271,10 @@ int test( ){
 			file_lookup_absolute( "/test/somedir", &filebuf, 0 );
 			VFS_FUNCTION(( &filebuf ), mkdir, "asdf", 0 );
 
+			file_lookup_absolute( "/test", &filebuf, 0 );
+
 			kprintf( "[%s] open function returned %d\n", provides,
-					VFS_FUNCTION(( &filebuf ), open, "blarg", FILE_CREATE | FILE_WRITE ));
+					VFS_FUNCTION(( &filebuf ), open, "meh.txt", FILE_CREATE | FILE_WRITE ));
 
 			kprintf( "[%s] open function returned %d\n", provides,
 					VFS_FUNCTION(( &filebuf ), open, "asdf", FILE_CREATE | FILE_WRITE ));
@@ -295,8 +298,18 @@ int test( ){
 		}
 		*/
 
-		stuff = vfs_open( "/test/fatdir", FILE_READ );
+		int blarg;
+		char *msg = "This is a test message\n";
+		char msgbuf[32];
+
+		stuff = vfs_open( "/test/meh.txt", FILE_READ | FILE_WRITE | FILE_CREATE );
 		kprintf( "[%s_test] open function returned %d\n", provides, stuff );
+
+		blarg = vfs_write( stuff, msg, strlen( msg ) + 1 );
+		kprintf( "[%s_test] write function returned %d\n", provides, blarg );
+
+		blarg = vfs_read( stuff, msgbuf, strlen( msg ) + 1 );
+		kprintf( "[%s_test] read function returned %d, got \"%s\"\n", provides, blarg, msgbuf );
 
 		stuff = vfs_close( stuff );
 		kprintf( "[%s_test] close function returned %d\n", provides, stuff );
@@ -325,6 +338,11 @@ int init_vfs( ){
 		drv = temp->data;
 		kprintf( "[%s] Have driver \"%s\"\n", provides, drv->name );
 	}
+
+	register_syscall( SYSCALL_OPEN, vfs_open );
+	register_syscall( SYSCALL_CLOSE, vfs_close );
+	register_syscall( SYSCALL_READ, vfs_read );
+	register_syscall( SYSCALL_WRITE, vfs_write );
 
 	drv = file_get_driver( "ramfs" );
 	kprintf( "[%s] Have ramfs at 0x%x\n", provides, drv );

@@ -45,10 +45,19 @@ int syscall_##fn(P1 p1, P2 p2, P3 p3, P4 p4){ \
 
 typedef enum {
 	SYSCALL_TEST,
-	SYSCALL_EXIT_THREAD,
+	SYSCALL_EXIT,
+	SYSCALL_OPEN,
+	SYSCALL_CLOSE,
+	SYSCALL_READ,
+	SYSCALL_WRITE,
 } syscall_t;
 
 DECL_SYSCALL0( test );
+DECL_SYSCALL1( exit, int );
+DECL_SYSCALL2( open, char *, int );
+DECL_SYSCALL1( close, int );
+DECL_SYSCALL3( read, int, void *, int );
+DECL_SYSCALL3( write, int, void *, int );
 
 int syscall_tester( );
 void init_syscalls( );

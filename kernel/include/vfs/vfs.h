@@ -176,6 +176,7 @@ typedef struct file_pobj {
 
 	unsigned read_offset;
 	unsigned write_offset;
+	char *path;
 } file_pobj_t;
 
 int file_register_driver( file_driver_t *driver );

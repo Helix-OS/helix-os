@@ -142,14 +142,34 @@ int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, uns
 int fatfs_vfs_open( struct file_node *node, char *path, int flags ){
 	fatfs_dircache_t *cache;
 	fatfs_device_t *dev;
+	file_node_t nodebuf;
 	int ret = 0;
+	int lookup;
 
 	dev = node->fs->devstruct;
 	cache = hashmap_get( dev->inode_map, node->inode );
 
 	if ( cache ){
-		cache->references++;
-		ret = node->inode;
+		if ( cache->dir.attributes & FAT_ATTR_DIRECTORY ){
+			lookup = file_lookup_relative( path, node, &nodebuf, 0 );
+
+			if ( lookup == 0 ){
+				/*
+				cache->references++;
+				ret = node->inode;
+				*/
+				cache = hashmap_get( dev->inode_map, nodebuf.inode );
+				cache->references++;
+				ret = nodebuf.inode;
+
+			} else {
+				ret = lookup;
+			}
+
+		} else {
+			ret = -ERROR_NOT_DIRECTORY;
+		}
+
 	} else {
 		ret = -ERROR_NOT_FOUND;
 	}
