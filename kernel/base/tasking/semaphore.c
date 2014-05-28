@@ -17,7 +17,7 @@ int enter_semaphore( semaphore_t *sem ){
 
 	block_tasks( );
 
-	kprintf( "[enter_semaphore] Woot got here\n" );
+	//kprintf( "[enter_semaphore] Woot got here\n" );
 
 	if ( !sem ){
 		unblock_tasks( );

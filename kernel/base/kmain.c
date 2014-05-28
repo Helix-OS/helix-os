@@ -31,7 +31,7 @@ void sometest( ){
 }
 
 void userspace_test( ){
-	int fd;
+	/*
 	char meh[512];
 	syscall_test( );
 
@@ -44,6 +44,12 @@ void userspace_test( ){
 		fd = syscall_open( "/test/devices/device2", FILE_WRITE );
 		syscall_write( fd, meh, 512 );
 	}
+
+	int fd;
+	fd = syscall_open( "/test/fatdir/meh", FILE_READ );
+	if ( fd >= 0 )
+		syscall_spawn( fd, 0, 0, 0 );
+	*/
 
 	while( 1 );
 }
@@ -117,6 +123,11 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	kprintf( "-==[ Kernel initialized successfully.\n" );
 	asm volatile( "int $0x30" );
 	create_thread( userspace_test );
+
+	int fd;
+	fd = syscall_open( "/test/fatdir/asdf", FILE_READ );
+	if ( fd >= 0 )
+		syscall_spawn( fd, 0, 0, 0 );
 
 	while( 1 ) asm volatile( "hlt" );
 }

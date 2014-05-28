@@ -2,6 +2,7 @@
 #include <base/tasking/task.h>
 #include <base/kstd.h>
 #include <base/mem/alloc.h>
+#include <base/tasking/elfload.h>
 
 int vfs_open( char *path, int flags ){
 	file_pobj_t *newobj;
@@ -130,6 +131,16 @@ int vfs_write( int pnode, void *buf, int length ){
 
 int vfs_spawn( int pnode, char *args[], char *envp[], int flags ){
 	int ret = 0;
+	int vfsfunc;
+	Elf32_Ehdr *header = knew( char[2000] );
+
+	vfsfunc = vfs_read( pnode, header, 2000 );
+	if ( vfsfunc > 0 )
+		elfload_from_mem( header );
+	else
+		ret = vfsfunc;
+
+	kfree( header );
 
 	return ret;
 }

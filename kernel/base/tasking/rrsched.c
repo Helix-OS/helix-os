@@ -57,7 +57,7 @@ void rrschedule_call( void ){
 	ebp = move->ebp;
 
 	if ( move->pagedir != get_current_page_dir( )){
-		kprintf( "[%s] Setting new page dir 0x%x\n", __func__, move->pagedir );
+		//kprintf( "[%s] Setting new page dir 0x%x\n", __func__, move->pagedir );
 		set_page_dir( move->pagedir );
 	}
 	//set_kernel_stack( move->stack );

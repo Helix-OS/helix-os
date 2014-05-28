@@ -43,6 +43,7 @@ void unblock_tasks( );
 void usleep( unsigned long useconds );
 
 int create_thread( void (*start)( ));
+int create_process( void (*start)( ), char *argv[], char *envp[] );
 void exit_thread( );
 task_t *add_task( task_t *new_task );
 task_t *init_task( task_t *buffer );

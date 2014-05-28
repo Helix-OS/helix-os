@@ -16,6 +16,7 @@ DEFN_SYSCALL2( open, SYSCALL_OPEN, char *, int );
 DEFN_SYSCALL1( close, SYSCALL_CLOSE, int );
 DEFN_SYSCALL3( read, SYSCALL_READ, int, void *, int );
 DEFN_SYSCALL3( write, SYSCALL_WRITE, int, void *, int );
+DEFN_SYSCALL4( spawn, SYSCALL_SPAWN, int, char **, char **, int );
 
 void init_syscalls( ){
 	register_syscall( SYSCALL_TEST, syscall_tester );
@@ -34,6 +35,7 @@ void register_syscall( syscall_t n, void *call ){
 }
 
 static void syscall_handler( registers_t *regs ){
+	kprintf( "[%s] Got here, syscall %d\n", __func__, regs->eax );
 	if ( regs->eax >= CHANGEME_MAX_SYSCALLS )
 		return;
 

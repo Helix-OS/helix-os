@@ -6,6 +6,7 @@
 #include <base/mem/alloc.h>
 #include <base/bitmap.h>
 #include <base/kstd.h>
+#include <base/tasking/task.h>
 
 int paging_enabled = 0;
 unsigned int 	npages = 0,
@@ -166,7 +167,7 @@ void set_page_dir( unsigned *dir ){
 	}
 
 	address = address | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT;
-	kprintf( "Setting page dir to 0x%x... ", address );
+	//kprintf( "Setting page dir to 0x%x... ", address );
 
 	current_dir = dir;
 	asm volatile( "mov %0, %%cr3":: "r"( address ));
@@ -195,14 +196,29 @@ void flush_tlb( ){
 
 void page_fault_handler( registers_t *regs ){
 	unsigned long fault_addr;
+	task_t *current;
 
 	asm volatile( "mov %%cr2, %0": "=r"( fault_addr ));
-	panic( "page fault: 0x%x: 0x%x:%s%s%s\n",
-		fault_addr, regs->err_code,
-		(!regs->err_code & 1 )?		" not present":"",
-		( regs->err_code & 2 )?		" readonly":"",
-		( regs->err_code & 4 )?		" usermode":""
-	);
+
+	current = get_current_task( );
+	if ( !current || !current->pid ){
+		panic( "page fault: 0x%x: 0x%x:%s%s%s\n",
+			fault_addr, regs->err_code,
+			(!regs->err_code & 1 )?		" not present":"",
+			( regs->err_code & 2 )?		" readonly":"",
+			( regs->err_code & 4 )?		" usermode":""
+		);
+	} else {
+		kprintf( "page fault: 0x%x: 0x%x:%s%s%s\n",
+			fault_addr, regs->err_code,
+			(!regs->err_code & 1 )?		" not present":"",
+			( regs->err_code & 2 )?		" readonly":"",
+			( regs->err_code & 4 )?		" usermode":""
+		);
+
+		kprintf( "[%s] Have bad process %d, killing...\n", __func__, current->pid );
+		remove_task_by_pid( current->pid );
+	}
 }
 
 #endif
