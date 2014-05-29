@@ -131,8 +131,6 @@ static void keyboard_handler( registers_t *regs ){
 	unsigned char scancode;
 	char *buf;
 
-	enter_semaphore( &keybd_sem );
-
 	scancode = inb( 0x60 );
 
 	if ( scancode & 0x80 ){
@@ -155,13 +153,13 @@ static void keyboard_handler( registers_t *regs ){
 
 		} else {
 			if ( buf ){
+				keybd_sem = 0;
 				pipe_write( keyboard_pipe, buf, (unsigned)strlen( buf ));
+				keybd_sem = 1;
 				//kprintf( "[%s] Got buffer \"%s\", meta keys: 0x%x\n", __func__, buf, metastatus );
 			}
 		}
 	}
-
-	leave_semaphore( &keybd_sem );
 
 	return;
 }
