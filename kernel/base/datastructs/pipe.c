@@ -39,12 +39,13 @@ int pipe_write( pipe_t *pipe, char *buf, unsigned size ){
 
 	for ( i = 0; i < pipe->nbufs; i++ ){
 		line = pipe->bufs[i];
-		kprintf( "pipe_write: writing to pipe %d:0x%x\n", i, line );
+		//kprintf( "pipe_write: writing to pipe %d:0x%x\n", i, line );
 
 		if ( line->flags & PIPE_FLAG_OPEN ){
 			for ( j = 0; j < size; j++ ){
 				if ( line->avail == line->size - 1 ){
 					if ( line->flags & PIPE_FLAG_BLOCK )
+						// TODO: Implement blocking here
 						break;
 					else 
 						line->readp = ( line->readp + 1 ) % line->size;
@@ -52,12 +53,13 @@ int pipe_write( pipe_t *pipe, char *buf, unsigned size ){
 					line->avail++;
 				}
 
-				c = ( j + line->writep ) % line->size;
+				c = ( line->writep ) % line->size;
 				line->buf[c] = buf[j];
 				ret++;
+				line->writep++;
 			}
 
-			kprintf( "pipe_write: pipe->bufs[%d]->buf = \"%s\", avail = %d\n", i, line->buf, line->avail );
+			//kprintf( "pipe_write: pipe->bufs[%d]->buf = \"%s\", avail = %d\n", i, line->buf, line->avail );
 		}
 	}
 

@@ -4,11 +4,38 @@
 #include <base/datastructs/list.h>
 #include <base/tasking/semaphore.h>
 
+/* Main hardware abstraction layer types */
 enum {
 	HAL_TYPE_NULL,
 	HAL_TYPE_GENERAL,
 	HAL_TYPE_STORAGE,
 	HAL_TYPE_VIDEO,
+	HAL_TYPE_PERIPHERAL,
+};
+
+/* General subtypes */
+enum {
+	HAL_GENERAL_NULL,
+};
+
+/* Storage subtypes */
+enum {
+	HAL_STORAGE_NULL,
+	HAL_STORAGE_HARDDISK,
+};
+
+/* Video subtypes */
+enum {
+	HAL_VIDEO_NULL,
+	HAL_VIDEO_TEXT_BUF,
+	HAL_VIDEO_FRAME_BUF,
+};
+
+/* Peripheral subtypes */
+enum {
+	HAL_PERIPHERAL_NULL,
+	HAL_PERIPHERAL_KEYBOARD,
+	HAL_PERIPHERAL_MOUSE,
 };
 
 enum {
@@ -28,8 +55,11 @@ typedef struct hal_device {
 	hal_device_write_block 	write;
 	void 	*dev;
 
-	unsigned block_size;
+	char 	*name;
 	unsigned type;
+	unsigned subtype;
+
+	unsigned block_size;
 	unsigned flags;
 } hal_device_t;
 
