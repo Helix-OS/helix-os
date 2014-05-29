@@ -3,6 +3,31 @@
 #include <base/kstd.h>
 #include <base/mem/alloc.h>
 #include <base/tasking/elfload.h>
+#include <base/stdint.h>
+
+// Not a syscall, is a helper function
+int vfs_get_pobj( int pnode, file_pobj_t **obj ){
+	file_pobj_t *nodeobj;
+	task_t *cur_task;
+	int ret = 0;
+
+	cur_task = get_current_task( );
+	nodeobj = dlist_get( cur_task->pobjects, pnode );
+
+	if ( nodeobj ){
+		if ( nodeobj->type == FILE_POBJ ){
+			*obj = nodeobj;
+
+		} else {
+			ret = -ERROR_NOT_FILE;
+		}
+
+	} else {
+		ret = -ERROR_NOT_FOUND; 
+	}
+
+	return ret;
+}
 
 int vfs_open( char *path, int flags ){
 	file_pobj_t *newobj;
@@ -57,47 +82,24 @@ int vfs_open( char *path, int flags ){
 }
 
 int vfs_close( int pnode ){
-	file_pobj_t *nodeobj;
-	task_t *cur_task;
 	int ret;
+	file_pobj_t *nodeobj;
 
-	cur_task = get_current_task( );
-	nodeobj = dlist_get( cur_task->pobjects, pnode );
-
-	if ( nodeobj ){
-		if ( nodeobj->type == FILE_POBJ )
-			ret = VFS_FUNCTION( &nodeobj->node, close, 0 );
-		else 
-			ret = -ERROR_NOT_FILE;
-
-	} else {
-		ret = -ERROR_NOT_FOUND; 
-	}
+	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 )
+		ret = VFS_FUNCTION( &nodeobj->node, close, 0 );
 
 	return ret;
 }
 
 int vfs_read( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
-	task_t *cur_task;
 	int ret = 0;
 
-	cur_task = get_current_task( );
-	nodeobj = dlist_get( cur_task->pobjects, pnode );
+	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
+		ret = VFS_FUNCTION( &nodeobj->node, read, buf,
+				length, nodeobj->read_offset );
 
-	if ( nodeobj ){
-		if ( nodeobj->type == FILE_POBJ ){
-			ret = VFS_FUNCTION( &nodeobj->node, read, buf,
-					length, nodeobj->read_offset );
-
-			nodeobj->read_offset += ret;
-
-		} else {
-			ret = -ERROR_NOT_FILE;
-		}
-
-	} else {
-		ret = -ERROR_NOT_FOUND; 
+		nodeobj->read_offset += ret;
 	}
 
 	return ret;
@@ -105,25 +107,13 @@ int vfs_read( int pnode, void *buf, int length ){
 
 int vfs_write( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
-	task_t *cur_task;
 	int ret = 0;
 
-	cur_task = get_current_task( );
-	nodeobj = dlist_get( cur_task->pobjects, pnode );
+	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
+		ret = VFS_FUNCTION( &nodeobj->node, write, buf,
+				length, nodeobj->write_offset );
 
-	if ( nodeobj ){
-		if ( nodeobj->type == FILE_POBJ ){
-			ret = VFS_FUNCTION( &nodeobj->node, write, buf,
-					length, nodeobj->write_offset );
-
-			nodeobj->write_offset += ret;
-
-		} else {
-			ret = -ERROR_NOT_FILE;
-		}
-
-	} else {
-		ret = -ERROR_NOT_FOUND; 
+		nodeobj->write_offset += ret;
 	}
 
 	return ret;
@@ -132,16 +122,28 @@ int vfs_write( int pnode, void *buf, int length ){
 int vfs_spawn( int pnode, char *args[], char *envp[], int flags ){
 	int ret = 0;
 	int vfsfunc;
-	Elf32_Ehdr *header = knew( char[2000] );
+	file_pobj_t *nodeobj;
+	Elf32_Ehdr *header;
+	file_info_t *info;
 
-	vfsfunc = vfs_read( pnode, header, 2000 );
-	if ( vfsfunc > 0 )
-		elfload_from_mem( header );
-	else
-		ret = vfsfunc;
+	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
+		info = knew( file_info_t );
 
-	kfree( header );
+		if (( ret = VFS_FUNCTION( &nodeobj->node, get_info, info )) >= 0 ){
+			kprintf( "[%s] Loading process from file %d, size = %d\n", __func__, pnode, info->size );
+			header = knew( uint8_t[ info->size ]);
+
+			vfsfunc = vfs_read( pnode, header, info->size );
+			if ( vfsfunc == info->size )
+				elfload_from_mem( header );
+			else
+				ret = vfsfunc;
+
+			kfree( header );
+		}
+
+		kfree( info );
+	}
 
 	return ret;
 }
-

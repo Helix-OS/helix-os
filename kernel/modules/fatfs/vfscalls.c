@@ -221,6 +221,7 @@ int fatfs_vfs_get_info( struct file_node *node, struct file_info *buf ){
 		buf->links = 1;
 		buf->flags = 0;
 		buf->dev_id = 0;
+		buf->size = cache->dir.size;
 
 	} else {
 		ret = -ERROR_NOT_FOUND;
