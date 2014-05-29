@@ -154,7 +154,13 @@ static void keyboard_handler( registers_t *regs ){
 		} else {
 			if ( buf ){
 				keybd_sem = 0;
+
+				char *ctrl_seq = "\e";
+				if ( metastatus & KEYMETA_CTRL )
+					pipe_write( keyboard_pipe, ctrl_seq, (unsigned)strlen( ctrl_seq ));
+
 				pipe_write( keyboard_pipe, buf, (unsigned)strlen( buf ));
+
 				keybd_sem = 1;
 				//kprintf( "[%s] Got buffer \"%s\", meta keys: 0x%x\n", __func__, buf, metastatus );
 			}
