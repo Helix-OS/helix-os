@@ -4,6 +4,9 @@
 #include <base/elf.h>
 #include <base/multiboot.h>
 #include <base/string.h>
+#include <base/datastructs/list.h>
+#include <base/datastructs/dlist.h>
+#include <base/datastructs/hashmap.h>
 
 // Some structs to access the initmods images
 typedef struct mtable_header {
@@ -28,13 +31,21 @@ typedef struct module {
 	unsigned long 	pages;
 	char 		*def_symtab;
 	
+	dlist_container_t *depends;
+	dlist_container_t *links;
+
+	hashmap_t 	*symcache;
+	/*
 	int 		ndeps;
 	struct module 	*depends;
+	*/
 
+	/*
 	int 		nlinks;
 	struct module 	*links;
+	*/
 
-	struct module 	*next;
+	//struct module 	*next;
 } module_t;
 
 void init_module_system( multiboot_elf_t *elfinfo );

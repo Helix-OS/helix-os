@@ -1,13 +1,25 @@
 #include <base/module.h>
 #include <base/logger.h>
 #include <base/mem/alloc.h>
+#include <base/lib/stdbool.h>
 
-module_t *mod_list = 0;
+list_head_t *mod_list = 0;
 int mods_inited = 0;
 
 unsigned long mod_address;
 
 typedef int (*init_func)( );
+
+unsigned hash_string( char *str ){
+	unsigned ret = 0, i;
+
+	for ( i = 0; str[i]; i++ ){
+		ret ^= str[i] * (i + 1);
+		ret *= str[i];
+	}
+
+	return ret;
+}
 
 /*
  * The sections from the kernel image need to be loaded into a module struct
@@ -25,6 +37,8 @@ void init_module_system( multiboot_elf_t *elfinfo ){
 		memcpy((void *)((unsigned long)buf + sizeof( Elf32_Ehdr )),
 				(void *)elfinfo->addr, elfinfo->size * elfinfo->num );
 
+		mod_list = list_create( 0 );
+
 		buf->e_type  = ET_EXEC;
 		buf->e_phoff = 0;
 		buf->e_shoff = sizeof( Elf32_Ehdr );
@@ -41,8 +55,12 @@ void init_module_system( multiboot_elf_t *elfinfo ){
 		mod->elf_head 	= buf;
 		mod->def_symtab = strdup( ".symtab" );
 
-		mod_list 	= mod;
+		mod->depends 	= dlist_create( 0, 0 );
+		mod->links 	= dlist_create( 0, 0 );
+		mod->symcache 	= hashmap_create( 32 );
+
 		mod_address 	= 0xcf000000;
+		list_add_data( mod_list, mod );
 
 		for ( i = 0 ; i < elfinfo->num; i++ ){
 			shdr = (Elf32_Shdr *)((unsigned long)buf +
@@ -82,11 +100,14 @@ void load_init_modules( mhead_t *initmods ){
 
 module_t *get_module( char *name ){
 	module_t 	*ret = 0,
-			*move;
+			*mod;
+	list_node_t  	*move = mod_list->base;
 
-	for ( move = mod_list; move; move = move->next ){
-		if ( strcmp( move->name, name ) == 0 ){
-			ret = move;
+	foreach_in_list( move ){
+		mod = move->data;
+
+		if ( strcmp( mod->name, name ) == 0 ){
+			ret = mod;
 			break;
 		}
 	}
@@ -94,32 +115,111 @@ module_t *get_module( char *name ){
 	return ret;
 }
 
-void add_module( module_t *mod ){
-	module_t *move;
-
-	for ( move = mod_list; move->next; move = move->next );
-	move->next = mod;
-}
-
 void dump_modules( ){
-	module_t *move;
+	list_node_t *move = mod_list->base;
+	module_t *mod, *depmod;
+	int i, alloced;
 
-	move = mod_list;
-	for ( ; move; move = move->next )
-		kprintf( "\"%s\" at 0x%x\n", move->name, move->address );
+	foreach_in_list( move ){
+		mod = move->data;
+		kprintf( "\"%s\" at 0x%x", mod->name, mod->address );
+
+		if ( dlist_used( mod->depends )){
+			kprintf( ", depends on " );
+
+			alloced = dlist_allocated( mod->depends );
+			for ( i = 0; i < alloced; i++ ){
+				depmod = dlist_get( mod->depends, i );
+				if ( depmod )
+					kprintf( "%s, ", depmod->name );
+			}
+		}
+
+		kprintf( "\n" );
+	}
 }
 
 void *get_real_symbol_address( module_t *mod, char *name ){
 	Elf32_Sym 	*sym;
 	void 		*ret = 0;
+	unsigned 	nhash = hash_string( name );
 
 	if ( mod && mod->elf_head ){
-		sym = get_elf_sym_byname( mod->elf_head, name, mod->def_symtab );
-		if ( sym && sym->st_shndx != SHN_UNDEF )
-			ret = (void *)( mod->address + sym->st_value );
-		else
-			kprintf( "[get_real_symbol_address] have undefined symbol \"%s\" (sym: 0x%x:0x%x, %s)\n",
-					name, sym, sym? sym->st_shndx: 0, mod->def_symtab );
+		if (( ret = hashmap_get( mod->symcache, nhash )) == 0 ){
+			sym = get_elf_sym_byname( mod->elf_head, name, mod->def_symtab );
+
+			if ( sym && sym->st_shndx != SHN_UNDEF ){
+				ret = (void *)( mod->address + sym->st_value );
+				hashmap_add( mod->symcache, nhash, ret );
+			}
+		}
+	}
+
+	return ret;
+}
+
+bool module_load_depends( module_t *mod, char **depends ){
+	bool ret = true;
+	module_t *depmod;
+	int i;
+
+	for ( i = 0; depends[i]; i++ ){
+		depmod = get_module( depends[i] );
+		if ( !depmod ){
+			ret = false;
+			break;
+		}
+
+		dlist_add( mod->depends, depmod );
+	}
+
+	return ret;
+}
+
+void module_link_depends( module_t *mod ){
+	module_t *depmod;
+	int i,
+	    alloced;
+
+	alloced = dlist_allocated( mod->depends );
+	for ( i = 0; i < alloced; i++ ){
+		depmod = dlist_get( mod->depends, i );
+
+		if ( depmod )
+			dlist_add( depmod->links, mod );
+	}
+}
+
+bool module_link_symbol( module_t *mod, char *name, Elf32_Rel *rel ){
+	bool ret = false;
+	unsigned *addr,
+		 *calc;
+	unsigned i,
+		 alloced;
+	module_t *depmod;
+
+	addr = get_real_symbol_address( mod, name );
+
+	if ( !addr ){
+
+		alloced = dlist_allocated( mod->depends );
+		for ( i = 0; i < alloced && !addr; i++ ){
+			depmod = dlist_get( mod->depends, i );
+			if ( depmod )
+				addr = get_real_symbol_address( depmod, name );
+		}
+	}
+
+	if ( addr ){
+		calc = (unsigned *)( mod->address + rel->r_offset );
+
+		if ( ELF32_R_TYPE( rel->r_info ) == R_386_32 ){
+			*calc = (unsigned)addr;
+		} else if ( ELF32_R_TYPE( rel->r_info ) == R_386_PC32 ){
+			*calc = ((unsigned)addr - mod->address) + *calc - rel->r_offset;
+		}
+
+		ret = true;
 	}
 
 	return ret;
@@ -134,30 +234,32 @@ int load_module( Elf32_Ehdr *elf_obj ){
 	Elf32_Shdr 	*shdr;
 	Elf32_Rel 	*rel;
 	Elf32_Sym 	*sym;
-	module_t 	*new_mod,
-			*depmod;
+	module_t 	*new_mod;
 	int 		i,
 			j,
-			flags,
-			could_load = 0;
-	unsigned 	*calc,
-			*addr;
+			flags;
+	unsigned 	*calc;
 	unsigned long 	end_addr;
 	extern unsigned *kernel_dir;
 	init_func 	mod_init;
 
 	if ( !( buf[0] == 0x7f && buf[1] == 'E' && buf[2] == 'L' && buf[3] == 'F' )){
 		kprintf( "Invalid ELF object, could not load.\n" );
-		return -1;
+		goto error;
 	}
 
 	if ( elf_obj->e_type != ET_DYN ){
 		kprintf( "Cannot load non-dynamic elf object as module\n" );
-		return -1;
+		goto error;
 	}
 
 	new_mod = kmalloc( sizeof( module_t ));
 	memset( new_mod, 0, sizeof( module_t ));
+
+	new_mod->depends = dlist_create( 0, 0 );
+	new_mod->links = dlist_create( 0, 0 );
+	new_mod->symcache = hashmap_create( 32 );
+
 	new_mod->address = mod_address;
 	new_mod->elf_head = elf_obj;
 	new_mod->def_symtab = strdup( ".dynsym" );
@@ -165,22 +267,17 @@ int load_module( Elf32_Ehdr *elf_obj ){
 	for ( i = 0; i < elf_obj->e_phnum; i++ ){
 		phdr = get_elf_phdr( elf_obj, i );
 		if ( phdr && phdr->p_type == PT_LOAD ){
-			kprintf( "Loading %d bytes from 0x%x to 0x%x\n", phdr->p_filesz, phdr->p_offset,
-					phdr->p_vaddr + new_mod->address );
 
 			end_addr = phdr->p_vaddr + phdr->p_memsz + 
 				( PAGE_SIZE - ( phdr->p_vaddr + phdr->p_memsz )) % PAGE_SIZE % PAGE_SIZE;
-			kprintf( "[load_module] end_addr: 0x%x\n", end_addr );
 
 			flags = ((phdr->p_flags & PF_W)? PAGE_WRITEABLE : 0 ) | PAGE_PRESENT;
-
 			map_pages( kernel_dir, 	new_mod->address + ( phdr->p_vaddr & ~(PAGE_SIZE - 1)),
 						new_mod->address + end_addr, flags );
 
 			memcpy((void *)( new_mod->address + phdr->p_vaddr ),
 					(void *)((unsigned)elf_obj + phdr->p_offset ),
 					phdr->p_filesz );
-
 			mod_address = new_mod->address + end_addr;
 		}
 	}
@@ -194,31 +291,34 @@ int load_module( Elf32_Ehdr *elf_obj ){
 		rel = (Elf32_Rel *)((unsigned)elf_obj + shdr->sh_offset + shdr->sh_entsize * i );
 		if ( ELF32_R_TYPE( rel->r_info ) == R_386_RELATIVE ){
 			calc = (unsigned *)( new_mod->address + rel->r_offset );
-			kprintf( "Have relocation symbol of type R_386_RELATIVE: 0x%x\n", calc );
 			*calc = *calc + new_mod->address;
 		} 
 	}
 
-	kprintf( "[load_module] kprintf: 0x%x\n", get_real_symbol_address( get_module( "base" ), "kprintf" ));
-
 	provides = get_real_symbol_address( new_mod, "provides" );
 	if ( !provides ){
 		kprintf( "[load_module] Could not load module, does not have \"provides\" symbol defined.\n" );
-		kfree( new_mod );
-		return -1;
+		goto error_free;
 	}
-	kprintf( "Provides: 0x%x:%s\n", provides, *provides );
+
+	//kprintf( "Provides: 0x%x:%s\n", provides, *provides );
 	new_mod->name = *provides;
+	kprintf( "[%s] Loading module \"%s\"\n", __func__, new_mod->name );
 
 	depends = get_real_symbol_address( new_mod, "depends" );
 	if ( !depends ){
 		kprintf( "[load_module] Could not load module, does not have \"depends\" symbol defined.\n" );
-		kfree( new_mod );
-		return -1;
+		goto error_free;
 	}
-	kprintf( "depends: 0x%x:%s\n", depends, depends[0] );
 
-	kprintf( "Resolving symbols for %s...  ", *provides );
+	//kprintf( "depends: 0x%x:%s\n", depends, depends[0] );
+
+	if ( module_load_depends( new_mod, depends ) == false ){
+		kprintf( "[%s] Could not load module, could not resolve all dependancies\n", __func__ );
+		goto error_free;
+	}
+
+	//kprintf( "Resolving symbols for %s...  ", *provides );
 
 	for ( i = 0; shdr && i < shdr->sh_size / shdr->sh_entsize; i++ ){
 		rel = (Elf32_Rel *)((unsigned)elf_obj + shdr->sh_offset + shdr->sh_entsize * i );
@@ -232,62 +332,40 @@ int load_module( Elf32_Ehdr *elf_obj ){
 
 			temp = get_elf_sym_name( elf_obj, sym, new_mod->def_symtab );
 
-			//kprintf( "symbol j: %d: %s(0x%x):", j, temp, temp );
-			addr = get_real_symbol_address( new_mod, temp );
-			if ( !addr ){
-				//kprintf( "[load_module] dumping current modules:\n" );
-				//dump_modules( mod_list );
-				for ( j = 0; depends[j] && !addr; j++ ){
-					//kprintf( "[load_module] Trying next dependancy module \"%s\"\n", depends[j] );
-					depmod = get_module( depends[j] );
-					addr = get_real_symbol_address( depmod, temp );
-				}
+			if ( module_link_symbol( new_mod, temp, rel ) == false ){
+				kprintf( "[load_module] module \"%s\":"
+					 "Could not resolve symbol \"%s\"\n", *provides, temp );
 
-				if ( !addr ){
-					kprintf( "[load_module] module \"%s\":"
-						 "Could not resolve symbol \"%s\"\n", *provides, temp );
-					could_load = 0;
-					break;
-				}
-			} 
-			
-			if ( addr ){
-				calc = (unsigned *)( new_mod->address + rel->r_offset );
-				if ( ELF32_R_TYPE( rel->r_info ) == R_386_32 ){
-					//kprintf( "[load_module] Have relocation symbol of type R_386_32: 0x%x\n", calc );
-					*calc = (unsigned)addr;
-				} else if ( ELF32_R_TYPE( rel->r_info ) == R_386_PC32 ){
-					//kprintf( "[load_module] Have relocation symbol of type R_386_PC32: 0x%x\n", calc );
-					*calc = ((unsigned)addr - new_mod->address) + *calc - rel->r_offset;
-				}
-
-				//kprintf( "[load_module] Set relocation address to 0x%x\n", *calc );
-				could_load = 1;
-
+				goto error_free;
 			}
 		} 
 	}
 
-	if ( could_load ){
-		mod_init = (init_func)get_real_symbol_address( new_mod, "init" );
-		if ( !mod_init ){
-			kprintf( "[load_module] module \"%s\" has no init function\n", *provides );
-			return -1;
-		}
-
-		kprintf( "[load_module] Launching init function at 0x%x\n", mod_init );
-		mod_init( );
-
-		//new_mod->name = strdup( *provides );
-		add_module( new_mod );
-	} else {
-		kfree( new_mod );
-		return -1;
+	mod_init = (init_func)get_real_symbol_address( new_mod, "init" );
+	if ( !mod_init ){
+		kprintf( "[load_module] module \"%s\" has no init function\n", *provides );
+		goto error_free;
 	}
+
+	kprintf( "[load_module] Launching init function at 0x%x\n", mod_init );
+	mod_init( );
+
+	module_link_depends( new_mod );
+	list_add_data( mod_list, new_mod );
 
 	dump_modules( mod_list );
 
 	return 0;
+
+error_free:
+	hashmap_free( new_mod->symcache );
+	dlist_free( new_mod->depends );
+	dlist_free( new_mod->links );
+	kfree( new_mod->depends );
+	kfree( new_mod->links );
+	kfree( new_mod );
+
+error:
+	return -1;
+
 }
-
-
