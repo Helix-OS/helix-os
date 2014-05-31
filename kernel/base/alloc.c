@@ -139,7 +139,6 @@ void *amalloc( mheap_t *heap, int size, int align ){
 			}
 
 		} else if ( move->next == MBL_END ){
-			//kprintf( "Getting more pages...\n" );
 			buf = (unsigned)heap->blocks + heap->npages * PAGE_SIZE;
 			map_pages( heap->page_dir, buf, buf + heap->page_blocks * PAGE_SIZE, PAGE_WRITEABLE | PAGE_PRESENT );
 
@@ -151,9 +150,27 @@ void *amalloc( mheap_t *heap, int size, int align ){
 			temp->type = MBL_FREE;
 			temp->next = MBL_END;
 			move->next = temp;
+
+			if ( move->type == MBL_FREE ){
+				move->next = temp->next;
+				move->size += temp->size;
+				move = move->prev;
+			}
+
+			kprintf( "[%s] Got more pages, move->next at 0x%x, move->next->size 0x%x\n",
+					__func__, move->next, 
+					(move->next == MBL_END)? 0xdeadbeef : move->next->size );
 		}
 
-		//kprintf( "Have block with size 0x%x, trying next block...\n", move->size );
+		/*
+		kprintf( "Have block 0x%x with size 0x%x, trying next block...\n", move, move->size );
+		if ( move->size > 0xf000000 || move->size < sizeof( mblock_t ) * 2 ){
+			kprintf( "[%s] Caught a bad block at 0x%x! Debug me nao!\n",
+					__func__, move->next );
+			while( 1 );
+		}
+		*/
+
 		move = move->next;
 	}
 
