@@ -12,18 +12,23 @@ int vfs_get_pobj( int pnode, file_pobj_t **obj ){
 	int ret = 0;
 
 	cur_task = get_current_task( );
-	nodeobj = dlist_get( cur_task->pobjects, pnode );
 
-	if ( nodeobj ){
-		if ( nodeobj->type == FILE_POBJ ){
-			*obj = nodeobj;
+	if ( pnode < dlist_allocated( cur_task->pobjects )){
+		nodeobj = dlist_get( cur_task->pobjects, pnode );
+
+		if ( nodeobj ){
+			if ( nodeobj->type == FILE_POBJ ){
+				*obj = nodeobj;
+
+			} else {
+				ret = -ERROR_NOT_FILE;
+			}
 
 		} else {
-			ret = -ERROR_NOT_FILE;
+			ret = -ERROR_NOT_FOUND; 
 		}
-
 	} else {
-		ret = -ERROR_NOT_FOUND; 
+		ret = -ERROR_INVALID_ARGUMENT;
 	}
 
 	return ret;
@@ -95,7 +100,7 @@ int vfs_read( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
 	int ret = 0;
 
-	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
+	if ( length && ( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
 		ret = VFS_FUNCTION( &nodeobj->node, read, buf,
 				length, nodeobj->read_offset );
 
@@ -109,7 +114,7 @@ int vfs_write( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
 	int ret = 0;
 
-	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
+	if ( length && ( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
 		ret = VFS_FUNCTION( &nodeobj->node, write, buf,
 				length, nodeobj->write_offset );
 

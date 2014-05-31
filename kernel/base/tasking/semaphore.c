@@ -78,7 +78,7 @@ void *access_protected_var( protected_var_t *var ){
 
 	enter_semaphore( &var->sem );
 	ret = var->var;
-	kprintf( "Have ret = 0x%x\n", ret );
+	//kprintf( "Have ret = 0x%x\n", ret );
 
 	return ret;
 }

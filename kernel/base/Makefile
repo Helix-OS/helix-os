@@ -4,7 +4,7 @@ LD		= ld
 ARCH		= i586
 
 INCLUDE		= 
-CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DARCH=$(ARCH) -I$(INCLUDE)
+CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DARCH=$(ARCH) -I$(INCLUDE) -g
 ASFLAGS		= -f elf
 LDFLAGS		= -T linker.ld
 

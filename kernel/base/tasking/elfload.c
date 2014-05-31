@@ -14,8 +14,8 @@ int elfload_from_mem( Elf32_Ehdr *header ){
 
 	for ( phindex = 0; phindex < header->e_phnum; phindex++ ){
 		img_phdr = get_elf_phdr( header, phindex );
-		kprintf( "[%s] Have program header %d, vaddr: 0x%x, offset: 0x%x\n",
-				__func__, phindex, img_phdr->p_vaddr, img_phdr->p_offset );
+		kprintf( "[%s] Have program header %d at 0x%x, vaddr: 0x%x, offset: 0x%x\n",
+				__func__, phindex, img_phdr, img_phdr->p_vaddr, img_phdr->p_offset );
 
 		// TODO: Add address space checking to prevent kernel space from being overwritten by malicious files
 		map_pages( newdir, img_phdr->p_vaddr, img_phdr->p_vaddr + img_phdr->p_memsz,

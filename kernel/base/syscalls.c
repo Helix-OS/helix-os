@@ -35,7 +35,6 @@ void register_syscall( syscall_t n, void *call ){
 }
 
 static void syscall_handler( registers_t *regs ){
-	kprintf( "[%s] Got here, syscall %d\n", __func__, regs->eax );
 	if ( regs->eax >= CHANGEME_MAX_SYSCALLS )
 		return;
 
