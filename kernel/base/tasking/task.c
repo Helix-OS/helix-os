@@ -1,6 +1,7 @@
 #include <base/tasking/task.h>
 #include <base/arch/i386/init_tables.h>
 #include <base/tasking/rrsched.h>
+#include <base/string.h>
 
 static list_node_t *task_list = 0;
 static list_node_t *current_task = 0;
@@ -75,11 +76,58 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = 0;
-	add_task( new_task );
 
-	new_task->pagedir = clone_page_dir( get_current_page_dir( ));
+	// Assume page directory is already set up by loader
+	new_task->pagedir = get_current_page_dir( );
 	new_task->pobjects = dlist_create( 0, 0 );
 
+	// Copies all the argument and environment pointers to the task
+	{
+		int argc, i, envc,
+		    slen;
+		char **args;
+		char **envs;
+
+		for ( argc = 0; argv[argc]; argc++ );
+		for ( envc = 0; envp[envc]; envc++ ); 
+
+		new_task->esp -= sizeof( char *[envc] );
+		envs = (char **)new_task->esp;
+
+		new_task->esp -= sizeof( char *[argc] );
+		args = (char **)new_task->esp;
+
+		for ( i = 0; i < argc; i++ ){
+			slen = strlen( argv[i] );
+			new_task->esp -= sizeof( char[slen + 1] );
+
+			args[i] = (char *)new_task->esp;
+			strncpy( args[i], argv[i], slen );
+		}
+
+		for ( i = 0; i < envc; i++ ){
+			slen = strlen( envp[i] );
+			new_task->esp -= sizeof( char[slen + 1] );
+
+			envs[i] = (char *)new_task->esp;
+			strncpy( envs[i], envp[i], slen );
+		}
+		envs[envc] = 0;
+
+		new_task->esp -= sizeof( char ** );
+		*((char ***)new_task->esp) = envs;
+
+		new_task->esp -= sizeof( char ** );
+		*((char ***)new_task->esp) = args;
+
+		new_task->esp -= sizeof( int );
+		*((int *)new_task->esp) = argc;
+
+		kprintf( "[%s] Loading process with %d args\n", __func__, *((int *)new_task->esp ));
+	}
+
+
+	add_task( new_task );
 	unblock_tasks( );
 
 	return new_task->pid;

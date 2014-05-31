@@ -1,7 +1,7 @@
 #include <base/tasking/task.h>
 #include <base/tasking/elfload.h>
 
-int elfload_from_mem( Elf32_Ehdr *header ){
+int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[] ){
 	int ret = 0;
 	Elf32_Half phindex;
 	Elf32_Phdr *img_phdr;
@@ -23,7 +23,7 @@ int elfload_from_mem( Elf32_Ehdr *header ){
 		memcpy((void *)img_phdr->p_vaddr, (char *)header + img_phdr->p_offset, img_phdr->p_filesz );
 	}
 
-	create_thread( (void (*)())header->e_entry );
+	create_process( (void (*)())header->e_entry, argv, envp );
 
 	set_page_dir( olddir );
 

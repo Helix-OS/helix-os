@@ -66,7 +66,7 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	int fd;
 	fd = syscall_open( "/test/fatdir/asdf", FILE_READ );
 	if ( fd >= 0 )
-		syscall_spawn( fd, 0, 0, 0 );
+		syscall_spawn( fd, (char *[]){ "/test/fatdir/asdf", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
 
 	while( 1 ) asm volatile( "hlt" );
 }
