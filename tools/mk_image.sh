@@ -8,8 +8,15 @@ if [ `id -u` -ne 0 ]; then
 fi
 
 IMAGE=helix.img
-dd if=/dev/zero of=$IMAGE bs=1M count=16
-chmod uga+rw $IMAGE
+EXISTS=1
+
+if [ -e $IMAGE ]; then
+	EXISTS=0;
+else
+	dd if=/dev/zero of=$IMAGE bs=1M count=16
+	chmod uga+rw $IMAGE
+fi
+
 
 function copy_stuff(){
 	mkdir -p temp_mount/boot/grub
@@ -26,18 +33,26 @@ mkdir temp_mount
 if [ $machine = "Linux" ]; then
 	echo "Generating on linux..." 
 
-	echo -e "n\np\n\n2048\n\na\nw\nq\n" | fdisk $IMAGE
+	if [ $EXISTS -eq 1 ]; then
+		echo -e "n\np\n\n2048\n\na\nw\nq\n" | fdisk $IMAGE
+	fi
+
 	losetup -o$(( 2048 * 512 )) /dev/loop0 $IMAGE
-	mkfs.vfat /dev/loop0
+
+	if [ $EXISTS -eq 1 ]; then
+		mkfs.vfat /dev/loop0
+	fi
+
 	mount -t vfat /dev/loop0 temp_mount
 
 	copy_stuff
 
-	losetup /dev/loop1 $IMAGE
-	grub-install --root-directory=$PWD/temp_mount/boot --boot-directory=$PWD/temp_mount/boot \
-		--no-floppy --modules="normal part_msdos ext2 multiboot" /dev/loop1
-
-	losetup -d /dev/loop1
+	if [ $EXISTS -eq 1 ]; then
+		losetup /dev/loop1 $IMAGE
+		grub-install --root-directory=$PWD/temp_mount/boot --boot-directory=$PWD/temp_mount/boot \
+			--no-floppy --modules="normal part_msdos ext2 multiboot" /dev/loop1
+		losetup -d /dev/loop1
+	fi
 
 	umount temp_mount
 	losetup -d /dev/loop0

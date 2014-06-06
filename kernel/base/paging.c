@@ -153,6 +153,10 @@ page_dir_t *get_current_page_dir( ){
 	return current_dir;
 }
 
+page_dir_t *get_kernel_page_dir( ){
+	return kernel_dir;
+}
+
 void set_page_dir( unsigned *dir ){
 	unsigned	address = 0,
 			cr0;

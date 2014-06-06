@@ -72,15 +72,18 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 	new_task->group = new_task->pid;
 	new_task->state = TASK_STATE_RUNNING;
 
-	new_task->stack = (unsigned long)(kmalloc( 0x800 ));
-	new_task->eip = (unsigned long)start;
-	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
-	new_task->ebp = 0;
-
 	// Assume page directory is already set up by loader
 	new_task->pagedir = get_current_page_dir( );
 	new_task->pobjects = dlist_create( 0, 0 );
 
+	new_task->stack = (unsigned long)(kmalloc( 0x800 ));
+	//map_page( new_task->pagedir, 0xbfffe000 | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+	//new_task->stack = 0xbfffe000;
+	new_task->eip = (unsigned long)start;
+	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
+	new_task->ebp = 0;
+
+	/*
 	// Copies all the argument and environment pointers to the task
 	{
 		int argc, i, envc,
@@ -89,13 +92,13 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 		char **envs;
 
 		for ( argc = 0; argv[argc]; argc++ );
-		for ( envc = 0; envp[envc]; envc++ ); 
+		for ( envc = 0; envp[envc]; envc++ );
 
-		new_task->esp -= sizeof( char *[envc] );
-		envs = (char **)new_task->esp;
-
-		new_task->esp -= sizeof( char *[argc] );
+		new_task->esp -= sizeof( char *[argc + 1] );
 		args = (char **)new_task->esp;
+
+		new_task->esp -= sizeof( char *[envc + 1] );
+		envs = (char **)new_task->esp;
 
 		for ( i = 0; i < argc; i++ ){
 			slen = strlen( argv[i] );
@@ -104,6 +107,7 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 			args[i] = (char *)new_task->esp;
 			strncpy( args[i], argv[i], slen );
 		}
+		args[argc] = 0;
 
 		for ( i = 0; i < envc; i++ ){
 			slen = strlen( envp[i] );
@@ -123,9 +127,9 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 		new_task->esp -= sizeof( int );
 		*((int *)new_task->esp) = argc;
 
-		kprintf( "[%s] Loading process with %d args\n", __func__, *((int *)new_task->esp ));
+		kprintf( "[%s] Loading process with %d args at 0x%x\n", __func__, *((int *)new_task->esp), new_task->esp );
 	}
-
+	*/
 
 	add_task( new_task );
 	unblock_tasks( );

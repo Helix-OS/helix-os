@@ -20,6 +20,7 @@ void set_page_dir( unsigned *dir );
 void flush_tlb( );
 unsigned *clone_page_dir( unsigned *dir );
 page_dir_t *get_current_page_dir( );
+page_dir_t *get_kernel_page_dir( );
 
 int init_paging( unsigned max_mem );
 void page_fault_handler( registers_t *regs );
