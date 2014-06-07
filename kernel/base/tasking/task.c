@@ -83,7 +83,6 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = 0;
 
-	/*
 	// Copies all the argument and environment pointers to the task
 	{
 		int argc, i, envc,
@@ -129,7 +128,6 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 
 		kprintf( "[%s] Loading process with %d args at 0x%x\n", __func__, *((int *)new_task->esp), new_task->esp );
 	}
-	*/
 
 	add_task( new_task );
 	unblock_tasks( );
