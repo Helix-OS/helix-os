@@ -17,7 +17,7 @@ STRIP		= $(CROSS)/bin/$(TARGET)-strip
 CONFIG_C_FLAGS	= -g
 
 all: check helix-kernel ktools image
-dev-all: check helix-kernel userland image docs test
+dev-all: check helix-kernel ktools image docs test
 
 debug:
 	@gdb -x gdbscript
@@ -67,7 +67,7 @@ cross-cc:
 
 docs:
 	@echo -e "[\033[0;34mMaking documentation...\033[0;0m]"
-	@doxygen doc/doc.conf > /dev/null
+	@cd doc; doxygen doxy.conf > /dev/null
 	@echo -e "[\033[0;34mdone\033[0;0m]";
 
 clean:
