@@ -47,9 +47,6 @@ image:
 	@echo -e "[\033[0;32mMaking image\033[0;0m]"
 	@cp -r boot-image build
 	@cp kernel/helix_kernel-i586 build
-	@# The order of the files in kernel/modules is important, the modules
-	@# are loaded in this order
-	@#tools/mkinitrd build/initrd.img kernel/modobjs/{pci,ata,vga,devfs,fatfs,ps2keybd,dummy}_mod.o
 	@tar c kernel/modobjs kernel/config > build/initrd.tar
 	@./tools/mk_image.sh
 	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
@@ -80,6 +77,3 @@ clean:
 	@-rm -rf build
 
 .PHONY: all
-
-meh:
-	tools/mkinitrd ./initrd.img kernel/modules/*

@@ -7,6 +7,7 @@
 #include <base/datastructs/list.h>
 #include <base/datastructs/dlist.h>
 #include <base/datastructs/hashmap.h>
+#include <base/initrd.h>
 
 // Some structs to access the initmods images
 typedef struct mtable_header {
@@ -49,7 +50,8 @@ typedef struct module {
 } module_t;
 
 void init_module_system( multiboot_elf_t *elfinfo );
-void load_init_modules( mhead_t *initmods );
+//void load_init_modules( mhead_t *initmods );
+void load_init_modules( initrd_t *initmods );
 int load_module( Elf32_Ehdr *elf_obj );
 
 #endif

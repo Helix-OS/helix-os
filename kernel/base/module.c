@@ -75,26 +75,54 @@ void init_module_system( multiboot_elf_t *elfinfo ){
 	mods_inited = 1;
 }
 
-void load_init_modules( mhead_t *initmods ){
-	mtable_t *table;
+/** \brief Loads the initial modules listed in "kernel/config/modtab" in the initrd.
+ *  On failing to load a module, it continues and tries the next module listed.
+ *  @param initmods The initrd object returned from \ref init_initrd.
+ */
+void load_init_modules( initrd_t *initmods ){
+	tar_header_t *tarhead;
 	Elf32_Ehdr *elf_buf;
-	int i;
+	char *namebuf;
+	char *modtab;
+	int i, j;
+	unsigned size;
 
-	if ( !initmods ){
-		kprintf( "[load_init_modules] Was passed a null pointer! Can't load modules\n" );
-		return;
-	}
+	if ( initmods ){
+		kprintf( "Initmods at 0x%x\n", initmods );
 
-	kprintf( "Initmods at 0x%x: 0x%x: 0x%x\n", initmods, initmods->entries, initmods->magic );
+		tarhead = initrd_get_file( initmods, "kernel/config/modtab" );
+		if ( tarhead ){
+			modtab = (char *)(tarhead + 1);
+			size = initrd_get_size( tarhead );
+			namebuf = knew( char[128] );
 
-	table = (mtable_t *)((unsigned)initmods + initmods->table_offset );
-	for ( i = 0; i < initmods->entries; i++ ){
-		kprintf( "0x%x: 0x%x, 0x%x, 0x%x\n",
-				table + i, table[i].magic, table[i].offset, table[i].len );
+			for ( i = 0; i < size; ){
+				for ( j = 0; modtab[i + j] != '\n' && j < size; j++ )
+					namebuf[j] = modtab[i + j];
 
-		elf_buf = (Elf32_Ehdr *)((unsigned)initmods + table[i].offset );
+				namebuf[j] = 0;
 
-		load_module( elf_buf );
+				kprintf( "[%s] Have module \"%s\"\n", __func__, namebuf );
+				tarhead = initrd_get_file( initmods, namebuf );
+				if ( tarhead ){
+					elf_buf = (Elf32_Ehdr *)( tarhead + 1 );
+					load_module( elf_buf );
+
+				} else {
+					kprintf( "[%s] Could not find module \"%s\"\n", __func__, namebuf );
+				}
+
+				i += j + 1;
+			}
+
+			kfree( namebuf );
+
+		} else {
+			kprintf( "[load_init_modules] Could not find modtab file, can't load modules\n" );
+		}
+
+	} else {
+		kprintf( "[load_init_modules] Was passed a null pointer, Can't load modules\n" );
 	}
 }
 
