@@ -8,5 +8,6 @@ unsigned write_logger( void *buf, unsigned size );
 char *logputs( char *str );
 int kvprintf( char *format, va_list args );
 int kprintf( char *format, ... );
+int atoi( char *n );
 
 #endif

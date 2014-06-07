@@ -10,6 +10,8 @@
 #include <base/syscalls.h>
 #include <vfs/vfs.h> // TODO: Move this to the base tree
 
+#include <base/initrd.h>
+
 #include <base/arch/i386/pitimer.h>
 #include <base/tasking/task.h>
 #include <base/tasking/userspace.h>
@@ -19,8 +21,9 @@ extern mheap_t *kheap;
 extern unsigned int early_placement;
 
 void kmain( multiboot_header_t *mboot, int blarg, int magic ){
-	int *modules;
+	void *modules;
 	multiboot_elf_t *elfinfo = 0;
+	initrd_t *rd;
 
 	kprintf( "-==[ Helix kernel booting\n" );
 
@@ -32,7 +35,8 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 		elfinfo = &mboot->elf_headers;
 
 	if ( mboot->flags & MULTIBOOT_FLAG_MODS && mboot->mods_count ){
-		modules = (int *)*(int *)mboot->mods_addr;
+		//modules = (int *)*(int *)mboot->mods_addr;
+		modules = *(int **)mboot->mods_addr;
 		early_placement = *(int *)(mboot->mods_addr + 4);
 	}
 
@@ -42,6 +46,18 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 
 	kheap = kmalloc_early( sizeof( mheap_t ), 0 );
 	init_heap( kheap, kernel_dir, 0xd0000000, PAGE_SIZE * 8 );
+
+	rd = init_initrd( modules );
+	tar_header_t *meh = initrd_get_file( rd, "kernel/config/modtab" );
+	char *testptr;
+	unsigned i, size;
+
+	testptr = (char *)(meh + 1);
+	size = initrd_get_size( meh );
+	for ( i = 0; i < size; i++ )
+		kprintf( "%c", testptr[i] );
+
+	while( 1 );
 
 	asm volatile( "sti" );
 	init_syscalls( );
@@ -55,7 +71,7 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 
 	// Initialize module system
 	init_module_system( elfinfo );
-	load_init_modules((void *)modules );
+	load_init_modules( modules );
 
 	hal_dump_devices( );
 	dump_aheap_blocks( kheap );

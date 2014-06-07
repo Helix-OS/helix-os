@@ -58,6 +58,18 @@ void print_num( unsigned input ){
 		write_logger( &buf[i], 1 );
 }
 
+int atoi( char *n ){
+	int ret = 0;
+	char *s = n;
+
+	for ( ; *s; s++ ){
+		ret *= 10;
+		ret += *s - '0';
+	}
+
+	return ret;
+}
+
 void print_hex( unsigned input ){
 	unsigned i, a;
 	char	buf[32],

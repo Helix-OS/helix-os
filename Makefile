@@ -20,7 +20,7 @@ all: check helix-kernel ktools image
 dev-all: check helix-kernel ktools image docs test
 
 debug:
-	@gdb -x gdbscript
+	@gdb -x tools/gdbscript
 
 check:
 	@if [ ! -e cross/.cross_check ]; then \
@@ -45,9 +45,12 @@ ktools:
 image:
 	@echo -e "[\033[0;34mGenerating image...\033[0;0m]"
 	@echo -e "[\033[0;32mMaking image\033[0;0m]"
+	@cp -r boot-image build
+	@cp kernel/helix_kernel-i586 build
 	@# The order of the files in kernel/modules is important, the modules
 	@# are loaded in this order
-	@tools/mkinitrd ./initrd.img kernel/modobjs/{pci,ata,vga,devfs,fatfs,ps2keybd,dummy}_mod.o
+	@#tools/mkinitrd build/initrd.img kernel/modobjs/{pci,ata,vga,devfs,fatfs,ps2keybd,dummy}_mod.o
+	@tar c kernel/modobjs kernel/config > build/initrd.tar
 	@./tools/mk_image.sh
 	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
 	@echo -e "[\033[0;32mdone\033[0;0m]"
@@ -74,6 +77,7 @@ clean:
 	@cd kernel; $(MAKE) clean
 	@cd tools; $(MAKE) clean
 	@-rm *.img
+	@-rm -rf build
 
 .PHONY: all
 

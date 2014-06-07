@@ -17,17 +17,6 @@ else
 	chmod uga+rw $IMAGE
 fi
 
-
-function copy_stuff(){
-	mkdir -p temp_mount/boot/grub
-
-	cp kernel/helix_kernel-i586 temp_mount/boot/
-	cp initrd.img temp_mount/boot/
-	cp -r boot-image/* temp_mount/boot/
-
-	echo "Copied" temp_mount/boot/*
-}
-
 mkdir temp_mount
 
 if [ $machine = "Linux" ]; then
@@ -45,7 +34,9 @@ if [ $machine = "Linux" ]; then
 
 	mount -t vfat /dev/loop0 temp_mount
 
-	copy_stuff
+	mkdir -p temp_mount/boot/grub
+	cp -r build/* temp_mount/boot
+	echo "Copied" temp_mount/boot/*
 
 	if [ $EXISTS -eq 1 ]; then
 		losetup /dev/loop1 $IMAGE
