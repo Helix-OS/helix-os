@@ -28,9 +28,11 @@ void init_tasking( void ){
 	current_task = task_list = list_add_data_node( task_list, root_task );
 	root_task->pagedir = get_current_page_dir( );
 	root_task->pobjects = dlist_create( 0, 0 );
+	root_task->stack = kmalloca( 2048 );
 	tasking_initialized = 1;
 
 	register_pitimer_call( rrschedule_call );
+	set_kernel_stack( root_task->stack );
 	asm volatile( "sti" );
 }
 
@@ -47,7 +49,7 @@ int create_thread( void (*start)( )){
 	new_task->state = TASK_STATE_RUNNING;
 
 	new_task->pagedir = get_current_page_dir( );
-	new_task->stack = (unsigned long)(kmalloc( 0x800 ));
+	new_task->stack = (unsigned long)(kmalloca( 0x800 ));
 	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = 0;
@@ -76,12 +78,14 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 	new_task->pagedir = get_current_page_dir( );
 	new_task->pobjects = dlist_create( 0, 0 );
 
-	new_task->stack = (unsigned long)(kmalloc( 0x800 ));
+	new_task->stack = (unsigned long)(kmalloca( 0x800 ));
 	//map_page( new_task->pagedir, 0xbfffe000 | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+	//map_page( get_kernel_page_dir( ), 0xbfffe000 | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
 	//new_task->stack = 0xbfffe000;
 	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
-	new_task->ebp = 0;
+	new_task->ebp = new_task->esp;
+	//new_task->ebp = 0;
 
 	// Copies all the argument and environment pointers to the task
 	{

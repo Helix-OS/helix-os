@@ -20,6 +20,19 @@ extern unsigned int *kernel_dir;
 extern mheap_t *kheap;
 extern unsigned int early_placement;
 
+void utest( ){
+	switch_to_usermode( );
+
+	int fd;
+	fd = syscall_open( "/test/fatdir/asdf", FILE_READ );
+	if ( fd >= 0 )
+		syscall_spawn( fd, (char *[]){ "/test/fatdir/asdf", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
+
+	//syscall_test( );
+
+	while( 1 );
+}
+
 void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	void *modules;
 	multiboot_elf_t *elfinfo = 0;
@@ -44,7 +57,7 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	init_paging( mboot->mem_lower + mboot->mem_upper );
 
 	kheap = kmalloc_early( sizeof( mheap_t ), 0 );
-	init_heap( kheap, kernel_dir, 0xd0000000, PAGE_SIZE * 8 );
+	init_heap( kheap, kernel_dir, 0xd0000000, PAGE_SIZE * 32 );
 
 	initrd = init_initrd( modules );
 
@@ -66,10 +79,7 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	kprintf( "-==[ Kernel initialized successfully.\n" );
 	asm volatile( "int $0x30" );
 
-	int fd;
-	fd = syscall_open( "/test/fatdir/asdf", FILE_READ );
-	if ( fd >= 0 )
-		syscall_spawn( fd, (char *[]){ "/test/fatdir/asdf", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
+	create_thread( utest );
 
 	while( 1 ) asm volatile( "hlt" );
 }

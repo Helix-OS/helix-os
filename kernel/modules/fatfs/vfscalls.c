@@ -8,7 +8,8 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 	fatfs_device_t *dev = node->fs->devstruct;
 
 	unsigned cluster_size;
-	char namebuf[256];
+	//char namebuf[256];
+	char *namebuf;
 	uint8_t *sectbuf;
 	int i;
 	int has_longname = 0;
@@ -21,6 +22,8 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 	dircache = hashmap_get( dev->inode_map, node->inode );
 
 	if ( dircache ){
+		namebuf = knew( char[ 256 ]);
+
 		if ( dircache->dir.attributes & FAT_ATTR_DIRECTORY ){
 
 			cluster_size = dev->bpb->bytes_per_sect * dev->bpb->sect_per_clus;
@@ -71,6 +74,7 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 			ret = -ERROR_NOT_DIRECTORY;
 		}
 
+		kfree( namebuf );
 	} else {
 		ret = -ERROR_NOT_FOUND;
 	}
