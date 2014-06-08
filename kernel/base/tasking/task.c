@@ -2,6 +2,7 @@
 #include <base/arch/i386/init_tables.h>
 #include <base/tasking/rrsched.h>
 #include <base/string.h>
+#include <base/syscalls.h>
 
 static list_node_t *task_list = 0;
 static list_node_t *current_task = 0;
@@ -33,6 +34,9 @@ void init_tasking( void ){
 
 	register_pitimer_call( rrschedule_call );
 	set_kernel_stack( root_task->stack );
+
+	register_syscall( SYSCALL_EXIT, exit_process );
+
 	asm volatile( "sti" );
 }
 
@@ -137,6 +141,19 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 	unblock_tasks( );
 
 	return new_task->pid;
+}
+
+void exit_process( int status ){
+	task_t *cur = get_current_task( );
+
+	if ( cur->pid ){
+		if ( cur->waiting )
+			*cur->waiting = status;
+
+		remove_task_by_pid( cur->pid );
+	}
+
+	rrschedule_call( );
 }
 
 void exit_thread( ){

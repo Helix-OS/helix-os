@@ -28,7 +28,7 @@ void utest( ){
 	if ( fd >= 0 )
 		syscall_spawn( fd, (char *[]){ "/test/fatdir/asdf", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
 
-	//syscall_test( );
+	syscall_test( );
 
 	while( 1 );
 }

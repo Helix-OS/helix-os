@@ -45,6 +45,7 @@ void usleep( unsigned long useconds );
 int create_thread( void (*start)( ));
 int create_process( void (*start)( ), char *argv[], char *envp[] );
 void exit_thread( );
+void exit_process( int status );
 task_t *add_task( task_t *new_task );
 task_t *init_task( task_t *buffer );
 int remove_task_by_pid( int pid );
