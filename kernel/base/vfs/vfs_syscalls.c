@@ -79,7 +79,6 @@ int vfs_open( char *path, int flags ){
 
 		if ( lookup < 0 ){
 			ret = lookup;
-			kfree( newobj->path );
 			kfree( newobj );
 		}
 
