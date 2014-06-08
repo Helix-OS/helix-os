@@ -38,50 +38,54 @@ int vfs_open( char *path, int flags ){
 	file_pobj_t *newobj;
 
 	int lookup;
-	int ret;
+	int ret = -ERROR_NOT_FOUND;
 	int i;
 	task_t *cur_task;
-	//file_node_t dirnode;
 	char *dirpath;
 	char *fpath;
 
-	newobj = knew( file_pobj_t );
-	newobj->type = FILE_POBJ;
-	newobj->path = strdup( path );
-	dirpath = strdup( path );
+	if ( strlen( path )){
+		newobj = knew( file_pobj_t );
+		newobj->type = FILE_POBJ;
+		//newobj->path = strdup( path );
+		dirpath = strdup( path );
 
-	for ( i = strlen( path ); i; i-- ){
-		if ( path[i-1] == '/' ){
-			dirpath[i-1] = 0;
-			fpath = dirpath + i;
+		for ( i = strlen( path ); i; i-- ){
+			if ( path[i-1] == '/' ){
+				dirpath[i-1] = 0;
+				fpath = dirpath + i;
 
-			kprintf( "[%s] Looking for directory \"%s\", file \"%s\"\n", __func__, dirpath, fpath );
-			break;
+				kprintf( "[%s] Looking for directory \"%s\", file \"%s\"\n", __func__, dirpath, fpath );
+				break;
+			}
 		}
+
+		if ( dirpath[0] )
+			lookup = file_lookup_absolute( dirpath, &newobj->node, 0 );
+		else 
+			lookup = file_lookup_absolute( "/", &newobj->node, 0 );
+
+		if ( lookup == 0 ){
+			// TODO: Add permission checking
+			lookup = VFS_FUNCTION( &newobj->node, open, fpath, flags );
+
+			if ( lookup >= 0 ){
+				file_lookup_absolute( path, &newobj->node, 0 );
+
+				cur_task = get_current_task( );
+				ret = dlist_add( cur_task->pobjects, newobj );
+			} 
+		}
+
+		if ( lookup < 0 ){
+			ret = lookup;
+			kfree( newobj->path );
+			kfree( newobj );
+		}
+
+		memset( dirpath, 0, strlen( dirpath ));
+		kfree( dirpath );
 	}
-
-	lookup = file_lookup_absolute( dirpath, &newobj->node, 0 );
-
-	if ( lookup == 0 ){
-		// TODO: Add permission checking
-		lookup = VFS_FUNCTION( &newobj->node, open, fpath, flags );
-
-		if ( lookup >= 0 ){
-			file_lookup_absolute( path, &newobj->node, 0 );
-
-			cur_task = get_current_task( );
-			ret = dlist_add( cur_task->pobjects, newobj );
-		} 
-	}
-
-	if ( lookup < 0 ){
-		ret = lookup;
-		kfree( newobj->path );
-		kfree( newobj );
-	}
-
-	memset( dirpath, 0, strlen( dirpath ));
-	kfree( dirpath );
 
 	return ret;
 }
@@ -119,6 +123,18 @@ int vfs_write( int pnode, void *buf, int length ){
 				length, nodeobj->write_offset );
 
 		nodeobj->write_offset += ret;
+	}
+
+	return ret;
+}
+
+int vfs_readdir( int pnode, dirent_t *dirp, int entry ){
+	file_pobj_t *nodeobj;
+	int ret = 0;
+
+	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
+		ret = VFS_FUNCTION( &nodeobj->node, readdir, dirp, entry );
+		kprintf( "[%s] Woot got here, ret = %d\n", __func__, -ret );
 	}
 
 	return ret;

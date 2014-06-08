@@ -317,6 +317,7 @@ static int ramfs_readdir_node( struct file_node *node, struct dirent *dirp, int 
 
 	if ( foo >= 0 ){
 		if ( rnode->info.type == FILE_TYPE_DIR ){
+			kprintf( "[%s] Woot got here\n", __func__ );
 			dlist = rnode->data;
 			dirbuf = dlist_get( dlist, entry );
 
