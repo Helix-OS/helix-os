@@ -9,6 +9,7 @@ int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[] ){
 	Elf32_Phdr *img_phdr;
 	page_dir_t *newdir,
 		   *olddir;
+	memmap_t *map = 0;
 
 	int argc, envc;
 	char **argbuf, **envbuf;
@@ -40,11 +41,18 @@ int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[] ){
 		// TODO: Add address space checking to prevent kernel space from being overwritten by malicious files
 		map_pages( newdir, img_phdr->p_vaddr, img_phdr->p_vaddr + img_phdr->p_memsz,
 				PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+
+		if ( !map ){
+			map = memmap_create( img_phdr->p_vaddr, img_phdr->p_vaddr + img_phdr->p_memsz,
+				MEMMAP_TYPE_IMAGE, MEMMAP_PERM_READ | MEMMAP_PERM_WRITE | MEMMAP_PERM_EXEC | MEMMAP_PERM_USER );
+					
+		}
+		
 		memcpy((void *)img_phdr->p_vaddr, (char *)header + img_phdr->p_offset, img_phdr->p_filesz );
 	}
 
 	//create_process( (void (*)())header->e_entry, argv, envp );
-	create_process( (void (*)())header->e_entry, argbuf, envbuf );
+	ret = create_process( (void (*)())header->e_entry, argbuf, envbuf, map );
 	set_page_dir( olddir );
 
 	for ( i = 0; i < argc; i++ )

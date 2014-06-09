@@ -201,6 +201,9 @@ void flush_tlb( ){
 void page_fault_handler( registers_t *regs ){
 	unsigned long fault_addr;
 	task_t *current;
+	list_node_t *temp;
+	memmap_t *map;
+	bool found = false;
 
 	asm volatile( "mov %%cr2, %0": "=r"( fault_addr ));
 
@@ -212,16 +215,36 @@ void page_fault_handler( registers_t *regs ){
 			( regs->err_code & 2 )?		" readonly":"",
 			( regs->err_code & 4 )?		" usermode":""
 		);
-	} else {
-		kprintf( "page fault: 0x%x: 0x%x:%s%s%s\n",
-			fault_addr, regs->err_code,
-			(!regs->err_code & 1 )?		" not present":"",
-			( regs->err_code & 2 )?		" readonly":"",
-			( regs->err_code & 4 )?		" usermode":""
-		);
 
-		kprintf( "[%s] Have bad process %d, killing...\n", __func__, current->pid );
-		remove_task_by_pid( current->pid );
+	} else {
+		temp = current->memmaps->base;
+		foreach_in_list( temp ){
+			map = temp->data;
+			if ( memmap_check( map, fault_addr )){
+				found = true;
+				break;
+			}
+		}
+
+		if ( found ){
+			map_page( current->pagedir,
+					(fault_addr & ~(PAGE_SIZE  - 1)) | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+
+			kprintf( "================ [%s] Mapped page 0x%x\n", __func__, 
+					(fault_addr & ~(PAGE_SIZE  - 1)) | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+			flush_tlb( );
+
+		} else {
+			kprintf( "page fault: 0x%x: 0x%x:%s%s%s\n",
+				fault_addr, regs->err_code,
+				(!regs->err_code & 1 )?		" not present":"",
+				( regs->err_code & 2 )?		" readonly":"",
+				( regs->err_code & 4 )?		" usermode":""
+			);
+
+			kprintf( "[%s] Have bad process %d, killing...\n", __func__, current->pid );
+			remove_task_by_pid( current->pid );
+		}
 	}
 }
 

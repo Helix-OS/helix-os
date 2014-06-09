@@ -8,6 +8,7 @@
 #include <base/tasking/semaphore.h>
 #include <base/arch/i386/pitimer.h> /* TODO: remove this, implement generic timer */
 #include <base/arch/i386/paging.h> 
+#include <base/mem/memmap.h>
 
 typedef unsigned long pid_t;
 
@@ -34,7 +35,9 @@ typedef struct task {
 	unsigned long 		stack;
 
 	page_dir_t 		*pagedir;
+	list_head_t 		*memmaps;
 	semaphore_t 	 	*sem;
+	memmap_t		*mainmap;
 
 	int 			waiting;
 	int 			end_status;
@@ -51,13 +54,14 @@ void unblock_tasks( );
 void usleep( unsigned long useconds );
 
 int create_thread( void (*start)( ));
-int create_process( void (*start)( ), char *argv[], char *envp[] );
+int create_process( void (*start)( ), char *argv[], char *envp[], memmap_t *map );
 void exit_thread( );
 void exit_process( int status );
 task_t *add_task( task_t *new_task );
 task_t *init_task( task_t *buffer );
 int remove_task_by_pid( int pid );
 pid_t waitpid( pid_t id, int *status, int options );
+void *sbrk( int increment );
 
 list_node_t *get_task_list( void );
 list_node_t *get_current_task_node( void );

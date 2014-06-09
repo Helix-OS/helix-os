@@ -155,7 +155,7 @@ int vfs_spawn( int pnode, char *args[], char *envp[], int flags ){
 
 			vfsfunc = vfs_read( pnode, header, info->size );
 			if ( vfsfunc == info->size )
-				elfload_from_mem( header, args, envp );
+				ret = elfload_from_mem( header, args, envp );
 			else
 				ret = vfsfunc;
 

@@ -71,8 +71,8 @@ docs:
 	@echo -e "[\033[0;34mdone\033[0;0m]";
 
 clean:
-	@cd kernel; $(MAKE) clean
-	@cd tools; $(MAKE) clean
+	@-cd kernel; $(MAKE) clean
+	@-cd tools; $(MAKE) clean
 	@-rm *.img
 	@-rm -rf build
 

@@ -52,6 +52,7 @@ void init_tasking( void ){
 
 	register_syscall( SYSCALL_EXIT, exit_process );
 	register_syscall( SYSCALL_WAITPID, waitpid );
+	register_syscall( SYSCALL_SBRK, sbrk );
 
 	create_thread( idle_task );
 
@@ -60,6 +61,7 @@ void init_tasking( void ){
 
 int create_thread( void (*start)( )){
 	task_t *new_task = 0;
+	task_t *cur = get_current_task( );
 
 	block_tasks( );
 
@@ -67,10 +69,12 @@ int create_thread( void (*start)( )){
 	memset( new_task, 0, sizeof( task_t ));
 
 	new_task->pid = ++pidcount;
-	new_task->group = get_current_task( )->group;
+	new_task->group = cur->group;
 	new_task->state = TASK_STATE_RUNNING;
 
 	new_task->pagedir = get_current_page_dir( );
+	new_task->memmaps = cur->memmaps;
+	new_task->mainmap = cur->mainmap;
 	new_task->stack = (unsigned long)(kmalloca( 0x800 ));
 	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
@@ -84,7 +88,7 @@ int create_thread( void (*start)( )){
 	return new_task->pid;
 }
 
-int create_process( void (*start)( ), char *argv[], char *envp[] ){
+int create_process( void (*start)( ), char *argv[], char *envp[], memmap_t *map ){
 	task_t *new_task;
 
 	block_tasks( );
@@ -98,16 +102,20 @@ int create_process( void (*start)( ), char *argv[], char *envp[] ){
 
 	// Assume page directory is already set up by loader
 	new_task->pagedir = get_current_page_dir( );
+	new_task->memmaps = list_create( 0 );
 	new_task->pobjects = dlist_create( 0, 0 );
 
+	if ( map ){
+		list_add_data( new_task->memmaps, map );
+		map->references++;
+
+		new_task->mainmap = map;
+	}
+
 	new_task->stack = (unsigned long)(kmalloca( 0x800 ));
-	//map_page( new_task->pagedir, 0xbfffe000 | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
-	//map_page( get_kernel_page_dir( ), 0xbfffe000 | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
-	//new_task->stack = 0xbfffe000;
 	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = new_task->esp;
-	//new_task->ebp = 0;
 
 	// Copies all the argument and environment pointers to the task
 	{
@@ -195,6 +203,7 @@ pid_t waitpid( pid_t id, int *status, int options ){
 	target = listnode->data;
 	target->waiting++;
 
+	kprintf( "[%s] Increased wait queue, %d\n", __func__, target->waiting );
 	// TODO: properly find that the task has ended
 	while ( target->state != TASK_STATE_ENDED ){
 		kprintf( "." );
@@ -203,6 +212,19 @@ pid_t waitpid( pid_t id, int *status, int options ){
 
 	*status = target->end_status;
 	target->waiting--;
+
+	return ret;
+}
+
+void *sbrk( int increment ){
+	task_t *cur;
+	void *ret;
+	
+	cur = get_current_task( );
+	ret = (void *)cur->mainmap->end;
+	cur->mainmap->end += increment;
+
+	kprintf( "[%s] Got here, returning 0x%x\n", __func__, ret );
 
 	return ret;
 }
@@ -284,7 +306,12 @@ int remove_task_by_pid( int pid ){
 
 	task = node->data;
 	task->state = TASK_STATE_ENDED;
-	rrschedule_call( );
+	kprintf( "[%s] waiting: %d\n", __func__, task->waiting );
+	if ( task->waiting ){
+		kprintf( "[%s] Letting other process get the exit status...\n", __func__ );
+
+		rrschedule_call( );
+	}
 
 	block_tasks( );
 
