@@ -1,4 +1,5 @@
 #include <ata/ata.h>
+#include <base/string.h>
 
 static int ata_ide_irq_invoked = 0;
 
@@ -112,7 +113,10 @@ void ata_initialize_ide( ata_device_t *device ){
 			hal_buf->type = HAL_TYPE_STORAGE;
 			hal_buf->flags = HAL_FLAG_NULL;
 
-			kprintf( "[%s] Have hal_buf->dev at 0x%x, new_ctrl at 0x%x\n", __func__, hal_buf->dev, new_ctrl );
+			hal_buf->name = strdup((char []){ 'a', 't', 'a', count + '0', 0 });
+
+			kprintf( "[%s] Have \"%s\" hal_buf->dev at 0x%x, new_ctrl at 0x%x\n", __func__,
+					hal_buf->name, hal_buf->dev, new_ctrl );
 			hal_register_device( hal_buf );
 
 			new_ctrl->devices[count].hal_buf = hal_buf;

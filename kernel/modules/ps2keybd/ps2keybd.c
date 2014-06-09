@@ -182,6 +182,7 @@ int init( ){
 	new_dev->dev = keyboard_pipe->bufs[0];
 	new_dev->read = kbd_hal_read;
 	new_dev->block_size = 1;
+	new_dev->name = strdup( "keyboard" );
 
 	init_semaphore( &keybd_sem, 1 );
 

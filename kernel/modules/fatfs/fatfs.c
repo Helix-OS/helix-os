@@ -157,7 +157,7 @@ int test( ){
 	char *testbuf = knew( char[2300] );
 	int i;
 
-	file_mount_filesystem( "/test/fatdir", "/test/devices/device1", "fatfs", 0 );
+	file_mount_filesystem( "/test/fatdir", "/test/devices/ata1", "fatfs", 0 );
 	lookup = file_lookup_absolute( "/test/fatdir/Makefile", &fnode, 0 );
 
 	if ( lookup == 0 ){

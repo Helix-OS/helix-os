@@ -102,8 +102,7 @@ static int devfs_readdir_node( struct file_node *node, struct dirent *dirp, int 
 		devbuf = hal_get_device( entry );
 		if ( devbuf ){
 			// TODO: Have the type of the device in the name
-			strcpy( dirp->name, "device" );
-			dirp->name[6] = (char)entry + '0';
+			strcpy( dirp->name, devbuf->name );
 			dirp->inode = 128 + entry;
 
 			ret = 1;

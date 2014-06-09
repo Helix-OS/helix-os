@@ -94,6 +94,8 @@ int init( ){
 	new_haldev->type = HAL_TYPE_VIDEO;
 	new_haldev->write = vga_hal_write;
 	new_haldev->dev = new_vga;
+	new_haldev->name = strdup( "console" );
+
 	hal_register_device( new_haldev );
 
 	for ( i = 0; i < 80 * 25; i++ ){
