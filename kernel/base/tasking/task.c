@@ -284,8 +284,7 @@ int remove_task_by_pid( int pid ){
 
 	task = node->data;
 	task->state = TASK_STATE_ENDED;
-	while ( task->waiting )
-		rrschedule_call( );
+	rrschedule_call( );
 
 	block_tasks( );
 

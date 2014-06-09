@@ -4,11 +4,6 @@
 
 /* Switches tasks when called */
 void rrschedule_call( void ){
-	/*
-	if ( is_task_blocked( ))
-		return;
-		*/
-
 	//asm volatile( "sti" );
 	//block_tasks( );
 	asm volatile( "cli" );
@@ -52,7 +47,7 @@ void rrschedule_call( void ){
 		move = next_node->data;
 	} while (( move->state == TASK_STATE_SLEEPING && move->sleep > get_tick( )) ||
 			( move->state == TASK_STATE_WAITING && !*move->sem ) ||
-			( move->state == TASK_STATE_ENDED ));
+			( move->state == TASK_STATE_ENDED && move->waiting ));
 
 	move->state = TASK_STATE_RUNNING;
 
@@ -63,13 +58,9 @@ void rrschedule_call( void ){
 	ebp = move->ebp;
 
 	if ( move->pagedir != get_current_page_dir( )){
-		//kprintf( "[%s] Setting new page dir 0x%x\n", __func__, move->pagedir );
 		set_page_dir( move->pagedir );
 	}
 	//set_kernel_stack( move->stack );
-
-	//asm volatile( "cli" );
-	//unblock_tasks( );
 
 	asm volatile( "\
 		cli;           \
