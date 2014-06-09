@@ -3,11 +3,13 @@
 #include <base/hal.h>
 #include <base/logger.h>
 #include <base/string.h>
+#include <base/stdio.h>
 
 char *depends[] = { "base", 0 };
 char *provides = "vga";
 
 static int vga_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset );
+static void set_cursor( struct hal_device *dev, int x, int y );
 
 /* Offset is ignored in this function, since it's handled by the driver */
 static int vga_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset ){
@@ -23,6 +25,14 @@ static int vga_hal_write( struct hal_device *dev, void *buf, unsigned count, uns
 				vga->cur_y++;
 			case '\r':
 				vga->cur_x = 0;
+				continue;
+			case '\b':
+				vga->cur_x--;
+
+				i = vga->cur_x + vga->cur_y * vga->max_x;
+				buffer[i].letter = 0;
+
+				set_cursor( dev, vga->cur_x, vga->cur_y );
 				continue;
 			default:
 				break;
@@ -47,9 +57,23 @@ static int vga_hal_write( struct hal_device *dev, void *buf, unsigned count, uns
 		buffer[i].letter = str[ret];
 
 		vga->cur_x++;
+
+		buffer[i+1].color = VGA_COLOR_GRAY;
+		set_cursor( dev, vga->cur_x, vga->cur_y );
 	}
 
 	return ret;
+}
+
+static void set_cursor( struct hal_device *dev, int x, int y ){
+	unsigned temp;
+
+	temp = (y * 80) + x;
+
+	outb( 0x3d4, 14 );
+	outb( 0x3d5, temp >> 8 );
+	outb( 0x3d4, 15 );
+	outb( 0x3d5, temp );
 }
 
 int init( ){
