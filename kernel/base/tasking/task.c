@@ -19,6 +19,21 @@ unsigned long get_instruct_ptr( void ){
 }
 */
 
+/** \brief Idle task which just calls the scheduler to switch tasks.
+ *
+ *  This is needed because the scheduler disables interrupts while looking for an
+ *  task to run. If there's only one thread, and it does a usleep( ) call, the scheduler
+ *  will go in to an infinite loop because get_tick( ) will never increase (because interrupts
+ *  are disabled).
+ *
+ *  This gives anything that needs interrupts time to happen,
+ *  without disabling interrupts in the scheduler.
+ */
+void idle_task( ){
+	while ( 1 )
+		rrschedule_call( );
+}
+
 void init_tasking( void ){
 	asm volatile( "cli" );
 	task_t *root_task;
@@ -36,6 +51,9 @@ void init_tasking( void ){
 	set_kernel_stack( root_task->stack );
 
 	register_syscall( SYSCALL_EXIT, exit_process );
+	register_syscall( SYSCALL_WAITPID, waitpid );
+
+	create_thread( idle_task );
 
 	asm volatile( "sti" );
 }
@@ -147,8 +165,7 @@ void exit_process( int status ){
 	task_t *cur = get_current_task( );
 
 	if ( cur->pid ){
-		if ( cur->waiting )
-			*cur->waiting = status;
+		cur->end_status = status;
 
 		remove_task_by_pid( cur->pid );
 	}
@@ -164,6 +181,30 @@ void exit_thread( ){
 	}
 
 	rrschedule_call( );
+}
+
+pid_t waitpid( pid_t id, int *status, int options ){
+	pid_t ret = id;
+	task_t *target;
+	list_node_t *listnode;
+
+	listnode = get_task_node_by_pid( id );
+	if ( !listnode )
+		return -1;
+
+	target = listnode->data;
+	target->waiting++;
+
+	// TODO: properly find that the task has ended
+	while ( target->state != TASK_STATE_ENDED ){
+		kprintf( "." );
+		rrschedule_call( );
+	}
+
+	*status = target->end_status;
+	target->waiting--;
+
+	return ret;
 }
 
 unsigned long get_current_pid( ){
@@ -194,7 +235,7 @@ task_t *get_current_task( void ){
 	return ret;
 }
 
-list_node_t *get_task_node_by_pid( unsigned pid ){
+list_node_t *get_task_node_by_pid( pid_t pid ){
 	list_node_t *temp = get_task_list( );
 	list_node_t *ret = 0;
 	task_t *buf;
@@ -237,13 +278,18 @@ int remove_task_by_pid( int pid ){
 	int i, nobjs;
 	void *objptr;
 
-	block_tasks( );
 	node = get_task_node_by_pid( pid );
 	if ( !node )
 		return -1;
 
-	// Remove node from scheduler
 	task = node->data;
+	task->state = TASK_STATE_ENDED;
+	while ( task->waiting )
+		rrschedule_call( );
+
+	block_tasks( );
+
+	// Remove node from scheduler
 	list_remove_node( node );
 
 	// Clean up stack
@@ -277,13 +323,13 @@ void set_current_task_node( list_node_t *node ){
 }
 
 void usleep( unsigned long useconds ){
-	block_tasks( );
+	//block_tasks( );
 	task_t *task = get_current_task( );
 
 	task->sleep = get_tick( ) + (useconds * 100 / 1000);
 	task->state = TASK_STATE_SLEEPING;
 
-	unblock_tasks( );
+	//unblock_tasks( );
 	rrschedule_call( );
 }
 

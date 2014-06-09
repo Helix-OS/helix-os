@@ -4,11 +4,14 @@
 
 /* Switches tasks when called */
 void rrschedule_call( void ){
+	/*
 	if ( is_task_blocked( ))
 		return;
+		*/
 
 	//asm volatile( "sti" );
-	block_tasks( );
+	//block_tasks( );
+	asm volatile( "cli" );
 
 	unsigned long volatile 	esp = 0,
 			      	eip = 0,
@@ -21,13 +24,15 @@ void rrschedule_call( void ){
 	       *current = get_current_task( );
 
 	if ( !current_node || !current ){
-		unblock_tasks( );
+		//unblock_tasks( );
+		asm volatile( "sti" );
 		return;
 	}
 
 	eip = get_instruct_ptr( );
 	if ( check ){
-		unblock_tasks( );
+		//unblock_tasks( );
+		asm volatile( "sti" );
 		return;
 	}
 
@@ -46,7 +51,8 @@ void rrschedule_call( void ){
 		next_node = next_node->next? next_node->next : get_task_list( );
 		move = next_node->data;
 	} while (( move->state == TASK_STATE_SLEEPING && move->sleep > get_tick( )) ||
-			( move->state == TASK_STATE_WAITING && !*move->sem ));
+			( move->state == TASK_STATE_WAITING && !*move->sem ) ||
+			( move->state == TASK_STATE_ENDED ));
 
 	move->state = TASK_STATE_RUNNING;
 
@@ -63,7 +69,7 @@ void rrschedule_call( void ){
 	//set_kernel_stack( move->stack );
 
 	//asm volatile( "cli" );
-	unblock_tasks( );
+	//unblock_tasks( );
 
 	asm volatile( "\
 		cli;           \

@@ -15,50 +15,27 @@ int enter_semaphore( semaphore_t *sem ){
 	task_t *current;
 	int ret = 0;
 
-	block_tasks( );
-
-	//kprintf( "[enter_semaphore] Woot got here\n" );
-
-	if ( !sem ){
-		unblock_tasks( );
+	if ( !sem )
 		return 0;
-	}
 
 	if ( *sem ){
 		ret = --*sem;
-		unblock_tasks( );
 
 	} else {
-		kprintf( "[enter_semaphore] zomg threads are trying to access the same thing\n" );
-
 		current = get_current_task( );
 		current->state = TASK_STATE_WAITING;
 		current->sem = sem;
 
-		unblock_tasks( );
 		rrschedule_call( );
 
 		ret = --*sem;
-		kprintf( "[enter_semaphore] ok we're good\n" );
 	}
 
 	return ret;
 }
 
 int leave_semaphore( semaphore_t *sem ){
-	int ret;
-
-	block_tasks( );
-
-	if ( !sem ){
-		unblock_tasks( );
-		return 0;
-	}
-
-	ret = ++(*sem);
-
-	unblock_tasks( );
-	return ret;
+	return ++(*sem);
 }
 
 protected_var_t *create_protected_var( int nallowed, void *var ){
