@@ -46,7 +46,7 @@ download: check
 
 binutils: download
 	@echo -e "[\033[0;32mMaking $(BINUTILS)\033[0;0m]";
-	@cd $(BINUTILS); ./configure --prefix=$(PREFIX) --target=$(TARGET) --disable-nls; \
+	@cd $(BINUTILS); ./configure --disable-werror --prefix=$(PREFIX) --target=$(TARGET) --disable-nls; \
 	$(MAKE); $(MAKE) install;
 
 gmp: download
