@@ -66,12 +66,12 @@ mpc: download gmp mpfr
 
 gcc: download binutils gmp mpfr mpc
 	@echo -e "[\033[0;32mMaking $(GCC)\033[0;0m]";
-	@cd $(GCC); export PATH="$$PATH:$(PREFIX)";\
-	./configure --prefix=$(PREFIX) --target=$(TARGET) --disable-nls --enable-languages=c,c++ \
-	--disable-install-libiberty \
+	@mkdir -p gccbuild
+	@cd gccbuild; export PATH="$$PATH:$(PREFIX)";\
+	../$(GCC)/configure --prefix=$(PREFIX) --target=$(TARGET) --disable-nls --enable-languages=c,c++ \
 	--without-headers --with-gmp=$(PREFIX) --with-mpc=$(PREFIX) --with-mpfr=$(PREFIX);\
-	$(MAKE) all-gcc; $(MAKE) all-target-gcc;\
-	$(MAKE) install-gcc; ##$(MAKE) install-target-gcc;
+	$(MAKE) all-gcc all-target-libgcc; \
+	$(MAKE) install-gcc install-target-libgcc;
 
 test: gcc
 	@echo -e "[\033[0;32mTesting build...\033[0;0m]";
