@@ -1,0 +1,3 @@
+[submodule "userland/dalibc"]
+	path = userland/dalibc
+	url = https://github.com/dragontux/dalibc.git
