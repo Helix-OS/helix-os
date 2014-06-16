@@ -24,7 +24,7 @@ void utest( ){
 	switch_to_usermode( );
 
 	int fd;
-	fd = syscall_open( "/test/fatdir/asdf", FILE_READ );
+	fd = syscall_open( "/test/fatdir/bin/init", FILE_READ );
 	if ( fd >= 0 )
 		syscall_spawn( fd, (char *[]){ "/test/fatdir/asdf", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
 

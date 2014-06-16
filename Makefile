@@ -2,7 +2,8 @@ ARCH		= i586
 TARGET		= $(ARCH)-elf
 MAKE		= make
 EMULATOR	= qemu-system-i386
-EMU_FLAGS	= -hda helix.img -hdb fattest.hdd -s -serial stdio -m 32
+#EMU_FLAGS	= -hda helix.img -hdb fattest.hdd -s -serial stdio -m 32
+EMU_FLAGS	= -hda helix.img -hdb userland/user.hdd -s -serial stdio -m 32
 #EMU_FLAGS	= -kernel kernel/helix_kernel-i586 -serial stdio -nographic -m 16 -s
 CROSS		= $(shell pwd)/cross
 
@@ -16,8 +17,8 @@ OBJCOPY		= $(CROSS)/bin/$(TARGET)-objcopy
 STRIP		= $(CROSS)/bin/$(TARGET)-strip
 CONFIG_C_FLAGS	= -g
 
-all: check helix-kernel ktools image
-dev-all: check helix-kernel ktools image docs test
+all: check helix-kernel ktools userspace image
+dev-all: check helix-kernel ktools userspace image docs test
 
 debug:
 	@gdb -x tools/gdbscript
