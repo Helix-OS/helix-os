@@ -1,10 +1,11 @@
 #include <dalibc/syscalls.h>
+#include <stdlib.h>
 
 int main( int argc, char *argv[], char *envp[] ){
 	int keyboard = open( "/test/devices/keyboard", 1 );
 	int video = open( "/test/devices/console", 2 );
 	int i;
-	char asdf[32];
+	char *asdf = malloc( 32 );
 
 	write( video, "Hello, world!\n", 15 );
 
