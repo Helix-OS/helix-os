@@ -53,8 +53,9 @@ image:
 	@echo -e "[\033[0;32mdone\033[0;0m]"
 	@echo -e "[\033[0;34mdone\033[0;0m]";
 
-userland:
-	@cd user; $(MAKE)
+userspace:
+	@cd userland; $(MAKE) all KNAME=$(KNAME) \
+		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)
 
 test:
 	$(EMULATOR) $(EMU_FLAGS)
@@ -70,7 +71,11 @@ docs:
 	@cd doc; doxygen doxy.conf > /dev/null
 	@echo -e "[\033[0;34mdone\033[0;0m]";
 
-clean:
+user-clean:
+	@-cd userland; $(MAKE) clean KNAME=$(KNAME) \
+		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)
+
+clean: user-clean
 	@-cd kernel; $(MAKE) clean
 	@-cd tools; $(MAKE) clean
 	@-rm *.img
