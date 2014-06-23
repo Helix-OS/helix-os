@@ -33,6 +33,14 @@ void utest( ){
 	while( 1 );
 }
 
+/** \brief The main kernel entry point, initializes things that are
+ *         not architecture specific.
+ *
+ *  @param mboot The multiboot header passed by a compliant bootloader.
+ *  @param blarg At the moment, the initial stack placement. This parameter
+ *               is unused and will be removed soon.
+ *  @param magic The multiboot header checksum.
+ */
 void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	void *modules;
 	multiboot_elf_t *elfinfo = 0;

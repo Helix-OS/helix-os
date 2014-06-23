@@ -76,7 +76,8 @@ void init_module_system( multiboot_elf_t *elfinfo ){
 }
 
 /** \brief Loads the initial modules listed in "kernel/config/modtab" in the initrd.
- *  On failing to load a module, it continues and tries the next module listed.
+ *         On failing to load a module, it continues and tries the next module listed.
+ *
  *  @param initmods The initrd object returned from \ref init_initrd.
  */
 void load_init_modules( initrd_t *initmods ){
@@ -126,6 +127,12 @@ void load_init_modules( initrd_t *initmods ){
 	}
 }
 
+/** \brief Searches for a loaded module object.
+ *
+ *  @param name The name of the module to search for.
+ *  @return a module_t pointer for the module corresponding to "name"
+ *          if it was found, NULL otherwise.
+ */
 module_t *get_module( char *name ){
 	module_t 	*ret = 0,
 			*mod;
@@ -143,6 +150,7 @@ module_t *get_module( char *name ){
 	return ret;
 }
 
+/** \brief Dumps the currently loaded modules to the debug output. */
 void dump_modules( ){
 	list_node_t *move = mod_list->base;
 	module_t *mod, *depmod;
@@ -167,6 +175,12 @@ void dump_modules( ){
 	}
 }
 
+/** \brief Searches for a symbol in the given module.
+ *
+ *  @param mod The module to search in.
+ *  @param name The name of the symbol to search for.
+ *  @return The pointer corresponding to the symbol if found, NULL otherwise.
+ */
 void *get_real_symbol_address( module_t *mod, char *name ){
 	Elf32_Sym 	*sym;
 	void 		*ret = 0;
@@ -186,6 +200,13 @@ void *get_real_symbol_address( module_t *mod, char *name ){
 	return ret;
 }
 
+/** \brief Checks that all needed dependancies are loaded and adds them
+ *         to the new module's "depends" list.
+ *
+ *  @param mod The new module to load dependancies for.
+ *  @param depends A null-terminated list of dependancies to search for.
+ *  @return true if all needed modules were found, false otherwise.
+ */
 bool module_load_depends( module_t *mod, char **depends ){
 	bool ret = true;
 	module_t *depmod;
@@ -204,6 +225,10 @@ bool module_load_depends( module_t *mod, char **depends ){
 	return ret;
 }
 
+/** \brief Adds the new module to the "links" list of all it's dependancies
+ *
+ *  @param mod The new module to link to it's dependancies.
+ */
 void module_link_depends( module_t *mod ){
 	module_t *depmod;
 	int i,
@@ -253,6 +278,22 @@ bool module_link_symbol( module_t *mod, char *name, Elf32_Rel *rel ){
 	return ret;
 }
 
+/** \brief Copies a dynamic ELF object and links it against kernel symbols.
+ *
+ *  This function takes a pointer to an entire dynamic ELF already loaded in memory,
+ *  maps pages for the module, copies the program headers into the mapped memory,
+ *  and then links the module with the modules specified in the object.
+ *
+ *  The ELF object passed must remain in memory for the entire function; if it's freed
+ *  by another thread while copying undefined things will happen. After returning,
+ *  the object isn't needed any more and can be safely freed.
+ *
+ *  This function is a bit big and can probably be broken up more, but there is
+ *  not a lot of magic happening here.
+ *
+ *  @param  elf_obj Pointer to a dynamic ELF object in memory.
+ *  @return 0 if the module was loaded successfully, otherwise an error code less than 0.
+ */
 int load_module( Elf32_Ehdr *elf_obj ){
 	char 		*buf = (char *)elf_obj->e_ident,
 			**depends,
@@ -385,6 +426,7 @@ int load_module( Elf32_Ehdr *elf_obj ){
 
 	return 0;
 
+	// my compsci professor now hates me
 error_free:
 	hashmap_free( new_mod->symcache );
 	dlist_free( new_mod->depends );
