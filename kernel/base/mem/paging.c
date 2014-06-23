@@ -90,6 +90,16 @@ int map_pages( unsigned *dir, unsigned start, unsigned end, unsigned permissions
 	return 1;
 }
 
+/** Change the permissions of already-mapped pages */
+int remap_pages( unsigned *dir, unsigned start, unsigned end, unsigned permissions ){
+	unsigned i;
+
+	for ( i = start; i < end; i += PAGE_SIZE )
+		map_r_page( dir, (i & ~(PAGE_SIZE - 1)) | permissions, get_page( dir, i ));
+
+	return 1;
+}
+
 int free_page( unsigned *dir, unsigned vaddress ){
 	int ret = 0;
 	unsigned int	*move = (void *)0,

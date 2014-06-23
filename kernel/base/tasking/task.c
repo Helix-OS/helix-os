@@ -88,7 +88,7 @@ int create_thread( void (*start)( )){
 	return new_task->pid;
 }
 
-int create_process( void (*start)( ), char *argv[], char *envp[], memmap_t *map ){
+int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *map ){
 	task_t *new_task;
 
 	block_tasks( );
@@ -102,14 +102,22 @@ int create_process( void (*start)( ), char *argv[], char *envp[], memmap_t *map 
 
 	// Assume page directory is already set up by loader
 	new_task->pagedir = get_current_page_dir( );
-	new_task->memmaps = list_create( 0 );
 	new_task->pobjects = dlist_create( 0, 0 );
 
 	if ( map ){
-		list_add_data( new_task->memmaps, map );
-		map->references++;
+		list_node_t *temp = map->base;
+		memmap_t *tempmap;
 
-		new_task->mainmap = map;
+		new_task->memmaps = map;
+		foreach_in_list( temp ){
+			tempmap = temp->data;
+			tempmap->references++;
+		}
+
+		new_task->mainmap = map->last->data;
+	} else {
+		// TODO: Add a dummy map here for paging purposes
+		new_task->memmaps = list_create( 0 );
 	}
 
 	new_task->stack = (unsigned long)(kmalloca( 0x800 ));

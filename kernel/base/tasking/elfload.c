@@ -9,11 +9,14 @@ int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[] ){
 	Elf32_Phdr *img_phdr;
 	page_dir_t *newdir,
 		   *olddir;
-	memmap_t *map = 0;
+	//memmap_t *map = 0;
+	list_head_t *map_list;
 
 	int argc, envc;
 	char **argbuf, **envbuf;
 	int i;
+
+	map_list = list_create( 0 );
 
 	for ( argc = 0; argv[argc]; argc++ );
 	for ( envc = 0; argv[envc]; envc++ );
@@ -42,17 +45,31 @@ int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[] ){
 		map_pages( newdir, img_phdr->p_vaddr, img_phdr->p_vaddr + img_phdr->p_memsz,
 				PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
 
-		if ( !map ){
-			map = memmap_create( img_phdr->p_vaddr, img_phdr->p_vaddr + img_phdr->p_memsz,
-				MEMMAP_TYPE_IMAGE, MEMMAP_PERM_READ | MEMMAP_PERM_WRITE | MEMMAP_PERM_EXEC | MEMMAP_PERM_USER );
+		list_add_data( map_list,
+			memmap_create( img_phdr->p_vaddr, img_phdr->p_vaddr + img_phdr->p_memsz,
+				MEMMAP_TYPE_IMAGE,
+				MEMMAP_PERM_READ | MEMMAP_PERM_WRITE | MEMMAP_PERM_EXEC | MEMMAP_PERM_USER ));
 					
-		}
-		
 		memcpy((void *)img_phdr->p_vaddr, (char *)header + img_phdr->p_offset, img_phdr->p_filesz );
+
+		// If the pages are read-only, remap them as such
+		if (( img_phdr->p_flags & PF_W ) == 0 ){
+			kprintf( "[%s] Remapping pages as read-only...\n", __func__ );
+			remap_pages( newdir, img_phdr->p_vaddr, img_phdr->p_vaddr + img_phdr->p_memsz,
+				PAGE_USER | PAGE_PRESENT );
+		}
 	}
 
+	/** Map user heap */
+	map_pages( newdir, 0xb0000000, 0xb0001000,
+			PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+	list_add_data( map_list,
+		memmap_create( 0xb0000000, 0xb0000010,
+			MEMMAP_TYPE_IMAGE,
+			MEMMAP_PERM_READ | MEMMAP_PERM_WRITE | MEMMAP_PERM_EXEC | MEMMAP_PERM_USER ));
+
 	//create_process( (void (*)())header->e_entry, argv, envp );
-	ret = create_process( (void (*)())header->e_entry, argbuf, envbuf, map );
+	ret = create_process( (void (*)())header->e_entry, argbuf, envbuf, map_list );
 	set_page_dir( olddir );
 
 	for ( i = 0; i < argc; i++ )

@@ -14,23 +14,6 @@ typedef unsigned int	Elf32_Off;
 typedef signed int	Elf32_Sword;
 typedef unsigned int	Elf32_Word;
 
-typedef struct {
-	unsigned char	e_ident[EI_NIDENT];
-	Elf32_Half	e_type;
-	Elf32_Half	e_machine;
-	Elf32_Word	e_version;
-	Elf32_Addr	e_entry;
-	Elf32_Off	e_phoff;
-	Elf32_Off	e_shoff;
-	Elf32_Word	e_flags;
-	Elf32_Half	e_ehsize;
-	Elf32_Half	e_phentsize;
-	Elf32_Half	e_phnum;
-	Elf32_Half	e_shentsize;
-	Elf32_Half	e_shnum;
-	Elf32_Half	e_shstrndx;
-} Elf32_Ehdr;
-
 /** Types possible for e_type */
 enum {
 	ET_NONE	  = 0,
@@ -177,6 +160,25 @@ enum {
 	STT_HIPROC 	= 15
 };
 
+/** Main ELF object header */
+typedef struct {
+	unsigned char	e_ident[EI_NIDENT];
+	Elf32_Half	e_type;
+	Elf32_Half	e_machine;
+	Elf32_Word	e_version;
+	Elf32_Addr	e_entry;
+	Elf32_Off	e_phoff;
+	Elf32_Off	e_shoff;
+	Elf32_Word	e_flags;
+	Elf32_Half	e_ehsize;
+	Elf32_Half	e_phentsize;
+	Elf32_Half	e_phnum;
+	Elf32_Half	e_shentsize;
+	Elf32_Half	e_shnum;
+	Elf32_Half	e_shstrndx;
+} Elf32_Ehdr;
+
+/** An elf section header. */
 typedef struct {
 	Elf32_Word	sh_name;
 	Elf32_Word	sh_type;
@@ -190,6 +192,7 @@ typedef struct {
 	Elf32_Word	sh_entsize;
 } Elf32_Shdr;
 
+/** An elf program header, used for loading programs into memory. */
 typedef struct {
 	Elf32_Word	p_type;
 	Elf32_Off	p_offset;
@@ -201,6 +204,7 @@ typedef struct {
 	Elf32_Word	p_align;
 } Elf32_Phdr;
 
+/** An elf symbol */
 typedef struct {
 	Elf32_Word	st_name;
 	Elf32_Addr	st_value;
@@ -210,11 +214,13 @@ typedef struct {
 	Elf32_Half	st_shndx;
 } Elf32_Sym;
 
+/** Elf relocation entry */
 typedef struct {
 	Elf32_Addr	r_offset;
 	Elf32_Word	r_info;
 } Elf32_Rel;
 
+/** Elf relocation entry with append */
 typedef struct {
 	Elf32_Addr	r_offset;
 	Elf32_Word	r_info;

@@ -12,6 +12,7 @@ typedef unsigned page_dir_t;
 int map_page(	unsigned *dir, unsigned vaddress );
 int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress );
 int map_pages(	unsigned *dir, unsigned start, unsigned end, unsigned permissions );
+int remap_pages( unsigned *dir, unsigned start, unsigned end, unsigned permissions );
 int free_page(	unsigned *dir, unsigned vaddress );
 int set_page(	unsigned *dir, unsigned vaddress );
 unsigned get_page( unsigned *dir, unsigned vaddress );
