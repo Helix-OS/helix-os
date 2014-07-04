@@ -3,7 +3,7 @@ TARGET		= $(ARCH)-elf
 MAKE		= make
 EMULATOR	= qemu-system-i386
 #EMU_FLAGS	= -hda helix.img -hdb fattest.hdd -s -serial stdio -m 32
-EMU_FLAGS	= -hda helix.img -hdb userland/user.hdd -s -serial stdio -m 32
+EMU_FLAGS	= -hda helix.img -hdb userland/user.hdd -s -serial file:debug.log -m 32 -net nic,model=rtl8139
 #EMU_FLAGS	= -kernel kernel/helix_kernel-i586 -serial stdio -nographic -m 16 -s
 CROSS		= $(shell pwd)/cross
 
