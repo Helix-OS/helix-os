@@ -15,6 +15,7 @@ void isr_handler( registers_t regs ){
 		handler( &regs );
 	} else {
 		kprintf( "Unhandled interrupt: 0x%x : 0x%x\n", regs.int_no, regs.err_code );
+		asm volatile( "cli; hlt" );
 	}
 }
 

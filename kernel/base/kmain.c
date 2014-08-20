@@ -25,8 +25,10 @@ void utest( ){
 
 	int fd;
 	fd = syscall_open( "/test/fatdir/bin/init", FILE_READ );
-	if ( fd >= 0 )
+	if ( fd >= 0 ){
+		kprintf( "[%s] Spawning process from fd %d\n", __func__, fd );
 		syscall_spawn( fd, (char *[]){ "/test/fatdir/asdf", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
+	}
 
 	syscall_test( );
 

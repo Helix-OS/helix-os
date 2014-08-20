@@ -46,6 +46,8 @@ static void syscall_handler( registers_t *regs ){
 		// Syscall not registered
 		return;
 
+    kprintf( "[%s] Have syscall %d\n", __func__, regs->eax );
+
 	int ret;
 	asm volatile( "	\
 	push %1;	\

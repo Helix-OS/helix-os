@@ -44,6 +44,7 @@ int vfs_open( char *path, int flags ){
 	char *dirpath;
 	char *fpath;
 
+	kprintf( "[%s] Got here, 0x%x, %c\n", __func__, path, *(path + 3));
 	if ( strlen( path )){
 		newobj = knew( file_pobj_t );
 		newobj->type = FILE_POBJ;
