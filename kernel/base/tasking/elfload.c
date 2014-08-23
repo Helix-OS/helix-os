@@ -18,8 +18,8 @@ int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[] ){
 
 	map_list = list_create( 0 );
 
-	for ( argc = 0; argv[argc]; argc++ );
-	for ( envc = 0; argv[envc]; envc++ );
+	for ( argc = 0; argv && argv[argc]; argc++ );
+	for ( envc = 0; envp && envp[envc]; envc++ );
 
 	argbuf = knew( char *[argc + 1]);
 	envbuf = knew( char *[envc + 1]);

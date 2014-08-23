@@ -4,7 +4,7 @@ CFLAGS=-g -I"$(PREFIX)/include" -nostdlib -nodefaultlibs -nostartfiles -fno-buil
 
 .c:
 	@echo CC $<
-	$(CC) $(CFLAGS) -o $@ $< $(PREFIX)/lib/{crt0,syscalls,libc}.o
+	$(CC) $(CFLAGS) -o $@ $< $(PREFIX)/lib/{crt*,syscalls,libc}.o
 
 all: $(OBJ)
 

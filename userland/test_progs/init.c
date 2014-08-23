@@ -1,17 +1,22 @@
 #include <dalibc/syscalls.h>
+#include <stdio.h>
 #include <stdlib.h>
 
+static char *init_commands[] = {
+	"/test/fatdir/bin/logind",
+	NULL,
+};
+
 int main( int argc, char *argv[], char *envp[] ){
-	int keyboard = open( "/test/devices/keyboard", 1 );
-	int video = open( "/test/devices/console", 2 );
 	int i;
 	char *asdf = malloc( 32 );
 
-	write( video, "Hello, world!\n", 15 );
+	puts( "Hello, world!" );
 
-	while ( 1 ){
-		i = read( keyboard, asdf, 32 );
-		write( video, asdf, i );
+	for ( i = 0; init_commands[i]; i++ ){
+		printf( "starting %s... ", init_commands[i] );
+		_spawn( init_commands[i], NULL, NULL );
+		printf( "done\n" );
 	}
 
 	return 0;
