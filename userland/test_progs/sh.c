@@ -124,7 +124,7 @@ int exec_cmd( parsed_command_t *cmd ){
 	int pid;
 	int ret;
 
-	pid = _spawn( cmd->args[0], cmd->args + 1, NULL );
+	pid = _spawn( cmd->args[0], cmd->args, NULL );
 
 	if ( pid > 0 ){
 		syscall_waitpid( pid, &ret, 0 );

@@ -5,7 +5,7 @@ int main( int argc, char *argv[], char *envp[] ){
 	int arg, i, fd;
 	char buf[512];
 
-	for ( arg = 0; arg < argc; arg++ ){
+	for ( arg = 1; arg < argc; arg++ ){
 		fp = fopen( argv[arg], "r" );
 
 		if ( fp ){

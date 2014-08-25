@@ -16,7 +16,7 @@ int main( int argc, char *argv[], char *envp[] ){
 	dirent_t dir;
 	int arg, i, fd;
 
-	for ( arg = 0; arg < argc; arg++ ){
+	for ( arg = 1; arg < argc; arg++ ){
 		fd = open( argv[arg], 0 );
 
 		if ( fd >= 0 ){
