@@ -1,6 +1,6 @@
 #include <ata/ata.h>
 
-char *depends[] = { "pci", "base", 0 };
+char *depends[] = { "pci", "base", "hal", 0 };
 char *provides = "ata";
 
 static ata_device_t *ata_list;

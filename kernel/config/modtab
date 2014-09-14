@@ -1,3 +1,4 @@
+kernel/modobjs/hal_mod.o
 kernel/modobjs/pci_mod.o
 kernel/modobjs/ata_mod.o
 kernel/modobjs/vga_mod.o

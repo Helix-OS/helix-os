@@ -8,7 +8,7 @@
 #include <base/mem/alloc.h>
 #include <base/tasking/task.h>
 
-char *depends[] = { "base", 0 };
+char *depends[] = { "base", "hal", 0 };
 char *provides = "ps2kbd";
 
 static int kbd_hal_read( struct hal_device *dev, void *buf, unsigned count, unsigned offset );

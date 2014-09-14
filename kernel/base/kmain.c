@@ -6,7 +6,6 @@
 #include <base/module.h>
 #include <base/kstd.h>
 #include <base/elf.h>
-#include <base/hal.h>
 #include <base/syscalls.h>
 #include <vfs/vfs.h> // TODO: Move this to the base tree
 
@@ -76,14 +75,12 @@ void kmain( multiboot_header_t *mboot, int blarg, int magic ){
 	init_pitimer( 1000 );
 	init_tasking( );
 
-	init_hal( );
 	init_vfs( );
 
 	// Initialize module system
 	init_module_system( elfinfo );
 	load_init_modules( initrd );
 
-	hal_dump_devices( );
 	dump_aheap_blocks( kheap );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );

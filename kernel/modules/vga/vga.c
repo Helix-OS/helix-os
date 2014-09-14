@@ -5,7 +5,7 @@
 #include <base/string.h>
 #include <base/stdio.h>
 
-char *depends[] = { "base", 0 };
+char *depends[] = { "base", "hal", 0 };
 char *provides = "vga";
 
 static int vga_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset );

@@ -1,6 +1,9 @@
 #include <base/hal.h>
 #include <base/logger.h>
 
+char *depends[] = { "base", 0 };
+char *provides = "hal";
+
 //static hal_device_t *hal_device_list = 0;
 static list_head_t *hal_device_list = 0;
 static protected_var_t *p_hal_device_list = 0;
@@ -65,7 +68,18 @@ void hal_dump_devices( ){
 	leave_protected_var( p_hal_device_list );
 }
 
-void init_hal( ){
+//void init_hal( ){
+int init( ){
 	hal_device_list = list_create( 0 );
 	p_hal_device_list = create_protected_var( 1, hal_device_list );
+
+	kprintf( "[%s] Hello world!\n", provides );
+	kprintf( "[%s] This is module \"%s\", and I'm in yo kernelz\n",
+			provides, provides );
+
+	return 0;
+}
+
+void remove( ){
+	kprintf( "[%s] Mkkay, I'm out.\n", provides ); 
 }

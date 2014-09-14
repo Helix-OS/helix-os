@@ -1,7 +1,7 @@
 #include <base/stdio.h>
 #include <pci/pci.h>
 
-char *depends[] = { "base", 0 };
+char *depends[] = { "base", "hal", 0 };
 char *provides = "pci";
 
 static pci_device_t *pci_list = 0;
