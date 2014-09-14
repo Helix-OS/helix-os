@@ -15,6 +15,7 @@ static file_funcs_t fatfs_functions = {
 
 	.open 		= fatfs_vfs_open,
 	.close		= fatfs_vfs_close,
+	.readdir	= fatfs_vfs_readdir,
 };
 
 struct file_system *fatfs_create( struct file_driver *device, struct file_system *unused,

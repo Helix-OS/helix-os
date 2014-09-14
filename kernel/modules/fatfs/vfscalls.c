@@ -2,6 +2,7 @@
 #include <base/logger.h>
 #include <base/kstd.h>
 #include <base/string.h>
+#include <base/lib/stdbool.h>
 
 int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name, int flags ){
 	int ret = -ERROR_NOT_FOUND;
@@ -243,6 +244,84 @@ int fatfs_vfs_get_info( struct file_node *node, struct file_info *buf ){
 
 int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 	int ret = 0;
+	fatfs_dircache_t *cache;
+	fatfs_device_t *dev;
+	fatfs_dirent_t *dirbuf;
+	unsigned i;
+	unsigned count;
+	unsigned cluster_size;
+	uint8_t *sectbuf;
+	char *namebuf;
+	bool found = false;
+
+	dev = node->fs->devstruct;
+	cache = hashmap_get( dev->inode_map, node->inode );
+	cluster_size = dev->bpb->bytes_per_sect * dev->bpb->sect_per_clus;
+	sectbuf = knew( uint8_t[cluster_size] ); 
+	namebuf = knew( char[256] );
+
+	dirbuf = (void *)sectbuf;
+
+	VFS_FUNCTION(( &dev->device_node ), read, sectbuf,
+			cluster_size, dev->bpb->bytes_per_sect * node->inode );
+
+	kprintf( " " );
+	for ( i = 0; i < cluster_size; i+=32 ){
+		kprintf( "0x%x: ", i );
+
+		for ( count = 0; count < 32; count ++ ){
+			if (( sectbuf[i*32 + count] & 0xff ) < 0x10 ){
+				kprintf( "0x%x  ", sectbuf[i*32 + count] & 0xff );
+			} else {
+				kprintf( "0x%x ", sectbuf[i*32 + count] & 0xff );
+			}
+		}
+
+		kprintf( "\n" );
+	}
+
+	if ( cache ){
+		if ( cache->dir.attributes & FAT_ATTR_DIRECTORY ){
+			for ( count = i = 0; i < dev->bpb->dirents; i++ ){
+				if ( *(char *)(dirbuf + i) == 0 || *(char *)(dirbuf + i) == 0xe5 )
+					continue;
+
+				if ( dirbuf[i].attributes == FAT_ATTR_LONGNAME ){
+					fatfs_apply_longname((void *)(dirbuf + i), namebuf, 256 );
+
+				} else {
+					kprintf( "[%s] Got here, 0x%x, 0x%x\n", __func__, *(char *)(dirbuf + i), dirbuf[i].attributes );
+
+					if ( count == entry ){
+						found = true;
+						break;
+					}
+
+					namebuf[0] = 0;
+					count++;
+				}
+			}
+
+			if ( found ){
+				ret = 1;
+				dirp->inode = fatfs_relclus_to_sect( dev, dirbuf[i].cluster_low );
+				dirp->type = FILE_TYPE_REG;
+				strncpy( dirp->name, namebuf, 256 );
+
+			} else {
+				ret = 0;
+			}
+
+		} else {
+			ret = -ERROR_NOT_DIRECTORY;
+		}
+
+	} else {
+		ret = -ERROR_NOT_FOUND;
+	}
+
+	kfree( namebuf );
+	kfree( sectbuf );
 
 	return ret;
 }

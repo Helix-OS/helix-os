@@ -214,7 +214,7 @@ pid_t waitpid( pid_t id, int *status, int options ){
 	kprintf( "[%s] Increased wait queue, %d\n", __func__, target->waiting );
 	// TODO: properly find that the task has ended
 	while ( target->state != TASK_STATE_ENDED ){
-		kprintf( "." );
+		//kprintf( "." );
 		rrschedule_call( );
 	}
 
