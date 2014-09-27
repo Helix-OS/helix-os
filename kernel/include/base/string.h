@@ -7,8 +7,11 @@ int strcmp( char *, char * );
 int strncmp( char *, char *, int );
 char *strdup( char * );
 
-char *strcpy( char *dest, char *src );
-char *strncpy( char *dest, char *src, unsigned len );
+char *strcpy( char *dest, const char *src );
+char *strncpy( char *dest, const char *src, unsigned len );
+
+char *strcat( char *dest, const char *src );
+char *strncat( char *dest, const char *src, int n );
 
 void *memset( void *, unsigned char, unsigned );
 void *memsetw( void *, unsigned char, unsigned );

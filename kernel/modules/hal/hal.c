@@ -4,9 +4,11 @@
 char *depends[] = { "base", 0 };
 char *provides = "hal";
 
-//static hal_device_t *hal_device_list = 0;
 static list_head_t *hal_device_list = 0;
 static protected_var_t *p_hal_device_list = 0;
+
+static list_head_t *hal_event_queue = 0;
+static protected_var_t *p_hal_event_queue = 0;
 
 int hal_register_device( hal_device_t *device ){
 	list_head_t *device_list;
@@ -72,6 +74,9 @@ void hal_dump_devices( ){
 int init( ){
 	hal_device_list = list_create( 0 );
 	p_hal_device_list = create_protected_var( 1, hal_device_list );
+
+	hal_event_queue = list_create( 0 );
+	p_hal_event_queue = create_protected_var( 1, hal_event_queue );
 
 	kprintf( "[%s] Hello world!\n", provides );
 	kprintf( "[%s] This is module \"%s\", and I'm in yo kernelz\n",

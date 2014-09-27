@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 static char *init_commands[] = {
-	"/test/fatdir/bin/logind",
+	"/test/userroot/bin/logind",
 	NULL,
 };
 

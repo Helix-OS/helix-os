@@ -41,7 +41,7 @@ char *strdup( char *s ){
 	return memcpy( ret, s, strlen( s ) + 1 );
 }
 
-char *strcpy( char *dest, char *src ){
+char *strcpy( char *dest, const char *src ){
 	char *ret = dest;
 	int i;
 
@@ -53,7 +53,7 @@ char *strcpy( char *dest, char *src ){
 	return ret;
 }
 
-char *strncpy( char *dest, char *src, unsigned len ){
+char *strncpy( char *dest, const char *src, unsigned len ){
 	char *ret = dest;
 	int i;
 
@@ -61,6 +61,27 @@ char *strncpy( char *dest, char *src, unsigned len ){
 		dest[i] = src[i];
 
 	dest[i] = 0;
+
+	return ret;
+}
+
+char *strcat( char *dest, const char *src ){
+	char *ret = dest;
+	int i;
+
+	for ( i = 0; dest[i]; i++ );
+	strcpy( dest + i, src );
+
+	return ret;
+}
+
+char *strncat( char *dest, const char *src, int n ){
+	char *ret = dest;
+
+	int i;
+
+	for ( i = 0; dest[i]; i++ );
+	strncpy( dest + i, src, n );
 
 	return ret;
 }

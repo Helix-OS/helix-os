@@ -13,7 +13,7 @@ EXISTS=1
 if [ -e $IMAGE ]; then
 	EXISTS=0;
 else
-	dd if=/dev/zero of=$IMAGE bs=1M count=16
+	dd if=/dev/zero of=$IMAGE bs=1M count=32
 	chmod uga+rw $IMAGE
 fi
 
@@ -23,7 +23,7 @@ if [ $machine = "Linux" ]; then
 	echo "Generating on linux..." 
 
 	if [ $EXISTS -eq 1 ]; then
-		echo -e "n\np\n\n2048\n\na\nw\nq\n" | fdisk $IMAGE
+		echo -e "n\np\n\n2048\n+16M\na\nn\np\n\n34816\n\nw\nq\n" | fdisk $IMAGE
 	fi
 
 	losetup -o$(( 2048 * 512 )) /dev/loop0 $IMAGE
@@ -44,6 +44,20 @@ if [ $machine = "Linux" ]; then
 			--no-floppy --modules="normal part_msdos ext2 multiboot" /dev/loop1
 		losetup -d /dev/loop1
 	fi
+
+	umount temp_mount
+	losetup -d /dev/loop0
+
+	losetup -o$(( 34816 * 512 )) /dev/loop0 $IMAGE
+
+	if [ $EXISTS -eq 1 ]; then
+		mkfs.vfat /dev/loop0
+	fi
+	mount -t vfat /dev/loop0 temp_mount
+
+	cp -r userland/build/* temp_mount
+
+	echo "Copied" temp_mount/*
 
 	umount temp_mount
 	losetup -d /dev/loop0

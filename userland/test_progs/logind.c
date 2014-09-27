@@ -38,7 +38,7 @@ int main( int argc, char *argv[], char *envp[] ){
 		if (( strcmp( username, "admin" ) == 0 ) && ( strcmp( password, "password" ) == 0 )){
 			printf( "You have been successfully authenticated.\n" );
 
-			pid = _spawn( "/test/fatdir/bin/sh", NULL, NULL );
+			pid = _spawn( "/test/userroot/bin/sh", NULL, NULL );
 			syscall_waitpid( pid, &status, 0 );
 
 		} else { 

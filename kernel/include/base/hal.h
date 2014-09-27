@@ -65,6 +65,7 @@ typedef struct hal_device {
 
 int hal_register_device( hal_device_t *device );
 int hal_unregister_device( hal_device_t *device );
+
 hal_device_t *hal_get_device( unsigned devnum );
 list_head_t *hal_get_device_list( );
 
