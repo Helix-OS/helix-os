@@ -32,10 +32,17 @@ sh_token_t *read_token( FILE *stream ){
 
 	while ( !found && i < alloced ){
 		c = fgetc( stream );
-		putchar( c );
 
 		if ( c > ' ' && c < 0x7f ){
 			buf[i] = c;
+			putchar( c );
+
+		} else if ( c == '\b' ){
+			if ( i > 0 ){
+				buf[i] = 0;
+				i--;
+				putchar( c );
+			}
 
 		} else if ( c == ' ' ){
 			buf[i] = 0;
@@ -44,6 +51,7 @@ sh_token_t *read_token( FILE *stream ){
 			ret = malloc( sizeof( sh_token_t ));
 			ret->str = buf;
 			ret->type = TYPE_COMMAND;
+			putchar( c );
 
 		} else if ( c == '\n' ){
 			buf[i] = 0;
@@ -52,9 +60,12 @@ sh_token_t *read_token( FILE *stream ){
 			ret = malloc( sizeof( sh_token_t ));
 			ret->str = buf;
 			ret->type = TYPE_NEWLINE;
+			putchar( c );
 		}
 
-		i++;
+		if ( c != '\b' ){
+			i++;
+		}
 	}
 
 	if ( !ret ){
