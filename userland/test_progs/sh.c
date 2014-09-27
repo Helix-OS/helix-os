@@ -133,14 +133,16 @@ parsed_command_t *parse_command( sh_token_t *tokens ){
 
 int exec_cmd( parsed_command_t *cmd ){
 	int pid;
-	int ret;
+	int ret = 0;
 
-	pid = _spawn( cmd->args[0], cmd->args, NULL );
+	if ( strlen( cmd->args[0] ) > 0 ){
+		pid = _spawn( cmd->args[0], cmd->args, NULL );
 
-	if ( pid > 0 ){
-		syscall_waitpid( pid, &ret, 0 );
-	} else {
-		puts( "Command not found." );
+		if ( pid > 0 ){
+			syscall_waitpid( pid, &ret, 0 );
+		} else {
+			puts( "Command not found." );
+		}
 	}
 
 	return ret;
