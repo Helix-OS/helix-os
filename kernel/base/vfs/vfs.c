@@ -7,9 +7,6 @@
 #include <base/string.h>
 #include <base/syscalls.h>
 
-/*
-char *depends[] = { "base", 0 };
-*/
 char *provides = "vfs";
 
 static list_node_t *driver_list = 0;
@@ -155,7 +152,6 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 		    *nodebufs,
 		    *current_buf;
 
-	kprintf( "[%s] Looking up \"%s\"\n", __func__, path );
 	if ( path && buf ){
 		namebuf = knew( char[MAX_FILENAME_SIZE] );
 		current_buf = nodebufs = knew( file_node_t[2] );
@@ -172,18 +168,10 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 			pathptr += i;
 			expecting_dir = false;
 
-			kprintf( "[%s] Looking for \"%s\"\n", __func__, namebuf );
-
 			if ( *pathptr == '/' ){
 				pathptr++;
 				expecting_dir = true;
 			}
-
-			/*
-			kprintf( "[%s] move: 0x%x, fs: 0x%x, functions: 0x%x, lookup: 0x%x, current_buf: 0x%x\n", 
-				__func__, move, move->fs,
-				move->fs->functions, move->fs->functions->lookup, current_buf );
-			*/
 
 			vfs_function_ret = VFS_FUNCTION( move, lookup, current_buf, namebuf, flags );
 			if ( vfs_function_ret ){
@@ -192,17 +180,11 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 				break;
 			}
 
-			//if ( current_buf->mount && (flags & FILE_LOOKUP_NOMOUNT) == 0 ){
 			if ( current_buf->mount ){
 				move = current_buf->mount->fs->root_node;
-				kprintf( "[%s] Followed mountpoint\n", __func__ );
 			} else {
 				move = current_buf;
-				kprintf( "[%s] Did not follow a mountpoint\n", __func__ );
 			}
-
-			kprintf( "[%s] have directory name 0x%x:\"%s\", expecting directory: %d\n",
-					__func__, *pathptr, namebuf, expecting_dir );
 
 			/* This is probably obtuse enough to deserve a comment, so...
 			 * There's two file node buffers which are alternated between during lookups.
@@ -227,100 +209,6 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 	return ret;
 }
 
-int test( ){
-	file_node_t *blarg = get_global_vfs_root( );
-	file_info_t *infos;
-	int stuff;
-
-	if ( !blarg ){
-		kprintf( "[%s] Could not get file root...\n", provides );
-
-	} else {
-		infos = knew( file_info_t );
-
-		kprintf( "[%s] blarg: 0x%x, fs: 0x%x, functions: 0x%x, get_info: 0x%x\n", 
-				provides, blarg, blarg->fs,
-				blarg->fs->functions, blarg->fs->functions->get_info );
-
-		VFS_FUNCTION( blarg, get_info, infos );
-		kprintf( "[%s] Have root node info: type = %d\n", provides, infos->type );
-
-		/*
-		{ 
-			file_node_t filebuf;
-			dirent_t dir;
-			int foobar;
-
-			file_lookup_absolute( "/usr/bin/pacman", &filebuf, 0 );
-			file_lookup_relative( "pacman/asdf", blarg, &filebuf, 0 );
-			memset( &filebuf, 0, sizeof( filebuf ));
-			stuff = file_lookup_absolute( "/test", &filebuf, 0 );
-
-			file_lookup_absolute( "/test", &filebuf, 0 );
-
-			kprintf( "[%s] Directory /test has the following entries:\n", provides );
-			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
-				kprintf( "[%s]\t%d:%s\n", provides, dir.inode, dir.name );
-
-			file_lookup_absolute( "/test/somedir", &filebuf, 0 );
-
-			kprintf( "[%s] Directory /test/somedir has the following entries:\n", provides );
-			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
-				kprintf( "[%s]\t%d:%s\n", provides, dir.inode, dir.name );
-
-			file_lookup_absolute( "/test/somedir", &filebuf, 0 );
-			VFS_FUNCTION(( &filebuf ), mkdir, "asdf", 0 );
-
-			file_lookup_absolute( "/test", &filebuf, 0 );
-
-			kprintf( "[%s] open function returned %d\n", provides,
-					VFS_FUNCTION(( &filebuf ), open, "meh.txt", FILE_CREATE | FILE_WRITE ));
-
-			kprintf( "[%s] open function returned %d\n", provides,
-					VFS_FUNCTION(( &filebuf ), open, "asdf", FILE_CREATE | FILE_WRITE ));
-
-			file_lookup_absolute( "/test/somedir/blarg", &filebuf, 0 );
-			char *teststr = "Testing this stuff";
-			kprintf( "[%s] write function returned %d\n", provides,
-					VFS_FUNCTION(( &filebuf ), write, teststr, strlen( teststr ), 0 ));
-
-			char testbuf[20];
-			kprintf( "[%s] read function returned %d\n", provides,
-					VFS_FUNCTION(( &filebuf ), read, testbuf, strlen( teststr ), 0 ));
-
-			kprintf( "[%s] read \"%s\"\n", provides, testbuf );
-
-			file_lookup_absolute( "/test/somedir", &filebuf, 0 );
-
-			kprintf( "[%s] Directory test has the following entries:\n", provides );
-			for ( foobar = 0; VFS_FUNCTION(( &filebuf ), readdir, &dir, foobar ); foobar++ )
-				kprintf( "[%s]\t%d:%s\n", provides, dir.inode, dir.name );
-		}
-		*/
-
-		int blarg;
-		char *msg = "This is a test message\n";
-		char msgbuf[32];
-
-		stuff = vfs_open( "/test/meh.txt", FILE_READ | FILE_WRITE | FILE_CREATE );
-		kprintf( "[%s_test] open function returned %d\n", provides, stuff );
-
-		blarg = vfs_write( stuff, msg, strlen( msg ) + 1 );
-		kprintf( "[%s_test] write function returned %d\n", provides, blarg );
-
-		blarg = vfs_read( stuff, msgbuf, strlen( msg ) + 1 );
-		kprintf( "[%s_test] read function returned %d, got \"%s\"\n", provides, blarg, msgbuf );
-
-		stuff = vfs_close( stuff );
-		kprintf( "[%s_test] close function returned %d\n", provides, stuff );
-
-		kfree( infos );
-	}
-
-	return 0;
-}
-
-//int init( ){
 int init_vfs( ){
 	kprintf( "[%s] Initializing virtual file system...", provides );
 
@@ -377,16 +265,7 @@ int init_vfs( ){
 			}
 
 		}
-
-		test( );
 	}
 
 	return 0;
 }
-
-/*
-void remove( ){
-	kprintf( "[%s] Mkkay, I'm out.\n", provides ); 
-
-}
-*/
