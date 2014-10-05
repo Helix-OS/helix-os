@@ -26,14 +26,9 @@ debug:
 
 check:
 	@if [ ! -e cross/.cross_check ]; then \
-		echo "-----=[ Warning ]=-----";\
-		echo "It is recommended that you build a cross compiler using"; \
-		echo "    \"$(MAKE) cross-cc\""; \
-		echo "if you haven't done so already, for best results."; \
-		echo;\
-		echo "Your native compiler may work, but if it refuses to boot or compile,";\
-		echo "try the cross compiler before assuming it's a bug.";\
-		echo;\
+		echo "[W] Warning:";\
+		echo "[W] Building the cross compiler using \`$(MAKE) cross-cc\` is recommended for best results.";\
+		echo "[W] Things may break otherwise, proceed at your own risk.";\
 	fi
 	@./tools/check_depends.sh
 
