@@ -4,7 +4,9 @@ deps=( 	make
 	sh
 	cc
 	nasm
+	fdisk
 	grub-install
+	mkfs.vfat
 )
 
 echo "Checking for needed dependancies..."
