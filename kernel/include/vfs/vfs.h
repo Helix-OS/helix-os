@@ -191,6 +191,8 @@ int file_lookup_absolute( char *path, file_node_t *buf, int flags );
 
 void set_global_vfs_root( file_node_t *root );
 file_node_t *get_global_vfs_root( );
+file_node_t *get_local_vfs_root( );
+file_node_t *get_current_dir( );
 
 // Syscalls exposed to userland
 int vfs_open( char *path, int flags );
@@ -199,5 +201,8 @@ int vfs_read( int pnode, void *buf, int length );
 int vfs_write( int pnode, void *buf, int length );
 int vfs_spawn( int pnode, char *args[], char *envp[], int flags );
 int vfs_readdir( int pnode, dirent_t *dirp, int entry );
+
+int vfs_chroot( char *path );
+int vfs_chdir( char *path );
 
 #endif

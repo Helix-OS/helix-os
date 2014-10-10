@@ -6,6 +6,7 @@
 #include <base/logger.h>
 #include <base/string.h>
 #include <base/syscalls.h>
+#include <base/tasking/task.h>
 
 char *provides = "vfs";
 
@@ -81,6 +82,26 @@ file_node_t *get_global_vfs_root( ){
 	return global_vfs_root;
 }
 
+file_node_t *get_local_vfs_root( ){
+	task_t *cur = get_current_task( );
+	file_node_t *ret = get_global_vfs_root( );
+
+	if ( cur->froot )
+		ret = cur->froot;
+
+	return ret;
+}
+
+file_node_t *get_current_dir( ){
+	task_t *cur = get_current_task( );
+	file_node_t *ret = cur->curdir;
+
+	if ( !ret )
+		ret = get_local_vfs_root( );
+
+	return ret;
+}
+
 int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int flags ){
 	file_driver_t *driver;
 	file_system_t *fs;
@@ -121,6 +142,29 @@ int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int
 done:
 	return ret;
 
+}
+
+int file_lookup( char *path, file_node_t *buf, int flags ){
+	int ret = -ERROR_INVALID_PATH;
+	task_t *cur = get_current_task( );
+	file_node_t *node;
+
+	if ( path ){
+		if ( path[0] == '/' ){
+			node = get_local_vfs_root( );
+			path++;
+
+		} else if ( cur->froot ){
+			node = cur->froot;
+
+		} else {
+			node = get_local_vfs_root( );
+		}
+
+		ret = file_lookup_relative( path, node, buf, flags );
+	}
+
+	return ret;
 }
 
 int file_lookup_absolute( char *path, file_node_t *buf, int flags ){
