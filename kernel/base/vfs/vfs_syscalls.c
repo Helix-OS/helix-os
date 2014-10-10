@@ -4,6 +4,7 @@
 #include <base/mem/alloc.h>
 #include <base/tasking/elfload.h>
 #include <base/stdint.h>
+#include <base/debug.h>
 
 // Not a syscall, is a helper function
 int vfs_get_pobj( int pnode, file_pobj_t **obj ){
@@ -43,8 +44,10 @@ int vfs_open( char *path, int flags ){
 	task_t *cur_task;
 	char *dirpath;
 	char *fpath;
+	bool dirfound = false;
 
-	kprintf( "[%s] Got here, 0x%x, %c\n", __func__, path, *(path + 3));
+	debugp( DEBUG_VFS, MASK_CHECKPOINT, "[%s] Got here, 0x%x, %c\n", __func__, path, *(path + 3));
+
 	if ( strlen( path )){
 		newobj = knew( file_pobj_t );
 		newobj->type = FILE_POBJ;
@@ -55,32 +58,52 @@ int vfs_open( char *path, int flags ){
 			if ( path[i-1] == '/' ){
 				dirpath[i-1] = 0;
 				fpath = dirpath + i;
+				dirfound = true;
 
 				kprintf( "[%s] Looking for directory \"%s\", file \"%s\"\n", __func__, dirpath, fpath );
 				break;
 			}
 		}
 
-		if ( dirpath[0] )
-			lookup = file_lookup_absolute( dirpath, &newobj->node, 0 );
-		else 
-			lookup = file_lookup_absolute( "/", &newobj->node, 0 );
+		if ( dirfound ){
+			if ( dirpath[0] )
+				lookup = file_lookup( dirpath, &newobj->node, 0 );
+			else 
+				lookup = file_lookup_absolute( "/", &newobj->node, 0 );
 
-		if ( lookup == 0 ){
-			// TODO: Add permission checking
-			lookup = VFS_FUNCTION( &newobj->node, open, fpath, flags );
+			if ( lookup == 0 ){
+				// TODO: Add permission checking
+				lookup = VFS_FUNCTION( &newobj->node, open, fpath, flags );
+
+				if ( lookup >= 0 ){
+					//file_lookup_absolute( path, &newobj->node, 0 );
+					file_lookup( path, &newobj->node, 0 );
+
+					cur_task = get_current_task( );
+					ret = dlist_add( cur_task->pobjects, newobj );
+				} 
+			}
+
+			if ( lookup < 0 ){
+				ret = lookup;
+				kfree( newobj );
+			}
+
+		} else {
+			lookup = VFS_FUNCTION( get_current_dir( ), open, path, flags );
 
 			if ( lookup >= 0 ){
-				file_lookup_absolute( path, &newobj->node, 0 );
+				//file_lookup_absolute( path, &newobj->node, 0 );
+				file_lookup( path, &newobj->node, 0 );
 
 				cur_task = get_current_task( );
 				ret = dlist_add( cur_task->pobjects, newobj );
 			} 
-		}
 
-		if ( lookup < 0 ){
-			ret = lookup;
-			kfree( newobj );
+			if ( lookup < 0 ){
+				ret = lookup;
+				kfree( newobj );
+			}
 		}
 
 		memset( dirpath, 0, strlen( dirpath ));
@@ -165,6 +188,40 @@ int vfs_spawn( int pnode, char *args[], char *envp[], int flags ){
 
 		kfree( info );
 	}
+
+	return ret;
+}
+
+int vfs_chroot( char *path ){
+	task_t *cur = get_current_task( );
+	file_node_t *temp;
+	int ret = 0;
+
+	if ( cur->froot ){
+		temp = cur->froot;
+
+	} else {
+		temp = cur->froot = knew( file_node_t );
+	}
+
+	ret = file_lookup( path, temp, 0 );
+
+	return ret;
+}
+
+int vfs_chdir( char *path ){
+	task_t *cur = get_current_task( );
+	file_node_t *temp;
+	int ret = 0;
+
+	if ( cur->froot ){
+		temp = cur->curdir;
+
+	} else {
+		temp = cur->curdir = knew( file_node_t );
+	}
+
+	ret = file_lookup( path, temp, 0 );
 
 	return ret;
 }

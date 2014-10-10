@@ -9,6 +9,7 @@
 #include <base/arch/i386/pitimer.h> /* TODO: remove this, implement generic timer */
 #include <base/arch/i386/paging.h> 
 #include <base/mem/memmap.h>
+#include <vfs/vfs.h>
 
 typedef unsigned long pid_t;
 
@@ -21,28 +22,30 @@ enum {
 };
 
 typedef struct task {
-	unsigned long 		state;
-	unsigned long 		eip,
-				esp,
-				ebp;
+    unsigned long       state;
+    unsigned long       eip,
+                        esp,
+                        ebp;
 
-	pid_t 	 		pid;
-	pid_t 			group; /* Process group, possibly switch with 'pid' and rename
-					  current uses of 'pid' to use 'tid' (thread id) */
-	pid_t	 		parent;
+    pid_t               pid;
+    pid_t               group; /* Process group, possibly switch with 'pid' and rename
+                                  current uses of 'pid' to use 'tid' (thread id) */
+    pid_t               parent;
 
-	unsigned long 		sleep;
-	unsigned long 		stack;
+    unsigned long       sleep;
+    unsigned long       stack;
 
-	page_dir_t 		*pagedir;
-	list_head_t 		*memmaps;
-	semaphore_t 	 	*sem;
-	memmap_t		*mainmap;
+    page_dir_t         *pagedir;
+    list_head_t        *memmaps;
+    semaphore_t        *sem;
+    memmap_t           *mainmap;
 
-	int 			waiting;
-	int 			end_status;
+    int                 waiting;
+    int                 end_status;
 
-	dlist_container_t 	*pobjects;
+    dlist_container_t  *pobjects;
+	file_node_t        *froot;
+	file_node_t        *curdir;
 } task_t;
 
 extern unsigned long get_instruct_ptr( );

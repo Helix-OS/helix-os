@@ -20,6 +20,8 @@ DEFN_SYSCALL4( spawn, SYSCALL_SPAWN, int, char **, char **, int );
 DEFN_SYSCALL3( readdir, SYSCALL_READDIR, int, void *, int );
 DEFN_SYSCALL3( waitpid, SYSCALL_WAITPID, unsigned, int *, int );
 DEFN_SYSCALL1( sbrk, SYSCALL_SBRK, int );
+DEFN_SYSCALL1( chroot, SYSCALL_CHROOT,  const char * );
+DEFN_SYSCALL1( chdir, SYSCALL_CHDIR, const char * );
 
 void init_syscalls( ){
 	register_syscall( SYSCALL_TEST, syscall_tester );
