@@ -79,6 +79,17 @@ int create_thread( void (*start)( )){
 	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = 0;
+
+	if ( cur->froot ){
+		new_task->froot = knew( file_node_t );
+		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
+	}
+
+	if ( cur->curdir ){
+		new_task->curdir = knew( file_node_t );
+		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
+	}
+
 	add_task( new_task );
 
 	new_task->pobjects = dlist_create( 0, 0 );
@@ -90,6 +101,7 @@ int create_thread( void (*start)( )){
 
 int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *map ){
 	task_t *new_task;
+	task_t *cur = get_current_task( );
 
 	block_tasks( );
 
@@ -169,6 +181,16 @@ int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *m
 		*((int *)new_task->esp) = argc;
 
 		kprintf( "[%s] Loading process with %d args at 0x%x\n", __func__, *((int *)new_task->esp), new_task->esp );
+	}
+
+	if ( cur->froot ){
+		new_task->froot = knew( file_node_t );
+		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
+	}
+
+	if ( cur->curdir ){
+		new_task->curdir = knew( file_node_t );
+		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
 	}
 
 	add_task( new_task );

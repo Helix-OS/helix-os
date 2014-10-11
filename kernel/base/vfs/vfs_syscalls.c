@@ -201,10 +201,17 @@ int vfs_chroot( char *path ){
 		temp = cur->froot;
 
 	} else {
-		temp = cur->froot = knew( file_node_t );
+		temp = knew( file_pobj_t );
 	}
 
 	ret = file_lookup( path, temp, 0 );
+	debugp( DEBUG_VFS, MASK_CHECKPOINT, "[%s] Got here, 0x%x, returning %d\n", __func__, temp, ret );
+
+	if ( ret >= 0 ){
+		cur->froot = temp;
+	} else {
+		free( temp );
+	}
 
 	return ret;
 }
@@ -218,10 +225,17 @@ int vfs_chdir( char *path ){
 		temp = cur->curdir;
 
 	} else {
-		temp = cur->curdir = knew( file_node_t );
+		temp = knew( file_node_t );
 	}
 
 	ret = file_lookup( path, temp, 0 );
+
+	if ( ret >= 0 ){
+		cur->curdir = temp;
+
+	} else {
+		free( temp );
+	}
 
 	return ret;
 }
