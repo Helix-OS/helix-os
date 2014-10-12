@@ -14,16 +14,17 @@ OBJS 		+= $(patsubst %.s, %.o, $(shell find . -name "*.s" ))
 all: kernel
 
 %.o : %.c
-	@echo CC $<
+	@echo "[kernel base] CC $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 %.o : %.s
-	@echo AS $<
+	@echo "[kernel base] AS $<"
 	@$(AS) $(ASFLAGS) $< -o $@
 
 kernel: $(OBJS)
 	@$(CC) $(LDFLAGS) $(CFLAGS) -lgcc -o helix_kernel-$(ARCH) $(OBJS)
-	@echo CC $(LDFLAGS) $(CFLAGS) -lgcc -o helix_kernel-$(ARCH) $(OBJS)
+	@echo "[kernel base] CC -o helix_kernel-$(ARCH) *.o"
+	@#echo CC $(LDFLAGS) $(CFLAGS) -lgcc -o helix_kernel-$(ARCH) $(OBJS)
 
 clean:
 	-rm $(OBJS)

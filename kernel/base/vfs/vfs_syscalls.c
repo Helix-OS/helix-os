@@ -210,7 +210,7 @@ int vfs_chroot( char *path ){
 	if ( ret >= 0 ){
 		cur->froot = temp;
 	} else {
-		free( temp );
+		kfree( temp );
 	}
 
 	return ret;
@@ -234,7 +234,7 @@ int vfs_chdir( char *path ){
 		cur->curdir = temp;
 
 	} else {
-		free( temp );
+		kfree( temp );
 	}
 
 	return ret;

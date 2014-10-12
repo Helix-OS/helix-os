@@ -26,7 +26,6 @@ kernel: $(OBJS)
 	@mv base/helix_kernel-$(ARCH) .
 
 kmodules:
-	@echo $(MODULES)
 	@mkdir -p modobjs
 	@for module in $(MODULES); do\
 		cd $$module;\

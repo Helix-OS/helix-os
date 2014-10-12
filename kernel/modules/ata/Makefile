@@ -14,18 +14,18 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: ata_mod
 
 %.o : %.c
+	@echo "[ata] CC $<"
 	@$(CC) $(CFLAGS) -c $<
-	@echo CC $<
 
 %.o : %.s
+	@echo "[ata] AS $<"
 	@$(AS) $(ASFLAGS) $<
-	@echo AS $<
 
 ata_mod: $(OBJS)
 	@$(LD) $(LDFLAGS) -o ../../modobjs/ata_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../../modobjs/ata_mod.o *.o
+	@echo "[ata] LD $(LDFLAGS) -o ../../modobjs/ata_mod.o *.o"
 
 clean:
-	rm *.o
+	@rm -f *.o
 
 .PHONY: all

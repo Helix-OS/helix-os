@@ -3,6 +3,7 @@
 #include <base/tasking/rrsched.h>
 #include <base/string.h>
 #include <base/syscalls.h>
+#include <base/debug.h>
 
 static list_node_t *task_list = 0;
 static list_node_t *current_task = 0;
@@ -90,6 +91,28 @@ int create_thread( void (*start)( )){
 		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
 	}
 
+	{
+		int i;
+		file_pobj_t *nfobj;
+		file_pobj_t *nftemp;
+
+		for ( i = 0; i < 3; i++ ){
+			nfobj = dlist_get( cur->pobjects, i );
+
+			if ( nfobj ){
+				debugp( DEBUG_TASKING, MASK_CHECKPOINT, "[%s] Adding inode %d...\n", __func__, i );
+
+				nftemp = knew( file_pobj_t );
+				memcpy( nftemp, nfobj, sizeof( file_pobj_t ));
+
+				dlist_add( new_task->pobjects, nftemp );
+
+			} else {
+				break;
+			}
+		}
+	}
+
 	add_task( new_task );
 
 	new_task->pobjects = dlist_create( 0, 0 );
@@ -115,6 +138,37 @@ int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *m
 	// Assume page directory is already set up by loader
 	new_task->pagedir = get_current_page_dir( );
 	new_task->pobjects = dlist_create( 0, 0 );
+
+	if ( cur->froot ){
+		new_task->froot = knew( file_node_t );
+		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
+	}
+
+	if ( cur->curdir ){
+		new_task->curdir = knew( file_node_t );
+		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
+	}
+
+	{
+		int i;
+		file_pobj_t *nfobj;
+		file_pobj_t *nftemp;
+
+		for ( i = 0; i < 3; i++ ){
+			nfobj = dlist_get( cur->pobjects, i );
+
+			if ( nfobj ){
+				debugp( DEBUG_TASKING, MASK_CHECKPOINT, "[%s] Adding inode %d...\n", __func__, i );
+				nftemp = knew( file_pobj_t );
+				memcpy( nftemp, nfobj, sizeof( file_pobj_t ));
+
+				dlist_add( new_task->pobjects, nftemp );
+
+			} else {
+				break;
+			}
+		}
+	}
 
 	if ( map ){
 		list_node_t *temp = map->base;
@@ -181,16 +235,6 @@ int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *m
 		*((int *)new_task->esp) = argc;
 
 		kprintf( "[%s] Loading process with %d args at 0x%x\n", __func__, *((int *)new_task->esp), new_task->esp );
-	}
-
-	if ( cur->froot ){
-		new_task->froot = knew( file_node_t );
-		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
-	}
-
-	if ( cur->curdir ){
-		new_task->curdir = knew( file_node_t );
-		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
 	}
 
 	add_task( new_task );

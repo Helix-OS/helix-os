@@ -15,18 +15,18 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: pci_mod
 
 %.o : %.c
+	@echo "[pci] CC $<"
 	@$(CC) $(CFLAGS) -c $<
-	@echo CC $<
 
 %.o : %.s
+	@echo "[pci] AS $<"
 	@$(AS) $(ASFLAGS) $<
-	@echo AS $<
 
 pci_mod: $(OBJS)
+	@echo "[pci] LD $(LDFLAGS) -o ../../modobjs/pci_mod.o *.o"
 	@$(LD) $(LDFLAGS) -o ../../modobjs/pci_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../../modobjs/pci_mod.o *.o
 
 clean:
-	rm *.o
+	@rm -f *.o
 
 .PHONY: all

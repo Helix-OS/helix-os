@@ -205,4 +205,6 @@ int vfs_readdir( int pnode, dirent_t *dirp, int entry );
 int vfs_chroot( char *path );
 int vfs_chdir( char *path );
 
+int init_vfs( );
+
 #endif

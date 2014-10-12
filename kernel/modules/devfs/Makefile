@@ -15,18 +15,18 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: devfs_mod
 
 %.o : %.c
+	@echo "[devfs] CC $<"
 	@$(CC) $(CFLAGS) -c $<
-	@echo CC $<
 
 %.o : %.s
+	@echo "[devfs] AS $<"
 	@$(AS) $(ASFLAGS) $<
-	@echo AS $<
 
 devfs_mod: $(OBJS)
+	@echo "[devfs] LD $(LDFLAGS) -o ../../modobjs/devfs_mod.o *.o"
 	@$(LD) $(LDFLAGS) -o ../../modobjs/devfs_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../../modobjs/devfs_mod.o *.o
 
 clean:
-	@-rm *.o
+	@-rm -f *.o
 
 .PHONY: all

@@ -15,18 +15,18 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: dummy_mod
 
 %.o : %.c
+	@echo "[dummy] CC $<"
 	@$(CC) $(CFLAGS) -c $<
-	@echo CC $<
 
 %.o : %.s
+	@echo "[dummy] AS $<"
 	@$(AS) $(ASFLAGS) $<
-	@echo AS $<
 
 dummy_mod: $(OBJS)
+	@echo "[dummy] LD $(LDFLAGS) -o ../../modobjs/dummy_mod.o *.o"
 	@$(LD) $(LDFLAGS) -o ../../modobjs/dummy_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../../modobjs/dummy_mod.o *.o
 
 clean:
-	rm *.o
+	@rm -f *.o
 
 .PHONY: all

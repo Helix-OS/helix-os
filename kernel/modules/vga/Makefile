@@ -15,18 +15,18 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: vga_mod
 
 %.o : %.c
+	@echo "[vga] CC $<"
 	@$(CC) $(CFLAGS) -c $<
-	@echo CC $<
 
 %.o : %.s
+	@echo "[vga] AS $<"
 	@$(AS) $(ASFLAGS) $<
-	@echo AS $<
 
 vga_mod: $(OBJS)
+	@echo "[vga] LD $(LDFLAGS) -o ../../modobjs/vga_mod.o *.o"
 	@$(LD) $(LDFLAGS) -o ../../modobjs/vga_mod.o *.o
-	@echo LD $(LDFLAGS) -o ../../modobjs/vga_mod.o *.o
 
 clean:
-	rm *.o
+	@rm -f *.o
 
 .PHONY: all

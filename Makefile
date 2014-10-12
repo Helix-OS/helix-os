@@ -1,6 +1,7 @@
 ARCH		= i586
 TARGET		= $(ARCH)-elf
 MAKE		= make
+MAKEFLAGS       = --no-print-directory
 EMULATOR	= qemu-system-i386
 #EMU_FLAGS	= -hda helix.img -hdb fattest.hdd -s -serial stdio -m 32
 #EMU_FLAGS	= -hda helix.img -hdb userland/user.hdd -s -serial file:debug.log -m 32
@@ -18,7 +19,8 @@ OBJCOPY		= $(CROSS)/bin/$(TARGET)-objcopy
 STRIP		= $(CROSS)/bin/$(TARGET)-strip
 CONFIG_C_FLAGS	= -g
 
-all: check helix-kernel ktools userspace image
+
+all: check helix-kernel userspace image
 dev-all: check helix-kernel ktools userspace image docs test
 
 debug:
@@ -72,8 +74,10 @@ user-clean:
 	@-cd userland; $(MAKE) clean KNAME=$(KNAME) \
 		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)
 
-clean: user-clean
+kernel-clean:
 	@-cd kernel; $(MAKE) clean
+
+clean: kernel-clean user-clean
 	@-cd tools; $(MAKE) clean
 	@-rm *.img
 	@-rm -rf build

@@ -4,7 +4,7 @@ CFLAGS=-g -I"$(PREFIX)/include" -nostdlib -nodefaultlibs -nostartfiles -fno-buil
 
 .c:
 	@echo CC $<
-	$(CC) $(CFLAGS) -o $@ $< $(PREFIX)/lib/{crt*,syscalls,libc}.o
+	@$(CC) $(CFLAGS) -o $@ $< $(PREFIX)/lib/{crt*,syscalls,libc}.o
 
 all: $(OBJ)
 
@@ -12,6 +12,6 @@ clean:
 	@-rm $(OBJ)
 
 install:
-	cp $(OBJ) $(PREFIX)/bin
+	@cp $(OBJ) $(PREFIX)/bin
 
 .PHONY: all
