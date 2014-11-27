@@ -3,10 +3,7 @@ TARGET		= $(ARCH)-elf
 MAKE		= make
 MAKEFLAGS       = --no-print-directory
 EMULATOR	= qemu-system-i386
-#EMU_FLAGS	= -hda helix.img -hdb fattest.hdd -s -serial stdio -m 32
-#EMU_FLAGS	= -hda helix.img -hdb userland/user.hdd -s -serial file:debug.log -m 32
-EMU_FLAGS	= -hda helix.img -s -serial file:debug.log -m 32
-#EMU_FLAGS	= -kernel kernel/helix_kernel-i586 -serial stdio -nographic -m 16 -s
+EMU_FLAGS	= -hda helix.img -s -serial tcp::9090,server -m 32
 CROSS		= $(shell pwd)/cross
 
 KNAME		= obsidian-$(ARCH)
@@ -21,7 +18,7 @@ CONFIG_C_FLAGS	= -g
 
 
 all: check helix-kernel userspace image
-dev-all: check helix-kernel ktools userspace image docs test
+dev-all: check ktools helix-kernel userspace image docs test
 
 debug:
 	@gdb -x tools/gdbscript
@@ -77,7 +74,11 @@ user-clean:
 kernel-clean:
 	@-cd kernel; $(MAKE) clean
 
-clean: kernel-clean user-clean
+
+tools-clean:
+	@-cd tools; $(MAKE) clean
+
+clean: kernel-clean user-clean tools-clean
 	@-cd tools; $(MAKE) clean
 	@-rm *.img
 	@-rm -rf build
