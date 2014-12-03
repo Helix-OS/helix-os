@@ -108,7 +108,7 @@ int kprintf( char *format, ... ){
 	va_list args;
 	va_start( args, format );
 
-	//i = kvprintf( format, args );
+	i = kvprintf( format, args );
 
 	va_end( args );
 	return i;

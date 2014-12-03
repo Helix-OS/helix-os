@@ -1,6 +1,13 @@
 #ifndef _kernel_string_c
 #define _kernel_string_c
 #include <base/string.h>
+#include <base/stdint.h>
+
+/* TODO:
+ *   - use unsigned lengths
+ *   - refactor older code
+ */
+
 
 unsigned strlen( char *input ){
 	int i;
@@ -120,6 +127,20 @@ void *memmove( void *dest, void *src, unsigned count ){
 		*(src_dest) = 0;
 	}
 	return dest;
+}
+
+int memcmp( void *s1, void *s2, int len ){
+	int ret = 0;
+	int i;
+
+	char *foo = s1;
+	char *bar = s2;
+
+	for ( i = 0; i < len; i++ ){
+		ret += foo[i] != bar[i];
+	}
+
+	return ret;
 }
 
 #endif

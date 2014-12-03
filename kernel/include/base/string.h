@@ -17,5 +17,6 @@ void *memset( void *, unsigned char, unsigned );
 void *memsetw( void *, unsigned char, unsigned );
 void *memcpy( void *, void *, unsigned );
 void *memmove( void *, void *, unsigned );
+int memcmp( void *s1, void *s2, int len );
 
 #endif

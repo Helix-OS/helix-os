@@ -1,5 +1,6 @@
 #include <ata/ata.h>
 #include <base/string.h>
+#include <base/tasking/task.h>
 
 static int ata_ide_irq_invoked = 0;
 

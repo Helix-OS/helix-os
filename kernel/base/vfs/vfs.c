@@ -105,8 +105,7 @@ file_node_t *get_current_dir( ){
 int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int flags ){
 	file_driver_t *driver;
 	file_system_t *fs;
-	file_node_t *mount = 0,
-		    *devnode;
+	file_node_t *mount = 0;
 	int ret = 0,
 	    foo;
 
@@ -215,6 +214,7 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 			if ( *pathptr == '/' ){
 				pathptr++;
 				expecting_dir = true;
+				expecting_dir = expecting_dir; // XXX: get compiler to shut up about unused variable
 			}
 
 			vfs_function_ret = VFS_FUNCTION( move, lookup, current_buf, namebuf, flags );
@@ -271,14 +271,14 @@ int init_vfs( ){
 		kprintf( "[%s] Have driver \"%s\"\n", provides, drv->name );
 	}
 
-	register_syscall( SYSCALL_OPEN, vfs_open );
-	register_syscall( SYSCALL_CLOSE, vfs_close );
-	register_syscall( SYSCALL_READ, vfs_read );
-	register_syscall( SYSCALL_WRITE, vfs_write );
-	register_syscall( SYSCALL_SPAWN, vfs_spawn );
+	register_syscall( SYSCALL_OPEN,    vfs_open );
+	register_syscall( SYSCALL_CLOSE,   vfs_close );
+	register_syscall( SYSCALL_READ,    vfs_read );
+	register_syscall( SYSCALL_WRITE,   vfs_write );
+	register_syscall( SYSCALL_SPAWN,   vfs_spawn );
 	register_syscall( SYSCALL_READDIR, vfs_readdir );
-	register_syscall( SYSCALL_CHROOT, vfs_chroot );
-	register_syscall( SYSCALL_CHDIR, vfs_chdir );
+	register_syscall( SYSCALL_CHROOT,  vfs_chroot );
+	register_syscall( SYSCALL_CHDIR,   vfs_chdir );
 
 	drv = file_get_driver( "ramfs" );
 	kprintf( "[%s] Have ramfs at 0x%x\n", provides, drv );
@@ -291,7 +291,6 @@ int init_vfs( ){
 	} else {
 		{
 			file_node_t filebuf;
-			dirent_t dir;
 			int foobar;
 
 			file_lookup_absolute( "/test", &filebuf, 0 );

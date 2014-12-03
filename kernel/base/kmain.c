@@ -19,10 +19,18 @@ extern unsigned int *kernel_dir;
 extern mheap_t *kheap;
 extern unsigned int early_placement;
 
+// XXX: remove after userspace loading is fully implemented
+extern int syscall_spawn( int, char **, char **, int );
+
 void utest( ){
 	switch_to_usermode( );
-
 	int fd;
+
+	// open initial file descriptors
+	fd = syscall_open( "/test/devices/keyboard", FILE_READ );
+	fd = syscall_open( "/test/devices/console",  FILE_READ );
+	fd = syscall_open( "/test/devices/console",  FILE_READ );
+
 	fd = syscall_open( "/test/userroot/bin/init", FILE_READ );
 	if ( fd >= 0 ){
 		kprintf( "[%s] Spawning process from fd %d\n", __func__, fd );

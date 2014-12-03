@@ -45,7 +45,7 @@ void init_tasking( void ){
 	current_task = task_list = list_add_data_node( task_list, root_task );
 	root_task->pagedir = get_current_page_dir( );
 	root_task->pobjects = dlist_create( 0, 0 );
-	root_task->stack = kmalloca( 2048 );
+	root_task->stack = (unsigned long)kmalloca( 2048 );
 	tasking_initialized = 1;
 
 	register_pitimer_call( rrschedule_call );
