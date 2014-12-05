@@ -15,15 +15,15 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: ps2keybd_mod
 
 %.o : %.c
-	@echo "[ps2keybd] CC $<"
+	@echo "   [ps2keybd] CC $<"
 	@$(CC) $(CFLAGS) -c $<
 
 %.o : %.s
-	@echo "[ps2keybd] AS $<"
+	@echo "   [ps2keybd] AS $<"
 	@$(AS) $(ASFLAGS) $<
 
 ps2keybd_mod: $(OBJS)
-	@echo "[ps2keybd] LD $(LDFLAGS) -o ../../modobjs/ps2keybd_mod.o *.o"
+	@echo "   [ps2keybd] LD $(LDFLAGS) -o ../../modobjs/ps2keybd_mod.o *.o"
 	@$(LD) $(LDFLAGS) -o ../../modobjs/ps2keybd_mod.o *.o
 
 clean:

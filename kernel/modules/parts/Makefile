@@ -15,15 +15,15 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: parts_mod
 
 %.o : %.c
-	@echo "[parts] CC $<"
+	@echo "      [parts] CC $<"
 	@$(CC) $(CFLAGS) -c $<
 
 %.o : %.s
-	@echo "[parts] AS $<"
+	@echo "      [parts] AS $<"
 	@$(AS) $(ASFLAGS) $<
 
 parts_mod: $(OBJS)
-	@echo "[parts] LD $(LDFLAGS) -o ../../modobjs/parts_mod.o *.o"
+	@echo "      [parts] LD $(LDFLAGS) -o ../../modobjs/parts_mod.o *.o"
 	@$(LD) $(LDFLAGS) -o ../../modobjs/parts_mod.o *.o
 
 clean:

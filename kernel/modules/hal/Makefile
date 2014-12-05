@@ -15,15 +15,15 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: hal_mod
 
 %.o : %.c
-	@echo "[hal] CC $<"
+	@echo "        [hal] CC $<"
 	@$(CC) $(CFLAGS) -c $<
 
 %.o : %.s
-	@echo "[hal] AS $<"
+	@echo "        [hal] AS $<"
 	@$(AS) $(ASFLAGS) $<
 
 hal_mod: $(OBJS)
-	@echo "[hal] LD $(LDFLAGS) -o ../../modobjs/hal_mod.o *.o"
+	@echo "        [hal] LD $(LDFLAGS) -o ../../modobjs/hal_mod.o *.o"
 	@$(LD) $(LDFLAGS) -o ../../modobjs/hal_mod.o *.o
 
 clean:

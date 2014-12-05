@@ -14,15 +14,15 @@ OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
 all: dummy_mod
 
 %.o : %.c
-	@echo "[fatfs] CC $<"
+	@echo "      [fatfs] CC $<"
 	@$(CC) $(CFLAGS) -c $<
 
 %.o : %.s
-	@echo "[fatfs] AS $<"
+	@echo "      [fatfs] AS $<"
 	@$(AS) $(ASFLAGS) $<
 
 dummy_mod: $(OBJS)
-	@echo "[fatfs] LD $(LDFLAGS) -o ../../modobjs/fatfs_mod.o *.o"
+	@echo "      [fatfs] LD $(LDFLAGS) -o ../../modobjs/fatfs_mod.o *.o"
 	@$(LD) $(LDFLAGS) -o ../../modobjs/fatfs_mod.o *.o
 
 clean:
