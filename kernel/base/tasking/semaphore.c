@@ -11,31 +11,14 @@ void init_semaphore( semaphore_t *sem, int nallowed ){
 	*sem = nallowed;
 }
 
-int enter_semaphore( semaphore_t *sem ){
+void semaphore_wait( semaphore_t *sem ){
 	task_t *current;
-	int ret = 0;
 
-	if ( !sem )
-		return 0;
+	current = get_current_task( );
+	current->state = TASK_STATE_WAITING;
+	current->sem = sem;
 
-	if ( *sem ){
-		ret = --*sem;
-
-	} else {
-		current = get_current_task( );
-		current->state = TASK_STATE_WAITING;
-		current->sem = sem;
-
-		rrschedule_call( );
-
-		ret = --*sem;
-	}
-
-	return ret;
-}
-
-int leave_semaphore( semaphore_t *sem ){
-	return ++(*sem);
+	rrschedule_call( );
 }
 
 protected_var_t *create_protected_var( int nallowed, void *var ){
