@@ -6,8 +6,8 @@
 #include <base/logger.h>
 #include <base/string.h>
 #include <base/tasking/semaphore.h>
-#include <base/arch/i386/pitimer.h> /* TODO: remove this, implement generic timer */
-#include <base/arch/i386/paging.h> 
+#include <base/arch/i586/pitimer.h> /* TODO: remove this, implement generic timer */
+#include <base/arch/i586/paging.h> 
 #include <base/mem/memmap.h>
 #include <vfs/vfs.h>
 

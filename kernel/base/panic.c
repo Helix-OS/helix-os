@@ -1,7 +1,7 @@
 #ifndef _kernel_panic_c
 #define _kernel_panic_c
 #include <base/kstd.h>
-#include <base/arch/i386/isr.h>
+#include <base/arch/i586/isr.h>
 
 void panic( char *fmt, ... ){
 	va_list args;

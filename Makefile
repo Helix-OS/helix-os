@@ -5,6 +5,7 @@ MAKEFLAGS       = --no-print-directory
 EMULATOR	= qemu-system-i386
 EMU_FLAGS	= -hda helix.img -s -serial tcp::9090,server -m 32
 CROSS		= $(shell pwd)/cross
+PLATFORM        = pc
 
 KNAME		= obsidian-$(ARCH)
 
@@ -33,10 +34,11 @@ check:
 
 helix-kernel:
 	@cd kernel; $(MAKE) KNAME=$(KNAME) CONFIG_C_FLAGS="$(CONFIG_C_FLAGS)" \
-		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)
+		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)\
+		  PLATFORM=$(PLATFORM)
 
 ktools:
-	cd tools; $(MAKE)
+	cd tools; $(MAKE) ARCH=$(ARCH) PLATFORM=$(PLATFORM)
 
 image:
 	@echo -e "[\033[0;34mGenerating image...\033[0;0m]"
@@ -51,7 +53,8 @@ image:
 
 userspace:
 	@cd userland; $(MAKE) all KNAME=$(KNAME) \
-		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)
+		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)\
+		  PLATFORM=$(PLATFORM)
 
 test:
 	$(EMULATOR) $(EMU_FLAGS)

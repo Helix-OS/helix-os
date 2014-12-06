@@ -1,6 +1,6 @@
 #include <base/kmain.h>
-#include <base/arch/i386/init_tables.h>
-#include <base/arch/i386/paging.h>
+#include <base/arch/i586/init_tables.h>
+#include <base/arch/i586/paging.h>
 #include <base/multiboot.h>
 #include <base/mem/alloc.h>
 #include <base/module.h>
@@ -11,7 +11,7 @@
 
 #include <base/initrd.h>
 
-#include <base/arch/i386/pitimer.h>
+#include <base/arch/i586/pitimer.h>
 #include <base/tasking/task.h>
 #include <base/tasking/userspace.h>
 

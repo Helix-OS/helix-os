@@ -71,8 +71,9 @@ DECL_SYSCALL1( sbrk, int );
 DECL_SYSCALL1( chroot, const char * );
 DECL_SYSCALL1( chdir, const char * );
 
-int syscall_tester( );
 void init_syscalls( );
+void arch_init_syscalls( );
+int syscall_tester( );
 void register_syscall( syscall_t n, void *call );
 
 #endif

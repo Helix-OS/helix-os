@@ -1,5 +1,5 @@
 #include <base/tasking/task.h>
-#include <base/arch/i386/init_tables.h>
+#include <base/arch/i586/init_tables.h>
 #include <base/tasking/rrsched.h>
 #include <base/string.h>
 #include <base/syscalls.h>

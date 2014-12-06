@@ -1,6 +1,6 @@
 #ifndef _helix_paging_h
 #define _helix_paging_h
-#include <base/arch/i386/isr.h>
+#include <base/arch/i586/isr.h>
 
 #define PAGE_USER	4
 #define PAGE_WRITEABLE	2

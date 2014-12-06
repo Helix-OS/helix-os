@@ -2,7 +2,7 @@
 #define _helix_pitimer_h
 #include <base/stdint.h>
 #include <base/stdio.h>
-#include <base/arch/i386/isr.h>
+#include <base/arch/i586/isr.h>
 #include <base/logger.h>
 
 #define PIT_FREQ 1193180

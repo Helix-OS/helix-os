@@ -2,9 +2,10 @@ CC		= gcc
 AS		= nasm
 LD		= ld
 ARCH		= i586
+PLATFORM        = pc
 
 INCLUDE		= $(shell pwd)/include
-CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DARCH=$(ARCH) -I$(INCLUDE)
+CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DPLATFORM=$(PLATFORM) -DARCH=$(ARCH) -I$(INCLUDE)
 ASFLAGS		= -f elf
 LDFLAGS		= -T linker.ld
 
@@ -22,7 +23,7 @@ all: kernel kmodules
 	$(AS) $(ASFLAGS) $<
 
 kernel: $(OBJS)
-	@cd base; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE)
+	@cd base; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) PLATFORM=$(PLATFORM) INCLUDE=$(INCLUDE) 
 	@mv base/helix_kernel-$(ARCH) .
 
 kmodules:

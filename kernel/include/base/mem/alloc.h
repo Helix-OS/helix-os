@@ -1,6 +1,6 @@
 #ifndef _helix_alloc_h
 #define _helix_alloc_h
-#include <base/arch/i386/paging.h>
+#include <base/arch/i586/paging.h>
 #include <base/logger.h>
 
 #define MBL_FREE 0x66726565

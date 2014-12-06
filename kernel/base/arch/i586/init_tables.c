@@ -1,7 +1,7 @@
 #ifndef _helix_x86_init_tables_c
 #define _helix_arch_x86_init_tables_c
 
-#include <base/arch/i386/init_tables.h>
+#include <base/arch/i586/init_tables.h>
 #include <base/stdio.h>
 #include <base/string.h>
 

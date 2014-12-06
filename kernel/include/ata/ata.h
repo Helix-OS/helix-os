@@ -2,8 +2,8 @@
 #define _helix_ata_h
 #include <base/stdint.h>
 #include <base/stdio.h>
-#include <base/arch/i386/isr.h>
-#include <base/arch/i386/pitimer.h>
+#include <base/arch/i586/isr.h>
+#include <base/arch/i586/pitimer.h>
 #include <base/hal.h>
 #include <base/logger.h>
 #include <pci/pci.h>

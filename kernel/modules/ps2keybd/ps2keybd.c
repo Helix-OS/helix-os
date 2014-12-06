@@ -1,5 +1,5 @@
 #include <base/logger.h>
-#include <base/arch/i386/isr.h>
+#include <base/arch/i586/isr.h>
 #include <base/datastructs/pipe.h>
 #include <base/string.h>
 #include <base/stdio.h>
