@@ -16,13 +16,51 @@ AS		= nasm
 OBJCOPY		= $(CROSS)/bin/$(TARGET)-objcopy
 STRIP		= $(CROSS)/bin/$(TARGET)-strip
 CONFIG_C_FLAGS	= -g
+MKCONFIG        = config.mk
+MKROOT          = $(shell pwd)
 
+CURRENT_VER     = 0.1.0
 
-all: check helix-kernel userspace image
-dev-all: check ktools helix-kernel userspace image docs test
+.PHONY: all
+all:     check $(MKCONFIG) helix-kernel userspace image
+dev-all: check $(MKCONFIG) ktools helix-kernel userspace image docs test
+
+helix-kernel: $(MKCONFIG)
+	@cd kernel; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT)
+
+ktools:
+	@cd tools; $(MAKE) ARCH=$(ARCH) PLATFORM=$(PLATFORM)
+
+userspace: $(MKCONFIG)
+	@#cd userland; $(MAKE) all KNAME=$(KNAME) \
+		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)\
+		  PLATFORM=$(PLATFORM)
+	@cd userland; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT)
+
+image:
+	@echo -e "[ ] Generating image..."
+	@cp -r boot-image build
+	@cp kernel/helix_kernel-i586 build
+	@tar c kernel/modobjs kernel/config > build/initrd.tar
+	@./tools/mk_image.sh
+	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
+	@echo -e "[ ] done"
+
+cross-cc: check
+	@echo -e "[ ] Making cross-compiler..."
+	@cd cross; $(MAKE) MAKE=$(MAKE) TARGET=$(TARGET)
+	@echo -e "[ ] done"
 
 debug:
 	@gdb -x tools/gdbscript
+
+test:
+	$(EMULATOR) $(EMU_FLAGS)
+
+docs:
+	@echo -e "[ ] Making documentation..."
+	@cd doc; doxygen doxy.conf > /dev/null
+	@echo -e "[ ] done";
 
 check:
 	@if [ ! -e cross/.cross_check ]; then \
@@ -32,51 +70,13 @@ check:
 	fi
 	@./tools/check_depends.sh
 
-helix-kernel:
-	@cd kernel; $(MAKE) KNAME=$(KNAME) CONFIG_C_FLAGS="$(CONFIG_C_FLAGS)" \
-		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)\
-		  PLATFORM=$(PLATFORM)
-
-ktools:
-	cd tools; $(MAKE) ARCH=$(ARCH) PLATFORM=$(PLATFORM)
-
-image:
-	@echo -e "[\033[0;34mGenerating image...\033[0;0m]"
-	@echo -e "[\033[0;32mMaking image\033[0;0m]"
-	@cp -r boot-image build
-	@cp kernel/helix_kernel-i586 build
-	@tar c kernel/modobjs kernel/config > build/initrd.tar
-	@./tools/mk_image.sh
-	@echo "To boot: $(EMULATOR) $(EMU_FLAGS)"
-	@echo -e "[\033[0;32mdone\033[0;0m]"
-	@echo -e "[\033[0;34mdone\033[0;0m]";
-
-userspace:
-	@cd userland; $(MAKE) all KNAME=$(KNAME) \
-		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)\
-		  PLATFORM=$(PLATFORM)
-
-test:
-	$(EMULATOR) $(EMU_FLAGS)
-
-cross-cc:
-	@echo -e "[\033[0;34mMaking cross-compiler...\033[0;0m]"
-	@#cd cross; $(MAKE) MAKE=$(MAKE) TARGET=$(TARGET) -j $$(( `cat /proc/cpuinfo | grep "^proc" | wc -l` * 2 ))
-	@cd cross; $(MAKE) MAKE=$(MAKE) TARGET=$(TARGET) 
-	@echo -e "[\033[0;34mdone\033[0;0m]"
-
-docs:
-	@echo -e "[\033[0;34mMaking documentation...\033[0;0m]"
-	@cd doc; doxygen doxy.conf > /dev/null
-	@echo -e "[\033[0;34mdone\033[0;0m]";
-
 user-clean:
-	@-cd userland; $(MAKE) clean KNAME=$(KNAME) \
+	@-cd userland; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT) clean
+	@#-cd userland; $(MAKE) clean KNAME=$(KNAME) \
 		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)
 
 kernel-clean:
-	@-cd kernel; $(MAKE) clean
-
+	@-cd kernel; $(MAKE) MKCONFIG="$(MKCONFIG)" MKROOT="$(MKROOT)" clean
 
 tools-clean:
 	@-cd tools; $(MAKE) clean
@@ -85,5 +85,23 @@ clean: kernel-clean user-clean tools-clean
 	@-cd tools; $(MAKE) clean
 	@-rm *.img
 	@-rm -rf build
+	@-rm config.mk
 
-.PHONY: all
+.PHONY: $(MKCONFIG)
+$(MKCONFIG):
+	@echo "# Global make variable configuration" > $(MKCONFIG)
+	@echo ARCH           = $(ARCH) >> $(MKCONFIG)
+	@echo TARGET         = $(TARGET) >> $(MKCONFIG)
+	@echo MAKE           = $(MAKE) >> $(MKCONFIG)
+	@echo MAKEFLAGS      = $(MAKEFLAGS) >> $(MKCONFIG)
+	@echo PLATFORM       = $(PLATFORM) >> $(MKCONFIG)
+	@echo LD             = $(LD) >> $(MKCONFIG)
+	@echo AS             = $(AS) >> $(MKCONFIG)
+	@echo CC             = $(CC) >> $(MKCONFIG)
+	@echo NATIVECC       = $(NATIVECC) >> $(MKCONFIG)
+	@echo OBJCOPY        = $(OBJCOPY) >> $(MKCONFIG)
+	@echo STRIP          = $(STRIP) >> $(MKCONFIG)
+	@echo CONFIG_C_FLAGS = $(CONFIG_C_FLAGS) >> $(MKCONFIG)
+	@echo MKCONFIG       = $(MKCONFIG) >> $(MKCONFIG)
+	@echo MKROOT         = $(MKROOT) >> $(MKCONFIG)
+	@echo CURRENT_VER    = $(CURRENT_VER) >> $(MKCONFIG)

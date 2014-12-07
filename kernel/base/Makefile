@@ -1,9 +1,6 @@
-CC		= gcc
-AS		= nasm
-LD		= ld
-ARCH		= i586
+include $(MKROOT)/$(MKCONFIG)
 
-INCLUDE		= 
+INCLUDE		=
 CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DPLATFORM=$(PLATFORM) -DARCH=$(ARCH) -I$(INCLUDE) -g
 ASFLAGS		= -f elf
 LDFLAGS		= -T arch/$(ARCH)/targets/$(PLATFORM)/linker.ld

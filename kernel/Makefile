@@ -1,38 +1,22 @@
-CC		= gcc
-AS		= nasm
-LD		= ld
-ARCH		= i586
-PLATFORM        = pc
+include $(MKROOT)/$(MKCONFIG)
 
-INCLUDE		= $(shell pwd)/include
-CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DPLATFORM=$(PLATFORM) -DARCH=$(ARCH) -I$(INCLUDE)
-ASFLAGS		= -f elf
-LDFLAGS		= -T linker.ld
-
-OBJS		= $(patsubst %.c, %.o, $(wildcard *c))
-OBJS		+=$(patsubst %.s, %.o, $(wildcard *s))
-
-MODULES 	= $(wildcard modules/*)
+MODULES = $(wildcard modules/*)
+MODOBJS = $(patsubst modules/%, modobjs/%_mod.o, $(MODULES))
+INCLUDE = $(shell pwd)/include
 
 all: kernel kmodules
 
-%.o : %.c
-	$(CC) $(CFLAGS) -c $<
-
-%.o : %.s
-	$(AS) $(ASFLAGS) $<
-
-kernel: $(OBJS)
-	@cd base; make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) PLATFORM=$(PLATFORM) INCLUDE=$(INCLUDE) 
+kernel:
+	@cd base; make MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT) INCLUDE=$(INCLUDE)
 	@mv base/helix_kernel-$(ARCH) .
 
-kmodules:
-	@mkdir -p modobjs
-	@for module in $(MODULES); do\
-		cd $$module;\
-		make AS=$(AS) CC=$(CC) LD=$(LD) ARCH=$(ARCH) INCLUDE=$(INCLUDE);\
-		cd ../..;\
-	done;
+modobjs:
+	@mkdir modobjs
+
+modobjs/%_mod.o : modules/%
+	@cd $<; make MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT) INCLUDE=$(INCLUDE)
+
+kmodules: modobjs $(MODOBJS)
 
 clean:
 	-@for module in $(MODULES); do\

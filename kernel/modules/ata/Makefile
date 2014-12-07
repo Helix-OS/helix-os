@@ -1,7 +1,4 @@
-CC		= gcc
-AS		= nasm
-LD		= ld
-ARCH		= i586
+include $(MKROOT)/$(MKCONFIG)
 
 INCLUDE		= $(shell pwd)/../include
 CFLAGS		= -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -DARCH=$(ARCH) -I$(INCLUDE)

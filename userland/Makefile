@@ -1,3 +1,5 @@
+include $(MKROOT)/$(MKCONFIG)
+
 subdirs:
 	@mkdir -p build/{bin,lib}
 
