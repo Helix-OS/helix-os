@@ -1,5 +1,8 @@
 include $(MKROOT)/$(MKCONFIG)
 
+.PHONY: all
+all: subdirs libs
+
 subdirs:
 	@mkdir -p build/{bin,lib}
 
@@ -17,7 +20,6 @@ image:
 	@sudo umount mnt
 	@rmdir mnt
 
-all: subdirs libs
 
 clean:
 	@-cd dalibc; $(MAKE) AS=$(AS) CC=$(CC) LD=$(LD) ARCH=i386 HOST=helix clean
@@ -25,4 +27,3 @@ clean:
 	@-rm -rf build
 	@-rm user.hdd
 
-.PHONY: all

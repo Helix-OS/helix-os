@@ -32,9 +32,6 @@ ktools:
 	@cd tools; $(MAKE) ARCH=$(ARCH) PLATFORM=$(PLATFORM)
 
 userspace: $(MKCONFIG)
-	@#cd userland; $(MAKE) all KNAME=$(KNAME) \
-		  AS=$(AS) CC=$(CC) LD=$(LD) SPLIT=$(SPLIT) OBJCOPY=$(OBJCOPY) ARCH=$(ARCH)\
-		  PLATFORM=$(PLATFORM)
 	@cd userland; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT)
 
 image:
