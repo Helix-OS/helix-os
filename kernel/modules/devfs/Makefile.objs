@@ -1,0 +1,9 @@
+devfs-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/devfs/*.c))
+devfs-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/devfs/*.s))
+devfs-link-y += $(MODOBJ_DIR)/devfs_mod.o
+
+mod-obj-y += $(devfs-obj-y) $(devfs-link-y)
+
+$(MODOBJ_DIR)/devfs_mod.o: $(devfs-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(devfs-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

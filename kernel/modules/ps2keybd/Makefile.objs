@@ -1,0 +1,9 @@
+ps2keybd-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/ps2keybd/*.c))
+ps2keybd-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/ps2keybd/*.s))
+ps2keybd-link-y += $(MODOBJ_DIR)/ps2keybd_mod.o
+
+mod-obj-y += $(ps2keybd-obj-y) $(ps2keybd-link-y)
+
+$(MODOBJ_DIR)/ps2keybd_mod.o: $(ps2keybd-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(ps2keybd-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

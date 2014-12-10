@@ -1,0 +1,9 @@
+ata-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/ata/*.c))
+ata-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/ata/*.s))
+ata-link-y += $(MODOBJ_DIR)/ata_mod.o
+
+mod-obj-y += $(ata-obj-y) $(ata-link-y)
+
+$(MODOBJ_DIR)/ata_mod.o: $(ata-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(ata-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

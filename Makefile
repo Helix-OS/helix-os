@@ -1,20 +1,21 @@
 CONFIG        = config.mk
 CURRENT_VER   = 0.1.0
-ARCH          = i586
-PLATFORM      = pc
-CROSS         = $(shell pwd)/cross
 ALL_TARGETS   =
+ALL_CLEAN     =
 
 .PHONY: do_all
 do_all: all
 
 include buildconf/$(CONFIG)
+include kernel/Makefile.objs
 
+# TODO: have these be included too
+ALL_TARGETS += userspace $(ARCH_TARGETS)
+ALL_CLEAN   += user-clean tools-clean
+
+.PHONY: all
 all: $(ALL_TARGETS)
 dev-all: $(ALL_TARGETS) ktools docs
-
-helix-kernel: $(MKCONFIG)
-	@cd kernel; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT)
 
 ktools:
 	@cd tools; $(MAKE) ARCH=$(ARCH) PLATFORM=$(PLATFORM)
@@ -41,23 +42,10 @@ docs:
 user-clean:
 	@-cd userland; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT) clean
 
-kernel-clean:
-	@-cd kernel; $(MAKE) MKCONFIG="$(MKCONFIG)" MKROOT="$(MKROOT)" clean
-
 tools-clean:
 	@-cd tools; $(MAKE) clean
 
-clean: kernel-clean user-clean tools-clean
-	@-cd tools; $(MAKE) clean
-	@-rm *.img
+clean: $(ALL_CLEAN)
 	@-rm -rf build
+	@-rm *.img
 	@-rm $(MKCONFIG)
-
-check:
-	@if [ ! -e cross/.cross_check ]; then \
-		echo "[W] Warning:";\
-		echo "[W] Building the cross compiler using \`$(MAKE) cross-cc\` is recommended for best results.";\
-		echo "[W] Things may break otherwise, proceed at your own risk.";\
-	fi
-	@./tools/check_depends.sh
-

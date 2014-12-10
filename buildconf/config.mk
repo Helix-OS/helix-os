@@ -1,6 +1,10 @@
 # The default build config
 KNAME		= helix_kernel-$(ARCH)
 
+ARCH            = i586
+PLATFORM        = pc
+CROSS           = $(shell pwd)/cross
+
 MAKE		= make
 MAKEFLAGS       = --no-print-directory
 MKROOT          = $(shell pwd)
@@ -15,10 +19,6 @@ OBJCOPY		= $(CROSS)/bin/$(TARGET)-objcopy
 STRIP		= $(CROSS)/bin/$(TARGET)-strip
 NATIVECC	= gcc
 CONFIG_C_FLAGS	= -g
-
-ALL_TARGETS    += $(MKCONFIG)
-ALL_TARGETS    += helix-kernel userspace
-ALL_TARGETS    += $(ARCH_TARGETS)
 
 # Global config generation
 .PHONY: $(MKCONFIG)

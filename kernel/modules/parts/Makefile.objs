@@ -1,0 +1,9 @@
+parts-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/parts/*.c))
+parts-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/parts/*.s))
+parts-link-y += $(MODOBJ_DIR)/parts_mod.o
+
+mod-obj-y += $(parts-obj-y) $(parts-link-y)
+
+$(MODOBJ_DIR)/parts_mod.o: $(parts-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(parts-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

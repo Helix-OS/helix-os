@@ -1,0 +1,9 @@
+hal-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/hal/*.c))
+hal-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/hal/*.s))
+hal-link-y += $(MODOBJ_DIR)/hal_mod.o
+
+mod-obj-y += $(hal-obj-y) $(hal-link-y)
+
+$(MODOBJ_DIR)/hal_mod.o: $(hal-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(hal-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

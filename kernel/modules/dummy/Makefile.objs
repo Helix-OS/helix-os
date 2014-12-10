@@ -1,0 +1,9 @@
+dummy-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/dummy/*.c))
+dummy-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/dummy/*.s))
+dummy-link-y += $(MODOBJ_DIR)/dummy_mod.o
+
+mod-obj-y += $(dummy-obj-y) $(dummy-link-y)
+
+$(MODOBJ_DIR)/dummy_mod.o: $(dummy-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(dummy-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

@@ -1,0 +1,21 @@
+BASEDIR      = $(KERNEL_DIR)/base
+BASE_LDFLAGS = -T $(BASEDIR)/arch/$(ARCH)/targets/$(PLATFORM)/linker.ld
+
+kbase-obj-y  += $(patsubst %.c, %.o, $(shell find $(BASEDIR)/arch/$(ARCH) -name "*.c" ))
+kbase-obj-y  += $(patsubst %.s, %.o, $(shell find $(BASEDIR)/arch/$(ARCH) -name "*.s" ))
+kbase-obj-y  += $(patsubst %.c, %.o, $(shell find $(BASEDIR)/arch/$(ARCH)/targets/$(PLATFORM) -name "*.c" ))
+kbase-obj-y  += $(patsubst %.s, %.o, $(shell find $(BASEDIR)/arch/$(ARCH)/targets/$(PLATFORM) -name "*.s" ))
+kbase-obj-y  += $(patsubst %.c, %.o, $(shell find $(BASEDIR)/{mem,tasking,vfs,datastructs} -name "*.c" ))
+kbase-obj-y  += $(patsubst %.s, %.o, $(shell find $(BASEDIR)/{mem,tasking,vfs,datastructs} -name "*.s" ))
+kbase-obj-y  += $(patsubst %.c, %.o, $(wildcard $(BASEDIR)/*.c))
+kbase-obj-y  += $(patsubst %.s, %.o, $(wildcard $(BASEDIR)/*.s))
+
+klink-obj-y  += kernel/$(KNAME)
+
+kernel-obj-y += $(kbase-obj-y) $(klink-obj-y)
+
+kernel/$(KNAME): $(kbase-obj-y)
+	@$(CC) $(BASE_LDFLAGS) $(CFLAGS) -lgcc -o $@ $(kbase-obj-y)
+	@echo "[ ] CC -o $(KNAME) *.o"
+
+.PHONY: all

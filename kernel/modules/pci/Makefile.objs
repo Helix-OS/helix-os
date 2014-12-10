@@ -1,0 +1,9 @@
+pci-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/pci/*.c))
+pci-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/pci/*.s))
+pci-link-y += $(MODOBJ_DIR)/pci_mod.o
+
+mod-obj-y += $(pci-obj-y) $(pci-link-y)
+
+$(MODOBJ_DIR)/pci_mod.o: $(pci-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(pci-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

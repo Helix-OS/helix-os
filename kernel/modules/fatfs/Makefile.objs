@@ -1,0 +1,9 @@
+fatfs-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/fatfs/*.c))
+fatfs-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/fatfs/*.s))
+fatfs-link-y += $(MODOBJ_DIR)/fatfs_mod.o
+
+mod-obj-y += $(fatfs-obj-y) $(fatfs-link-y)
+
+$(MODOBJ_DIR)/fatfs_mod.o: $(fatfs-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(fatfs-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"
