@@ -10,6 +10,7 @@ MAKEFLAGS       = --no-print-directory
 MKROOT          = $(shell pwd)
 MKCONFIG        = config.out.mk
 
+include buildconf/kernel/default.mk
 include buildconf/arch/$(ARCH)/$(PLATFORM).mk
 
 CC		= $(CROSS)/bin/$(TARGET)-gcc
