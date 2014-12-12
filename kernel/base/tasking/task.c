@@ -80,7 +80,10 @@ int create_thread( void (*start)( )){
 	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = 0;
+	new_task->pobjects = dlist_create( 0, 0 );
 
+	// TODO: Make file copying between processes work, move this to seperate function
+	/*
 	if ( cur->froot ){
 		new_task->froot = knew( file_node_t );
 		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
@@ -112,11 +115,9 @@ int create_thread( void (*start)( )){
 			}
 		}
 	}
+	*/
 
 	add_task( new_task );
-
-	new_task->pobjects = dlist_create( 0, 0 );
-
 	unblock_tasks( );
 
 	return new_task->pid;
@@ -139,6 +140,7 @@ int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *m
 	new_task->pagedir = get_current_page_dir( );
 	new_task->pobjects = dlist_create( 0, 0 );
 
+	/*
 	if ( cur->froot ){
 		new_task->froot = knew( file_node_t );
 		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
@@ -169,6 +171,7 @@ int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *m
 			}
 		}
 	}
+	*/
 
 	if ( map ){
 		list_node_t *temp = map->base;

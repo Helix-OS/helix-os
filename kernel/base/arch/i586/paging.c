@@ -216,6 +216,7 @@ void page_fault_handler( registers_t *regs ){
 	bool found = false;
 
 	asm volatile( "mov %%cr2, %0": "=r"( fault_addr ));
+	dump_registers( regs );
 
 	current = get_current_task( );
 	if ( !current || !current->pid ){
