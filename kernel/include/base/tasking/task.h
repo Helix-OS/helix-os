@@ -75,6 +75,8 @@ task_t *get_current_task( void );
 list_node_t *get_task_node_by_pid( pid_t pid );
 unsigned long get_current_pid( );
 
+void init_task_stack( task_t *task, char *argv[], char *envp[] );
+
 void set_current_task_node( list_node_t *node );
 
 #endif

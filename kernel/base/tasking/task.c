@@ -1,3 +1,4 @@
+// TODO: reorganize this file so functions can be found easier
 #include <base/tasking/task.h>
 #include <base/arch/i586/init_tables.h>
 #include <base/tasking/rrsched.h>
@@ -12,28 +13,7 @@ static unsigned int pidcount = 0;
 static int tasking_initialized = 0;
 static int task_blocked = 0;
 
-/*
-unsigned long get_instruct_ptr( void ){
-	asm volatile( "mov (%esp), %eax" );
-	asm volatile( "ret" );
-	return 0;
-}
-*/
-
-/** \brief Idle task which just calls the scheduler to switch tasks.
- *
- *  This is needed because the scheduler disables interrupts while looking for an
- *  task to run. If there's only one thread, and it does a usleep( ) call, the scheduler
- *  will go in to an infinite loop because get_tick( ) will never increase (because interrupts
- *  are disabled).
- *
- *  This gives anything that needs interrupts time to happen,
- *  without disabling interrupts in the scheduler.
- */
-void idle_task( ){
-	while ( 1 )
-		rrschedule_call( );
-}
+static void idle_task( );
 
 void init_tasking( void ){
 	asm volatile( "cli" );
@@ -60,6 +40,58 @@ void init_tasking( void ){
 	asm volatile( "sti" );
 }
 
+task_t *init_task( task_t *task ){
+	task_t *cur = get_current_task( );
+	task_t *ret = 0;
+
+	task->pid = ++pidcount;
+	task->group = cur->group;
+	task->state = TASK_STATE_RUNNING;
+
+	// If a process, assume the new directory has already been switched to
+	task->pagedir = get_current_page_dir( );
+	task->stack = (unsigned long)(kmalloca( 0x800 ));
+	task->esp = (unsigned long)( task->stack + 0x800 );
+	task->ebp = 0;
+	task->pobjects = dlist_create( 0, 0 );
+
+	// TODO: Make file copying between processes work
+	/*
+	if ( cur->froot ){
+		new_task->froot = knew( file_node_t );
+		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
+	}
+
+	if ( cur->curdir ){
+		new_task->curdir = knew( file_node_t );
+		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
+	}
+
+	{
+		int i;
+		file_pobj_t *nfobj;
+		file_pobj_t *nftemp;
+
+		for ( i = 0; i < 3; i++ ){
+			nfobj = dlist_get( cur->pobjects, i );
+
+			if ( nfobj ){
+				debugp( DEBUG_TASKING, MASK_CHECKPOINT, "[%s] Adding inode %d...\n", __func__, i );
+				nftemp = knew( file_pobj_t );
+				memcpy( nftemp, nfobj, sizeof( file_pobj_t ));
+
+				dlist_add( new_task->pobjects, nftemp );
+
+			} else {
+				break;
+			}
+		}
+	}
+	*/
+	
+	return ret;
+}
+
 int create_thread( void (*start)( )){
 	task_t *new_task = 0;
 	task_t *cur = get_current_task( );
@@ -69,53 +101,10 @@ int create_thread( void (*start)( )){
 	new_task = kmalloc( sizeof( task_t ));
 	memset( new_task, 0, sizeof( task_t ));
 
-	new_task->pid = ++pidcount;
-	new_task->group = cur->group;
-	new_task->state = TASK_STATE_RUNNING;
-
-	new_task->pagedir = get_current_page_dir( );
+	init_task( new_task );
 	new_task->memmaps = cur->memmaps;
 	new_task->mainmap = cur->mainmap;
-	new_task->stack = (unsigned long)(kmalloca( 0x800 ));
 	new_task->eip = (unsigned long)start;
-	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
-	new_task->ebp = 0;
-	new_task->pobjects = dlist_create( 0, 0 );
-
-	// TODO: Make file copying between processes work, move this to seperate function
-	/*
-	if ( cur->froot ){
-		new_task->froot = knew( file_node_t );
-		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
-	}
-
-	if ( cur->curdir ){
-		new_task->curdir = knew( file_node_t );
-		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
-	}
-
-	{
-		int i;
-		file_pobj_t *nfobj;
-		file_pobj_t *nftemp;
-
-		for ( i = 0; i < 3; i++ ){
-			nfobj = dlist_get( cur->pobjects, i );
-
-			if ( nfobj ){
-				debugp( DEBUG_TASKING, MASK_CHECKPOINT, "[%s] Adding inode %d...\n", __func__, i );
-
-				nftemp = knew( file_pobj_t );
-				memcpy( nftemp, nfobj, sizeof( file_pobj_t ));
-
-				dlist_add( new_task->pobjects, nftemp );
-
-			} else {
-				break;
-			}
-		}
-	}
-	*/
 
 	add_task( new_task );
 	unblock_tasks( );
@@ -125,53 +114,14 @@ int create_thread( void (*start)( )){
 
 int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *map ){
 	task_t *new_task;
-	task_t *cur = get_current_task( );
 
 	block_tasks( );
 
 	new_task = kmalloc( sizeof( task_t ));
 	memset( new_task, 0, sizeof( task_t ));
 
-	new_task->pid = ++pidcount;
-	new_task->group = new_task->pid;
-	new_task->state = TASK_STATE_RUNNING;
-
-	// Assume page directory is already set up by loader
-	new_task->pagedir = get_current_page_dir( );
-	new_task->pobjects = dlist_create( 0, 0 );
-
-	/*
-	if ( cur->froot ){
-		new_task->froot = knew( file_node_t );
-		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
-	}
-
-	if ( cur->curdir ){
-		new_task->curdir = knew( file_node_t );
-		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
-	}
-
-	{
-		int i;
-		file_pobj_t *nfobj;
-		file_pobj_t *nftemp;
-
-		for ( i = 0; i < 3; i++ ){
-			nfobj = dlist_get( cur->pobjects, i );
-
-			if ( nfobj ){
-				debugp( DEBUG_TASKING, MASK_CHECKPOINT, "[%s] Adding inode %d...\n", __func__, i );
-				nftemp = knew( file_pobj_t );
-				memcpy( nftemp, nfobj, sizeof( file_pobj_t ));
-
-				dlist_add( new_task->pobjects, nftemp );
-
-			} else {
-				break;
-			}
-		}
-	}
-	*/
+	init_task( new_task );
+	new_task->eip = (unsigned long)start;
 
 	if ( map ){
 		list_node_t *temp = map->base;
@@ -194,56 +144,80 @@ int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *m
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
 	new_task->ebp = new_task->esp;
 
-	// Copies all the argument and environment pointers to the task
-	{
-		int argc, i, envc,
-		    slen;
-		char **args;
-		char **envs;
-
-		for ( argc = 0; argv[argc]; argc++ );
-		for ( envc = 0; envp[envc]; envc++ );
-
-		new_task->esp -= sizeof( char *[argc + 1] );
-		args = (char **)new_task->esp;
-
-		new_task->esp -= sizeof( char *[envc + 1] );
-		envs = (char **)new_task->esp;
-
-		for ( i = 0; i < argc; i++ ){
-			slen = strlen( argv[i] );
-			new_task->esp -= sizeof( char[slen + 1] );
-
-			args[i] = (char *)new_task->esp;
-			strncpy( args[i], argv[i], slen );
-		}
-		args[argc] = 0;
-
-		for ( i = 0; i < envc; i++ ){
-			slen = strlen( envp[i] );
-			new_task->esp -= sizeof( char[slen + 1] );
-
-			envs[i] = (char *)new_task->esp;
-			strncpy( envs[i], envp[i], slen );
-		}
-		envs[envc] = 0;
-
-		new_task->esp -= sizeof( char ** );
-		*((char ***)new_task->esp) = envs;
-
-		new_task->esp -= sizeof( char ** );
-		*((char ***)new_task->esp) = args;
-
-		new_task->esp -= sizeof( int );
-		*((int *)new_task->esp) = argc;
-
-		kprintf( "[%s] Loading process with %d args at 0x%x\n", __func__, *((int *)new_task->esp), new_task->esp );
-	}
+	init_task_stack( new_task, argv, envp );
 
 	add_task( new_task );
 	unblock_tasks( );
 
 	return new_task->pid;
+}
+
+/** \brief Puts the given arguments and environment variables into place on the task's stack.
+ * @param task The new task to add arguments to
+ * @param args Null-terminated array of arguments
+ * @param env  Null-terminated array of environment variables
+ */
+void init_task_stack( task_t *task, char *argv[], char *envp[] ){
+	int argc, i, envc, slen;
+	char **args;
+	char **envs;
+
+	// count number of arguments
+	for ( argc = 0; argv[argc]; argc++ );
+	// count number of environment variables
+	for ( envc = 0; envp[envc]; envc++ );
+
+	// allocate space on the task's stack for pointers to the arguments
+	task->esp -= sizeof( char *[argc + 1] );
+	args = (char **)task->esp;
+
+	// and same for the environment variables
+	task->esp -= sizeof( char *[envc + 1] );
+	envs = (char **)task->esp;
+
+	// copy each argument onto the task's stack
+	for ( i = 0; i < argc; i++ ){
+		slen = strlen( argv[i] );
+		task->esp -= sizeof( char[slen + 1] );
+
+		args[i] = (char *)task->esp;
+		strncpy( args[i], argv[i], slen );
+	}
+	args[argc] = 0;
+
+	// and again for the environment vars.
+	for ( i = 0; i < envc; i++ ){
+		slen = strlen( envp[i] );
+		task->esp -= sizeof( char[slen + 1] );
+
+		envs[i] = (char *)task->esp;
+		strncpy( envs[i], envp[i], slen );
+	}
+	envs[envc] = 0;
+
+	// push pointer to pointer to arguments onto the stack
+	task->esp -= sizeof( char ** );
+	*((char ***)task->esp) = envs;
+
+	// push pointer to pointer to environment variables onto the stack
+	task->esp -= sizeof( char ** );
+	*((char ***)task->esp) = args;
+
+	// and lastly push the number of arguments
+	task->esp -= sizeof( int );
+	*((int *)task->esp) = argc;
+
+	/* final stack order is:
+	 * |arg count      |
+	 * |arg *[]        |
+	 * |env *[]        |
+	 * |env data       |
+	 * |arg data       |
+	 * |env *[argc]    |
+	 * |arg *[envc]    |
+	 */
+
+	kprintf( "[%s] Loading process with %d args at 0x%x\n", __func__, *((int *)task->esp), task->esp );
 }
 
 void exit_process( int status ){
@@ -436,3 +410,17 @@ void usleep( unsigned long useconds ){
 	rrschedule_call( );
 }
 
+/** \brief Idle task which just calls the scheduler to switch tasks.
+ *
+ *  This is needed because the scheduler disables interrupts while looking for an
+ *  task to run. If there's only one thread, and it does a usleep( ) call, the scheduler
+ *  will go in to an infinite loop because get_tick( ) will never increase (because interrupts
+ *  are disabled).
+ *
+ *  This gives anything that needs interrupts time to happen,
+ *  without disabling interrupts in the scheduler.
+ */
+static void idle_task( ){
+	while ( 1 )
+		rrschedule_call( );
+}
