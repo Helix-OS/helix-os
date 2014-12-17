@@ -28,7 +28,7 @@ unsigned int read_serial( void *buf, unsigned size ){
 	char *in = buf;
 	unsigned i;
 
-	enter_semaphore( &serial_sem );
+	//enter_semaphore( &serial_sem );
 
 	for ( i = 0; i < size; i++ ){
 		while( !serial_recieved( ))
@@ -37,7 +37,7 @@ unsigned int read_serial( void *buf, unsigned size ){
 		in[i] = inb( PORT );
 	}
 
-	leave_semaphore( &serial_sem );
+	//leave_semaphore( &serial_sem );
 	return i;
 }
 
@@ -45,7 +45,7 @@ unsigned int write_serial( void *buf, unsigned size ){
 	char *in = buf;
 	unsigned i;
 
-	enter_semaphore( &serial_sem );
+	//enter_semaphore( &serial_sem );
 
 	for ( i = 0; i < size; i++ ){
 		while( !transmit_empty( ))
@@ -54,6 +54,6 @@ unsigned int write_serial( void *buf, unsigned size ){
 		outb( PORT, in[i] );
 	}
 
-	leave_semaphore( &serial_sem );
+	//leave_semaphore( &serial_sem );
 	return i;	
 }

@@ -216,6 +216,7 @@ void page_fault_handler( registers_t *regs ){
 	bool found = false;
 
 	asm volatile( "mov %%cr2, %0": "=r"( fault_addr ));
+	kprintf( "page fault\n" );
 	dump_registers( regs );
 
 	current = get_current_task( );
@@ -228,12 +229,14 @@ void page_fault_handler( registers_t *regs ){
 		);
 
 	} else {
-		temp = current->memmaps->base;
-		foreach_in_list( temp ){
-			map = temp->data;
-			if ( memmap_check( map, fault_addr )){
-				found = true;
-				break;
+		if ( current->memmaps ){
+			temp = current->memmaps->base;
+			foreach_in_list( temp ){
+				map = temp->data;
+				if ( memmap_check( map, fault_addr )){
+					found = true;
+					break;
+				}
 			}
 		}
 

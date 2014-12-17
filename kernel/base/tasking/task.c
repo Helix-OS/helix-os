@@ -25,6 +25,15 @@ void init_tasking( void ){
 	current_task = task_list = list_add_data_node( task_list, root_task );
 	root_task->pagedir = get_current_page_dir( );
 	root_task->pobjects = dlist_create( 0, 0 );
+	root_task->memmaps = 0;
+	root_task->mainmap = 0;
+
+	/*
+	map_page( root_task->pagedir, 0xff000000 | PAGE_PRESENT | PAGE_WRITEABLE | PAGE_USER );
+	flush_tlb( );
+
+	root_task->stack = 0xff000000;
+	*/
 	root_task->stack = (unsigned long)kmalloca( 2048 );
 	tasking_initialized = 1;
 
@@ -50,8 +59,15 @@ task_t *init_task( task_t *task ){
 
 	// If a process, assume the new directory has already been switched to
 	task->pagedir = get_current_page_dir( );
+
+	task->stack = 0xa1000000 + task->pid * 0x1000;
+	map_page( task->pagedir, task->stack | PAGE_PRESENT | PAGE_WRITEABLE | PAGE_USER );
+	task->esp   = task->stack + 0x1000;
+	flush_tlb( );
+	/*
 	task->stack = (unsigned long)(kmalloca( 0x800 ));
 	task->esp = (unsigned long)( task->stack + 0x800 );
+	*/
 	task->ebp = 0;
 	task->pobjects = dlist_create( 0, 0 );
 
@@ -139,15 +155,25 @@ int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *m
 		new_task->memmaps = list_create( 0 );
 	}
 
+	//map_page( new_task->pagedir, 0xa1000000 | PAGE_WRITEABLE | PAGE_USER | PAGE_PRESENT );
+	//map_page( new_task->pagedir, 0xa1000000 | PAGE_WRITEABLE | PAGE_PRESENT );
+	//flush_tlb( );
+
+	/*
 	new_task->stack = (unsigned long)(kmalloca( 0x800 ));
-	new_task->eip = (unsigned long)start;
 	new_task->esp = (unsigned long)( new_task->stack + 0x800 );
+	//new_task->stack = 0xa1000000;
+	//new_task->esp = (unsigned long)( new_task->stack + 0xf00 );
+	*/
+	new_task->eip = (unsigned long)start;
 	new_task->ebp = new_task->esp;
 
 	init_task_stack( new_task, argv, envp );
 
 	add_task( new_task );
 	unblock_tasks( );
+
+	kprintf( "[%s] Done, returning\n", __func__ );
 
 	return new_task->pid;
 }
@@ -372,10 +398,13 @@ int remove_task_by_pid( int pid ){
 	// Clean up stack
 	if ( task->stack ){
 		kprintf( "[remove_task_by_pid] freeing thread stack at 0x%x\n", task->stack );
-		kfree((void *)( task->stack ));
+		//TODO: unmap stack pages here
+		//kfree((void *)( task->stack ));
 	}
 
+	// FIXME: lots of use-after-free errors resulting from the commented code
 	// Clean up process objects
+	/*
 	nobjs = dlist_allocated( task->pobjects );
 	for ( i = 0; i < nobjs; i++ ){
 		objptr = dlist_get( task->pobjects, i );
@@ -387,6 +416,7 @@ int remove_task_by_pid( int pid ){
 
 	// And done
 	kfree( task );
+	*/
 	unblock_tasks( );
 	rrschedule_call( );
 

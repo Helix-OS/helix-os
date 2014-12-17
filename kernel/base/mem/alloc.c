@@ -49,7 +49,9 @@ mheap_t *init_heap( mheap_t *heap, unsigned *p_dir, unsigned start, unsigned siz
 	return heap;
 }
 
-void *amalloc( mheap_t *heap, int size, int align ){
+//void *amalloc( mheap_t *heap, int size, int align ){
+void *amalloc( mheap_t *heap, unsigned size, int align ){
+
 	void *ret = 0;
 	int found = 0;
 	unsigned	buf,
@@ -184,6 +186,8 @@ void afree( mheap_t *heap, void *ptr ){
 		kprintf( "[afree] Warning! Caught null pointer, bailing out now\n" );
 		return;
 	}
+
+	kprintf( "[afree] freeing pointer at 0x%x...\n", ptr );
 
 	move = (mblock_t *)((unsigned)ptr - sizeof( mblock_t ));
 	if ( move->type == MBL_USED ){

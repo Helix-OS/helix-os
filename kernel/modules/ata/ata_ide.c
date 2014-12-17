@@ -206,6 +206,7 @@ char ata_ide_pio_access( ide_control_t *ctrl, char direction, uint8_t drive, uns
 	else if	( mode == 2 && !direction ) cmd = ATA_CMD_READ_PIO_EXT;
 	else if	( mode == 1 &&  direction ) cmd = ATA_CMD_WRITE_PIO;
 	else if	( mode == 2 &&  direction ) cmd = ATA_CMD_WRITE_PIO_EXT;
+    else cmd = 0;
 
 	ide_reg_write( ctrl, channel, ATA_REG_COMMAND, cmd );
 
@@ -252,7 +253,7 @@ char ata_ide_read_sectors( ide_control_t *ctrl, uint8_t drive, uint8_t numsects,
 	if (( lba + numsects > ctrl->devices[drive].size ))
 		return 2;
 
-	char error;
+	char error = 0;
 
 	if ( ctrl->devices[drive].type == ATA_TYPE_IDE )
 		error = ata_ide_pio_access( ctrl, ATA_READ, drive, lba, numsects, es, edi );

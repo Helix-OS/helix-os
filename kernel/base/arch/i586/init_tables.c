@@ -14,7 +14,7 @@ extern void gdt_flush( uint32_t );
 extern void idt_flush( uint32_t );
 extern void tss_flush( );
 
-gdt_entry_t gdt_entries[5];
+gdt_entry_t gdt_entries[6];
 gdt_ptr_t   gdt_ptr;
 
 idt_entry_t idt_entries[256];
