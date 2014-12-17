@@ -153,14 +153,18 @@ int file_lookup( char *path, file_node_t *buf, int flags ){
 			node = get_local_vfs_root( );
 			path++;
 
-		} else if ( cur->froot ){
-			node = cur->froot;
+			if ( *path ){
+				ret = file_lookup_relative( path, node, buf, flags );
+
+			} else {
+				*buf = *node;
+				ret = 0;
+			}
 
 		} else {
 			node = get_local_vfs_root( );
+			ret = file_lookup_relative( path, node, buf, flags );
 		}
-
-		ret = file_lookup_relative( path, node, buf, flags );
 	}
 
 	return ret;

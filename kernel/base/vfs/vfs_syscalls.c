@@ -35,6 +35,7 @@ int vfs_get_pobj( int pnode, file_pobj_t **obj ){
 	return ret;
 }
 
+// TODO: split this function into smaller pieces
 int vfs_open( char *path, int flags ){
 	file_pobj_t *newobj;
 
@@ -60,7 +61,9 @@ int vfs_open( char *path, int flags ){
 				fpath = dirpath + i;
 				dirfound = true;
 
-				kprintf( "[%s] Looking for directory \"%s\", file \"%s\"\n", __func__, dirpath, fpath );
+				//kprintf( "[%s] Looking for directory \"%s\", file \"%s\"\n", __func__, dirpath, fpath );
+				debugp( DEBUG_VFS, MASK_DEVINFO,
+						"[%s] Looking for directory \"%s\", file \"%s\"\n", __func__, dirpath, fpath );
 				break;
 			}
 		}
@@ -73,15 +76,24 @@ int vfs_open( char *path, int flags ){
 
 			if ( lookup == 0 ){
 				// TODO: Add permission checking
-				lookup = VFS_FUNCTION( &newobj->node, open, fpath, flags );
 
-				if ( lookup >= 0 ){
-					//file_lookup_absolute( path, &newobj->node, 0 );
-					file_lookup( path, &newobj->node, 0 );
+				// check to see if the path is not just "/"
+				if ( *fpath ){
+					lookup = VFS_FUNCTION( &newobj->node, open, fpath, flags );
 
+					if ( lookup >= 0 ){
+						file_lookup( path, &newobj->node, 0 );
+
+						cur_task = get_current_task( );
+						ret = dlist_add( cur_task->pobjects, newobj );
+					}
+
+				} else {
+					// if it is "/", the root dir is already in &newobj->node
+					// so just add it
 					cur_task = get_current_task( );
 					ret = dlist_add( cur_task->pobjects, newobj );
-				} 
+				}
 			}
 
 			if ( lookup < 0 ){
@@ -93,7 +105,6 @@ int vfs_open( char *path, int flags ){
 			lookup = VFS_FUNCTION( get_current_dir( ), open, path, flags );
 
 			if ( lookup >= 0 ){
-				//file_lookup_absolute( path, &newobj->node, 0 );
 				file_lookup( path, &newobj->node, 0 );
 
 				cur_task = get_current_task( );
