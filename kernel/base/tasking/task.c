@@ -1,10 +1,11 @@
 // TODO: reorganize this file so functions can be found easier
 #include <base/tasking/task.h>
-#include <base/arch/i586/init_tables.h>
 #include <base/tasking/rrsched.h>
 #include <base/string.h>
 #include <base/syscalls.h>
 #include <base/debug.h>
+
+//#include <arch/init_tables.h>
 
 static list_node_t *task_list = 0;
 static list_node_t *current_task = 0;

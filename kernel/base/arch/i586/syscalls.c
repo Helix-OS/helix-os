@@ -1,5 +1,5 @@
 #include <base/syscalls.h>
-#include <base/arch/i586/isr.h>
+#include <arch/isr.h>
 #include <base/logger.h>
 #define CHANGEME_MAX_SYSCALLS 64
 

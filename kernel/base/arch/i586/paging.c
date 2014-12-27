@@ -1,6 +1,6 @@
 #ifndef _helix_paging_c
 #define _helix_paginc_c
-#include <base/arch/i586/paging.h>
+#include <arch/paging.h>
 #include <base/logger.h>
 #include <base/string.h>
 #include <base/mem/alloc.h>

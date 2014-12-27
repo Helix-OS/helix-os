@@ -8,7 +8,7 @@
 #define _helix_i386_init_tables_h
 
 #include <base/stdint.h>
-#include <base/arch/i586/isr.h>
+#include <arch/isr.h>
 
 struct gdt_entry {
 	uint16_t limit_low;

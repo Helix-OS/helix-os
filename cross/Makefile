@@ -6,9 +6,9 @@ GCC=gcc-4.8.2
 GMP=gmp-5.1.3
 MPC=mpc-1.0.1
 MPFR=mpfr-3.1.2
-CHECKFILE=.cross_check
+CHECKFILE=.cross_check-$(ARCH)
 
-CLEAN_DIRS=$(BINUTILS) $(MPFR) $(MPC) $(GMP) $(GCC)
+CLEAN_DIRS=$(BINUTILS) $(MPFR) $(MPC) $(GMP) $(GCC) gccbuild
 
 all: check download binutils mpfr gmp mpc gcc test
 

@@ -2,8 +2,8 @@ ALL_TARGETS += kernel
 ALL_CLEAN   += kclean
 
 # global kernel compiler/assembler/linker options
-INCLUDE      = kernel/include
-CFLAGS       = -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall -I$(INCLUDE) -g
+INCLUDE      = -Ikernel/include -Ikernel/include/base/arch/$(ARCH)
+CFLAGS       = -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall $(INCLUDE) -g
 ASFLAGS      = -f elf
 MOD_LDFLAGS  = -fPIC -shared
 

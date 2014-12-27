@@ -2,7 +2,8 @@ BITS 32
 
 global loader					; making entry point visible to linker
  
-extern kmain					; kmain is defined in kmain.c
+;extern kmain					; kmain is defined in kmain.c
+extern arch_init
  
 ; setting up the Multiboot header - see GRUB docs for details
 MODULEALIGN	equ 1<<0			; align loaded modules on page boundaries
@@ -35,7 +36,8 @@ loader:
 	push esp			; Current stack pointer
 	push ebx			; Multiboot info structure
  
-	call kmain			; call kernel proper
+	;call kmain			; call kernel proper
+	call arch_init		; call kernel proper
  
 	cli
 .hang:

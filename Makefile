@@ -23,7 +23,7 @@ ktools:
 userspace: $(MKCONFIG)
 	@cd userland; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT)
 
-cross-cc: check
+cross-cc:
 	@echo -e "[ ] Making cross-compiler..."
 	@cd cross; $(MAKE) MAKE=$(MAKE) TARGET=$(TARGET)
 	@echo -e "[ ] done"

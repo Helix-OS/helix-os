@@ -1,4 +1,4 @@
-#include <base/arch/i586/pitimer.h>
+#include <arch/pitimer.h>
 
 static void (*pitimer_call)( ) = 0;
 static unsigned long tick = 0;

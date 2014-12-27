@@ -1,7 +1,7 @@
 #ifndef _kernel_isr_c
 #define _kernel_isr_c
 
-#include <base/arch/i586/isr.h>
+#include <arch/isr.h>
 #include <base/logger.h>
 #include <base/stdio.h>
 
