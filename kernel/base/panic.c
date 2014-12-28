@@ -1,7 +1,7 @@
 #ifndef _kernel_panic_c
 #define _kernel_panic_c
 #include <base/kstd.h>
-#include <arch/isr.h>
+#include <arch/interrupts.h>
 
 void panic( char *fmt, ... ){
 	va_list args;
@@ -19,10 +19,17 @@ void panic( char *fmt, ... ){
 
 	kvprintf( fmt, args );
 
+	debug_registers( );
+	disable_interrupts( );
+
+	while (1);
+
+	/*
 	asm volatile( "int $0x30" ); // Dump registers
 
 	asm volatile( "cli" );
 	asm volatile( "hlt" );
+	*/
 }
 
 #endif

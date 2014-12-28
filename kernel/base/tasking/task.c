@@ -62,7 +62,7 @@ task_t *init_task( task_t *task ){
 	task->pagedir = get_current_page_dir( );
 
 	task->stack = 0xa1000000 + task->pid * 0x1000;
-	map_page( task->pagedir, task->stack | PAGE_PRESENT | PAGE_WRITEABLE | PAGE_USER );
+	map_page( task->pagedir, task->stack, PAGE_PRESENT | PAGE_WRITEABLE | PAGE_USER );
 	task->esp   = task->stack + 0x1000;
 	flush_tlb( );
 	/*

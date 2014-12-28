@@ -1,3 +1,4 @@
+// TODO: Make this source more readable
 #ifndef _helix_paging_c
 #define _helix_paginc_c
 #include <arch/paging.h>
@@ -29,7 +30,7 @@ int init_paging( unsigned max_mem ){
 	memset( kernel_dir, 0, PAGE_SIZE );
 
 	for ( j = 0, i = PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT; i < 0x300000; i += 0x1000, j++ ){
-		map_r_page( kernel_dir, i, i );
+		map_r_page( kernel_dir, i, i, PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
 		BM_SET_BIT( page_bitmap, ((i & ~0xfff ) >> 12), 1 );
 	}
 
@@ -39,17 +40,18 @@ int init_paging( unsigned max_mem ){
 	return 0;
 }
 
-int map_page( unsigned *dir, unsigned vaddress ){
+int map_page( unsigned *dir, unsigned vaddress, unsigned permissions ){
 	int ret = 1;
 	unsigned	*move = (void *)0, 
 			raddress;
 
 	raddress = get_free_page( );
-	raddress = (vaddress & 0xfff) | (raddress & ~0xfff);
+	//raddress = (vaddress & 0xfff) | (raddress & ~0xfff);
+	raddress = (raddress & ~0xfff) | permissions;
 
 	if ( dir ){
 		if ( !dir[ vaddress >> 22 ] ){
-			dir[ vaddress >> 22 ] = (unsigned)kmalloc_early( PAGE_SIZE, 1 ) | (vaddress & 0xfff);
+			dir[ vaddress >> 22 ] = (unsigned)kmalloc_early( PAGE_SIZE, 1 ) | permissions;
 		}
 
 		move = (unsigned *)( dir[ vaddress >> 22 ] & ~0xfff );
@@ -62,15 +64,15 @@ int map_page( unsigned *dir, unsigned vaddress ){
 	return ret;
 }
 
-int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress ){
+int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress, unsigned permissions ){
 	int ret = 0;
 	unsigned *move = (void *)0;
 
-	raddress = (vaddress & 0xfff) | (raddress & ~0xfff);
+	raddress = (raddress & ~0xfff) | permissions;
 
 	if ( dir ){
 		if ( !dir[ vaddress >> 22 ] ){
-			dir[ vaddress >> 22 ] = (unsigned)kmalloc_early( PAGE_SIZE, 1 ) | (vaddress & 0xfff);
+			dir[ vaddress >> 22 ] = (unsigned)kmalloc_early( PAGE_SIZE, 1 ) | permissions;
 		}
 
 		move = (unsigned *)( dir[ vaddress >> 22 ] & ~0xfff );
@@ -84,8 +86,9 @@ int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress ){
 int map_pages( unsigned *dir, unsigned start, unsigned end, unsigned permissions ){
 	unsigned int i;
 
-	for ( i = start | permissions; i < end; i+= PAGE_SIZE )
-		map_page( dir, i );
+	//for ( i = start | permissions; i < end; i+= PAGE_SIZE )
+	for ( i = start; i < end; i+= PAGE_SIZE )
+		map_page( dir, i, permissions );
 
 	return 1;
 }
@@ -95,7 +98,7 @@ int remap_pages( unsigned *dir, unsigned start, unsigned end, unsigned permissio
 	unsigned i;
 
 	for ( i = start; i < end; i += PAGE_SIZE )
-		map_r_page( dir, (i & ~(PAGE_SIZE - 1)) | permissions, get_page( dir, i ));
+		map_r_page( dir, (i & ~(PAGE_SIZE - 1)), get_page( dir, i ), permissions);
 
 	return 1;
 }
@@ -242,7 +245,7 @@ void page_fault_handler( registers_t *regs ){
 
 		if ( found ){
 			map_page( current->pagedir,
-					(fault_addr & ~(PAGE_SIZE  - 1)) | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+					(fault_addr & ~(PAGE_SIZE  - 1)), PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
 
 			kprintf( "================ [%s] Mapped page 0x%x\n", __func__, 
 					(fault_addr & ~(PAGE_SIZE  - 1)) | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
