@@ -4,6 +4,26 @@ static void (*pitimer_call)( ) = 0;
 static unsigned long tick = 0;
 static uint32_t current_freq = 0;
 
+static void init_pitimer( uint32_t freq );
+
+// Generic timer interface functions
+void init_timer( ){
+	init_pitimer( 1000 );
+}
+
+void register_timer_call( void (*call)( )){
+	pitimer_call = call;
+}
+
+void unregister_timer_call( void (*call)( )){
+	pitimer_call = 0;
+}
+
+unsigned long get_tick( ){
+	return tick;
+}
+
+// pitimer-specific functions
 static void pitimer_stub( ){
 	tick++;
 	//kprintf( "[pitimer_stub] %d\n", tick );
@@ -13,7 +33,7 @@ static void pitimer_stub( ){
 
 }
 
-void init_pitimer( uint32_t freq ){
+static void init_pitimer( uint32_t freq ){
 	register_interrupt_handler( IRQ0, pitimer_stub );
 	current_freq = freq;
 
@@ -35,14 +55,3 @@ void poll_usleep( uint32_t useconds ){
 	while ( tick - start < timer );
 }
 
-void register_pitimer_call( void (*call)( )){
-	pitimer_call = call;
-}
-
-void unregister_pitimer_call( void (*call)( )){
-	pitimer_call = 0;
-}
-
-unsigned long get_tick( ){
-	return tick;
-}

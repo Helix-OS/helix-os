@@ -24,6 +24,8 @@ void arch_init( multiboot_header_t *mboot, int blarg, int magic ){
 	void *modules = 0;
 	void *elfinfo = 0;
 
+	init_serial( );
+
 	// Take care of multiboot stuff...
 	if ( magic != 0x2badb002 )
 		panic( "Need multiboot-compliant bootloader to boot Helix kernel.\n" );
@@ -43,7 +45,7 @@ void arch_init( multiboot_header_t *mboot, int blarg, int magic ){
 	kheap = kmalloc_early( sizeof( mheap_t ), 0 );
 	init_heap( kheap, kernel_dir, 0xd0000000, PAGE_SIZE * 32 );
 
-	init_pitimer( 1000 );
+	init_timer( );
 
 	kmain( 0, modules, elfinfo );
 

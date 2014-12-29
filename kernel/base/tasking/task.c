@@ -38,7 +38,8 @@ void init_tasking( void ){
 	root_task->stack = (unsigned long)kmalloca( 2048 );
 	tasking_initialized = 1;
 
-	register_pitimer_call( rrschedule_call );
+	//register_pitimer_call( rrschedule_call );
+	register_timer_call( rrschedule_call );
 	set_kernel_stack( root_task->stack );
 
 	register_syscall( SYSCALL_EXIT, exit_process );

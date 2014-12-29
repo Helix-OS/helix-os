@@ -9,8 +9,10 @@ static semaphore_t serial_sem = 1;
 void init_serial( ){
 	outb( PORT + 1, 0x00 );
 	outb( PORT + 3, 0x80 );
-	outb( PORT + 0, 0x03 );
+
+	outb( PORT + 0, 0x01 );
 	outb( PORT + 1, 0x00 );
+
 	outb( PORT + 3, 0x03 );
 	outb( PORT + 2, 0xc7 );
 	outb( PORT + 4, 0x0b );
@@ -31,8 +33,7 @@ unsigned int read_serial( void *buf, unsigned size ){
 	//enter_semaphore( &serial_sem );
 
 	for ( i = 0; i < size; i++ ){
-		while( !serial_recieved( ))
-			asm volatile( "hlt" );
+		while( !serial_recieved( ));
 
 		in[i] = inb( PORT );
 	}
@@ -48,8 +49,7 @@ unsigned int write_serial( void *buf, unsigned size ){
 	//enter_semaphore( &serial_sem );
 
 	for ( i = 0; i < size; i++ ){
-		while( !transmit_empty( ))
-			asm volatile( "hlt" );
+		while( !transmit_empty( ));
 
 		outb( PORT, in[i] );
 	}
