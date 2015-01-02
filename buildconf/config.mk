@@ -14,6 +14,7 @@ include buildconf/kernel/default.mk
 include buildconf/arch/$(ARCH)/$(PLATFORM).mk
 
 CC		= $(CROSS)/bin/$(TARGET)-gcc
+C++		= $(CROSS)/bin/$(TARGET)-g++
 LD		= $(CROSS)/bin/$(TARGET)-ld
 AS		= nasm
 OBJCOPY		= $(CROSS)/bin/$(TARGET)-objcopy

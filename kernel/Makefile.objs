@@ -3,7 +3,10 @@ ALL_CLEAN   += kclean
 
 # global kernel compiler/assembler/linker options
 INCLUDE      = -Ikernel/include -Ikernel/include/base/arch/$(ARCH)
-CFLAGS       = -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall $(INCLUDE) -g
+CFLAGS       = -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall $(INCLUDE) -g \
+		-ffreestanding
+C++FLAGS     = -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall $(INCLUDE) -g \
+		-ffreestanding -fno-exceptions -fno-rtti -std=c++11
 ASFLAGS      = -f elf
 MOD_LDFLAGS  = -fPIC -shared
 
@@ -21,6 +24,10 @@ include $(wildcard $(MODULE_DIR)/*/Makefile.objs)
 %.o : %.c
 	@echo "[ ] CC $< -o $@"
 	@$(CC) $(CFLAGS) $($@-cflags) -c $< -o $@
+
+%.o : %.cpp
+	@echo "[ ] C++ $< -o $@"
+	@$(C++) $(C++FLAGS) $($@-cflags) -c $< -o $@
 
 %.o : %.s
 	@echo "[ ] AS $<"
