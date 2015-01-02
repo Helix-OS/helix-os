@@ -1,9 +1,9 @@
-vga-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/vga/*.c))
-vga-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/vga/*.s))
-vga-link-y += $(MODOBJ_DIR)/vga_mod.o
+vga-obj-i586   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/vga/*.c))
+vga-obj-i586  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/vga/*.s))
+vga-link-i586 += $(MODOBJ_DIR)/vga_mod.o
 
-mod-obj-y += $(vga-obj-y) $(vga-link-y)
+mod-obj-y += $(vga-obj-$(ARCH)) $(vga-link-$(ARCH))
 
-$(MODOBJ_DIR)/vga_mod.o: $(vga-obj-y)
-	@$(LD) $(MOD_LDFLAGS) -o $@ $(vga-obj-y)
+$(MODOBJ_DIR)/vga_mod.o: $(vga-obj-$(ARCH))
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(vga-obj-$(ARCH))
 	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"
