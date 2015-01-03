@@ -9,7 +9,7 @@
 #include <arch/pitimer.h> /* TODO: remove this, implement generic timer */
 #include <arch/paging.h> 
 #include <base/mem/memmap.h>
-#include <vfs/vfs.h>
+#include <base/vfs/vfs.h>
 
 typedef unsigned long pid_t;
 

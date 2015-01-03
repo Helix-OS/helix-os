@@ -1,4 +1,4 @@
-#include <vfs/vfs.h>
+#include <base/vfs/vfs.h>
 #include <base/tasking/task.h>
 #include <base/kstd.h>
 #include <base/mem/alloc.h>

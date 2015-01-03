@@ -1,6 +1,6 @@
 #ifndef _helix_vfs_ramfs_h
 #define _helix_vfs_ramfs_h
-#include <vfs/vfs.h>
+#include <base/vfs/vfs.h>
 #include <base/datastructs/dlist.h>
 #include <base/datastructs/list.h>
 #include <base/tasking/semaphore.h>

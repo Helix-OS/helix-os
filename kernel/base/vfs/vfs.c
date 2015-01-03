@@ -1,5 +1,5 @@
-#include <vfs/vfs.h>
-#include <vfs/ramfs/ramfs.h>
+#include <base/vfs/vfs.h>
+#include <base/vfs/ramfs/ramfs.h>
 #include <base/tasking/semaphore.h>
 #include <base/datastructs/list.h>
 #include <base/lib/stdbool.h>

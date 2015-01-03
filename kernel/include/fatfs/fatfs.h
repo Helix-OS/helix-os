@@ -1,7 +1,7 @@
 #ifndef _helix_fatfs_module_h
 #define _helix_fatfs_module_h
 #include <base/stdint.h>
-#include <vfs/vfs.h>
+#include <base/vfs/vfs.h>
 #include <base/datastructs/hashmap.h>
 
 typedef enum {

@@ -4,7 +4,7 @@
 #include <base/kstd.h>
 #include <base/elf.h>
 #include <base/syscalls.h>
-#include <vfs/vfs.h> // TODO: Move this to the base tree
+#include <base/vfs/vfs.h>
 
 #include <base/initrd.h>
 #include <base/tasking/task.h>
