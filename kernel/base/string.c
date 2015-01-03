@@ -3,33 +3,31 @@
 #include <base/string.h>
 #include <base/stdint.h>
 
-/* TODO:
- *   - use unsigned lengths
- *   - refactor older code
- */
+/* TODO: - use unsigned lengths */
 
-
-unsigned strlen( char *input ){
+unsigned strlen( const char *input ){
 	int i;
+
 	for ( i = 0; input[i] != '\0'; i++ );
+
 	return i;
 }
 
-int strcmp( char *s1, char *s2 ){
-	unsigned i = 0, ret = 0, s1_len = 0, s2_len = 0;
-	s1_len = strlen( s1 );
-	s2_len = strlen( s2 );
-	
-	if ( s1_len != s2_len ){
-		return s1_len - s2_len;
+int strcmp( const char *s1, const char *s2 ){
+	int ret = 0;
+	unsigned i;
+
+	for ( i = 0;; i++ ){
+		ret += s1[i] != s2[i];
+
+		if ( !s1[i] || !s2[i] )
+			break;
 	}
-	for ( i = 0; i < s1_len; i++ ){
-		ret += (s1[i] == s2[i])?0:1;
-	}
+
 	return ret;
 }
 
-int strncmp( char *s1, char *s2, int len ){
+int strncmp( const char *s1, const char *s2, int len ){
 	int ret = 0;
 	int i;
 
@@ -43,8 +41,9 @@ int strncmp( char *s1, char *s2, int len ){
 	return ret;
 }
 
-char *strdup( char *s ){
+char *strdup( const char *s ){
 	char *ret = kmalloc( strlen( s ) + 1 );
+
 	return memcpy( ret, s, strlen( s ) + 1 );
 }
 
@@ -95,46 +94,53 @@ char *strncat( char *dest, const char *src, int n ){
 
 /* Basic memory stuff */
 void *memset( void *dest, unsigned char value, unsigned count ){
-	char *ret_dest = dest;
+	uint8_t *ret_dest = dest;
+
 	while ( count-- ){
 		*(ret_dest++) = value;
 	}
+
 	return dest;
 }
 
 void *memsetw( void *dest, unsigned char value, unsigned count ){
-	char *ret_dest = dest;
+	uint8_t *ret_dest = dest;
+
 	while ( count-- ){
 		*(ret_dest++) = value;
 	}
+
 	return dest;
 }
 
-void *memcpy( void *dest, void *src, unsigned count ){
-	char *ret_dest = dest;
-	char *src_dest = src;
+void *memcpy( void *dest, const void *src, unsigned count ){
+	uint8_t *ret_dest = dest;
+	const uint8_t *src_dest = src;
+
 	while ( count-- ){
 		*(ret_dest++) = *(src_dest++);
 	}
+
 	return dest;
 }
 
-void *memmove( void *dest, void *src, unsigned count ){
-	char *ret_dest = dest;
-	char *src_dest = src;
+void *memmove( void *dest, const void *src, unsigned count ){
+	uint8_t *ret_dest = dest;
+	const uint8_t *src_dest = src;
+
 	while ( count-- ){
 		*(ret_dest++) = *(src_dest++);
-		*(src_dest) = 0;
 	}
+
 	return dest;
 }
 
-int memcmp( void *s1, void *s2, int len ){
+int memcmp( const void *s1, const void *s2, unsigned len ){
 	int ret = 0;
-	int i;
+	unsigned i;
 
-	char *foo = s1;
-	char *bar = s2;
+	const uint8_t *foo = s1;
+	const uint8_t *bar = s2;
 
 	for ( i = 0; i < len; i++ ){
 		ret += foo[i] != bar[i];

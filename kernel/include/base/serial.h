@@ -5,7 +5,7 @@
 void init_serial( );
 int transmit_empty( );
 bool serial_recieved( );
-unsigned write_serial( void *buf, unsigned size );
+unsigned write_serial( const void *buf, unsigned size );
 unsigned int read_serial( void *buf, unsigned size );
 
 #endif

@@ -1,6 +1,7 @@
 #include <base/stdio.h>
 #include <base/string.h>
 #include <base/serial.h>
+#include <base/stdint.h>
 #include <base/tasking/semaphore.h>
 
 #define PORT 0x3f8
@@ -27,7 +28,7 @@ int transmit_empty( ){
 }
 
 unsigned int read_serial( void *buf, unsigned size ){
-	char *in = buf;
+	uint8_t *in = buf;
 	unsigned i;
 
 	//enter_semaphore( &serial_sem );
@@ -42,8 +43,8 @@ unsigned int read_serial( void *buf, unsigned size ){
 	return i;
 }
 
-unsigned int write_serial( void *buf, unsigned size ){
-	char *in = buf;
+unsigned int write_serial( const void *buf, unsigned size ){
+	const uint8_t *in = buf;
 	unsigned i;
 
 	//enter_semaphore( &serial_sem );

@@ -6,10 +6,10 @@
 extern "C" {
 #endif
 
-char *logputs( char *str );
-int kvprintf( char *format, va_list args );
-int kprintf( char *format, ... );
-int atoi( char *n );
+const char *logputs( const char *str );
+int kvprintf( const char *format, va_list args );
+int kprintf( const char *format, ... );
+int atoi( const char *n );
 
 #ifdef __cplusplus
 }

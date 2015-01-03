@@ -2,10 +2,14 @@
 #define _helix_string_h
 #include <base/mem/alloc.h>
 
-unsigned strlen( char * );
-int strcmp( char *, char * );
-int strncmp( char *, char *, int );
-char *strdup( char * );
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+unsigned strlen( const char * );
+int strcmp( const char *, const char * );
+int strncmp( const char *, const char *, int );
+char *strdup( const char * );
 
 char *strcpy( char *dest, const char *src );
 char *strncpy( char *dest, const char *src, unsigned len );
@@ -15,8 +19,11 @@ char *strncat( char *dest, const char *src, int n );
 
 void *memset( void *, unsigned char, unsigned );
 void *memsetw( void *, unsigned char, unsigned );
-void *memcpy( void *, void *, unsigned );
-void *memmove( void *, void *, unsigned );
-int memcmp( void *s1, void *s2, int len );
+void *memcpy( void *, const void *, unsigned );
+void *memmove( void *, const void *, unsigned );
+int memcmp( const void *s1, const void *s2, unsigned len );
 
+#ifdef __cplusplus
+}
+#endif
 #endif
