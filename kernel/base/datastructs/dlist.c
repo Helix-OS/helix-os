@@ -12,7 +12,8 @@ dlist_container_t *dlist_create( unsigned block_size, unsigned prealloc ){
 	ret->blocks_alloced = prealloc? prealloc : 1;
 
 	ret->alloced = ret->block_size * ret->blocks_alloced;
-	ret->entries = kmalloc( sizeof( void *[ ret->alloced ]));
+	//ret->entries = kmalloc( sizeof( void *[ ret->alloced ]));
+	ret->entries = knew( void *[ ret->alloced ]);
 
 	return ret;
 }

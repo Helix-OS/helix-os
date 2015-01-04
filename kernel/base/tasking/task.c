@@ -74,15 +74,14 @@ task_t *init_task( task_t *task ){
 	task->pobjects = dlist_create( 0, 0 );
 
 	// TODO: Make file copying between processes work
-	/*
 	if ( cur->froot ){
-		new_task->froot = knew( file_node_t );
-		memcpy( new_task->froot, cur->froot, sizeof( file_node_t ));
+		task->froot = knew( file_node_t );
+		memcpy( task->froot, cur->froot, sizeof( file_node_t ));
 	}
 
 	if ( cur->curdir ){
-		new_task->curdir = knew( file_node_t );
-		memcpy( new_task->curdir, cur->curdir, sizeof( file_node_t ));
+		task->curdir = knew( file_node_t );
+		memcpy( task->curdir, cur->curdir, sizeof( file_node_t ));
 	}
 
 	{
@@ -98,14 +97,13 @@ task_t *init_task( task_t *task ){
 				nftemp = knew( file_pobj_t );
 				memcpy( nftemp, nfobj, sizeof( file_pobj_t ));
 
-				dlist_add( new_task->pobjects, nftemp );
+				dlist_add( task->pobjects, nftemp );
 
 			} else {
 				break;
 			}
 		}
 	}
-	*/
 	
 	return ret;
 }
