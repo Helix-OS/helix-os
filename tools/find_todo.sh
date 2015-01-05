@@ -2,7 +2,11 @@
 # script to find and print "TODO:" comments in files
 # in a neat and pretty format
 
-SRCDIRS="kernel userland"
+if [ -z "$1" ]; then
+	SRCDIRS="kernel userland"
+else
+	SRCDIRS="$1"
+fi
 
 for thing in $SRCDIRS; do
 	find $thing -name "*.[ch]" |

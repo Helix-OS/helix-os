@@ -38,13 +38,14 @@ void utest( ){
  *         not architecture specific.
  *
  *  This function initializes modules, tasking, syscalls, and the userspace.
+ *  Architecture-specific initialization is done in \ref arch_init for the platform.
  *
  *  @param flags    (Currently undefined) flags passed from the \ref arch_init function
  *  @param modules  Location in memory of the init ramdisk, or NULL if none
  *  @param elfinfo  Location of the kernel's symbols, or NULL if none. If this is null,
  *                  the modules parameter must be ignored.
  */
-//void kmain( multiboot_header_t *mboot, int blarg, int magic ){
+// TODO: possibly change type of elfinfo to not depend on multiboot
 void kmain( unsigned flags, void *modules, multiboot_elf_t *elfinfo ){
 	initrd_t *initrd = 0;
 	kprintf( "-==[ Helix kernel booting\n" );
@@ -59,8 +60,6 @@ void kmain( unsigned flags, void *modules, multiboot_elf_t *elfinfo ){
 	// Initialize module system
 	init_module_system( elfinfo );
 	load_init_modules( initrd );
-
-	//dump_aheap_blocks( kheap );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );
 
