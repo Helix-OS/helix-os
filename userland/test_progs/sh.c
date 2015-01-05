@@ -3,146 +3,87 @@
 #include <stdlib.h>
 #include <dalibc/syscalls.h>
 
-typedef enum type {
-	TYPE_NULL,
-	TYPE_COMMAND,
-	TYPE_QUOTED,
-	TYPE_VARIABLE,
-	TYPE_NEWLINE,
-} type_t;
+int running = 1;
 
-typedef struct sh_token {
-	char *str;
-	struct sh_token *next;
-	type_t type;
-} sh_token_t;
+char *getline( char *buf, unsigned len ){
+	unsigned i;
+	char c;
 
-typedef struct parsed_command {
-	char **args;
-	unsigned num_args;
-} parsed_command_t;
+	c = getchar( );
+	for ( i = 0; i < len && c != '\n'; ){
 
-sh_token_t *read_token( FILE *stream ){
-	sh_token_t *ret = NULL;
-	unsigned alloced = 32; // TODO: dynamically reallocate
-	char *buf = malloc( alloced );
-	int found = 0;
-	int c;
-	int i = 0;
+		if ( c == '\b' && i > 0 ){
+			putchar( '\b' );
+			buf[i] = 0;
+			i--;
 
-	while ( !found && i < alloced ){
-		c = fgetc( stream );
-
-		if ( c > ' ' && c < 0x7f ){
+		} else if ( c != '\b' ){
 			buf[i] = c;
 			putchar( c );
-
-		} else if ( c == '\b' ){
-			if ( i > 0 ){
-				buf[i] = 0;
-				i--;
-				putchar( c );
-			}
-
-		} else if ( c == ' ' ){
-			buf[i] = 0;
-			found = 1;
-
-			ret = malloc( sizeof( sh_token_t ));
-			ret->str = buf;
-			ret->type = TYPE_COMMAND;
-			putchar( c );
-
-		} else if ( c == '\n' ){
-			buf[i] = 0;
-			found = 1;
-
-			ret = malloc( sizeof( sh_token_t ));
-			ret->str = buf;
-			ret->type = TYPE_NEWLINE;
-			putchar( c );
-		}
-
-		if ( c != '\b' ){
 			i++;
 		}
+
+		c = getchar( );
 	}
 
-	if ( !ret ){
-		free( buf );
+	buf[i] = 0;
+
+	return buf;
+}
+
+char **split_str( char *s, char split ){
+	unsigned i, nchars, j;
+	char **ret = NULL;
+
+	for ( nchars = i = 0; s[i]; i++ ){
+		if ( s[i] == split )
+			nchars++;
+	}
+
+	if ( nchars ){
+		ret = malloc( sizeof( char *[nchars + 2] ));
+
+		for ( j = 0, i = 0; s[i]; i++ ){
+			if ( i == 0 ){
+				ret[j] = s;
+				j++;
+
+			} else if ( s[i] == split ){
+				s[i] = 0;
+				ret[j] = s + i + 1;
+				j++;
+			}
+		}
+
+		ret[j] = NULL;
+
+	} else {
+		ret = malloc( sizeof( char *[2] ));
+		ret[0] = s;
+		ret[1] = NULL;
 	}
 
 	return ret;
 }
 
-sh_token_t *read_command( FILE *stream ){
-	sh_token_t *ret;
-	sh_token_t *move;
-
-	ret = move = read_token( stream );
-
-	while ( move && move->type != TYPE_NEWLINE ){
-		move->next = read_token( stream );
-		move = move->next;
-	}
-
-	return ret;
-}
-
-sh_token_t *dump_tokens( sh_token_t *tokens ){
-	sh_token_t *move;
-
-	for ( move = tokens; move; move = move->next ){
-		printf( "[%s] Have token \"%s\"\n", __func__, move->str );
-	}
-
-	return tokens;
-}
-
-unsigned tokens_length( sh_token_t *tokens ){
-	unsigned ret = 0;
-	sh_token_t *move;
-
-	for ( move = tokens; move; move = move->next ){
-		ret++;
-	}
-
-	return ret;
-}
-
-parsed_command_t *parse_command( sh_token_t *tokens ){
-	parsed_command_t *ret;
-	sh_token_t *move;
-	unsigned len;
-	unsigned i;
-
-	ret = malloc( sizeof( parsed_command_t ));
-	ret->num_args = tokens_length( tokens );
-	ret->args = malloc( sizeof( char *[ ret->num_args + 1]));
-
-	move = tokens;
-	for ( i = 0; i < ret->num_args; i++ ){
-		ret->args[i] = move->str;
-		move = move->next;
-	}
-
-	ret->args[i] = NULL;
-
-	return ret;
-}
-
-int exec_cmd( parsed_command_t *cmd ){
+int exec_cmd( char *args[], char *env[] ){
 	int pid;
 	int ret = 0;
 
-	if ( strlen( cmd->args[0] ) > 0 ){
-		pid = _spawn( cmd->args[0], cmd->args, NULL );
+	if ( args ){
+		if ( strlen( args[0] ) > 0 ){
+			pid = _spawn( args[0], args, NULL );
 
-		if ( pid > 0 ){
-			syscall_waitpid( pid, &ret, 0 );
-		} else {
-			puts( "Command not found." );
+			if ( pid > 0 ){
+				syscall_waitpid( pid, &ret, 0 );
+
+			} else {
+				puts( "Command not found." );
+			}
 		}
+
+		puts( "Got here." );
+		printf( "\"%s\"\n", args[0] );
 	}
 
 	return ret;
@@ -150,16 +91,14 @@ int exec_cmd( parsed_command_t *cmd ){
 
 int main( int argc, char *argv[], char *envp[] ){
 	char *buf = malloc( 128 );
-	int i, c;
-	int running = 1;
-	parsed_command_t *cmd;
+	int ret;
 
 	while ( running ){
 		printf( "$ " );
-		//cmd = parse_command( dump_tokens( read_command( stdin )));
-		cmd = parse_command( read_command( stdin ));
-		exec_cmd( cmd );
+		getline( buf, 128 );
+		putchar( '\n' );
+		ret = exec_cmd( split_str( buf, ' ' ), NULL );
 	}
 
-	return 0;
+	return ret;
 }
