@@ -72,18 +72,39 @@ int exec_cmd( char *args[], char *env[] ){
 
 	if ( args ){
 		if ( strlen( args[0] ) > 0 ){
-			pid = _spawn( args[0], args, NULL );
+			if ( strcmp( args[0], "cd" ) == 0 ){
+				if ( args[1] ){
+					printf( "Changing directory to \"%s\"\n", args[1] );
+					if ( syscall_chdir( args[1] ) >= 0 ){
+						puts( "Changed directory." );
 
-			if ( pid > 0 ){
-				syscall_waitpid( pid, &ret, 0 );
+					} else {
+						printf( "Could not change directory to \"%s\"\n", args[1] );
+					}
+
+				} else {
+					printf( "Changing directory to root\n" );
+					syscall_chdir( "/" );
+				}
+
+			} else if ( strcmp( args[0], "exit" ) == 0 ){
+				running = 0;
+
+			} else if ( strcmp( args[0], "help" ) == 0 ){
+				puts( "Helix shell v0.1" );
+				puts( "Help message coming soon." );
 
 			} else {
-				puts( "Command not found." );
+				pid = _spawn( args[0], args, NULL );
+
+				if ( pid > 0 ){
+					syscall_waitpid( pid, &ret, 0 );
+
+				} else {
+					puts( "Command not found." );
+				}
 			}
 		}
-
-		puts( "Got here." );
-		printf( "\"%s\"\n", args[0] );
 	}
 
 	return ret;

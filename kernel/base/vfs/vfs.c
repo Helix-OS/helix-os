@@ -162,7 +162,8 @@ int file_lookup( char *path, file_node_t *buf, int flags ){
 			}
 
 		} else {
-			node = get_local_vfs_root( );
+			//node = get_local_vfs_root( );
+			node = get_current_dir( );
 			ret = file_lookup_relative( path, node, buf, flags );
 		}
 	}
@@ -174,7 +175,8 @@ int file_lookup_absolute( char *path, file_node_t *buf, int flags ){
 	int ret = 0;
 	file_node_t *root;
 	
-	root = get_global_vfs_root( );
+	//root = get_global_vfs_root( );
+	root = get_local_vfs_root( );
 	if ( !root || *path != '/' ){
 		ret = -ERROR_NOT_FOUND;
 

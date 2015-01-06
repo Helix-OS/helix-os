@@ -220,6 +220,7 @@ int vfs_chroot( char *path ){
 
 	if ( ret >= 0 ){
 		cur->froot = temp;
+
 	} else {
 		kfree( temp );
 	}
@@ -232,7 +233,7 @@ int vfs_chdir( char *path ){
 	file_node_t *temp;
 	int ret = 0;
 
-	if ( cur->froot ){
+	if ( cur->curdir ){
 		temp = cur->curdir;
 
 	} else {
@@ -240,6 +241,7 @@ int vfs_chdir( char *path ){
 	}
 
 	ret = file_lookup( path, temp, 0 );
+	debugp( DEBUG_VFS, MASK_CHECKPOINT, "[%s] Got here, 0x%x, returning %d\n", __func__, temp, ret );
 
 	if ( ret >= 0 ){
 		cur->curdir = temp;

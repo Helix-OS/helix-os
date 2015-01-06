@@ -73,7 +73,6 @@ task_t *init_task( task_t *task ){
 	task->ebp = 0;
 	task->pobjects = dlist_create( 0, 0 );
 
-	// TODO: Make file copying between processes work
 	if ( cur->froot ){
 		task->froot = knew( file_node_t );
 		memcpy( task->froot, cur->froot, sizeof( file_node_t ));
