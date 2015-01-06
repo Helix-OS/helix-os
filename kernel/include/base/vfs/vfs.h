@@ -2,6 +2,10 @@
 #define _helix_vfs_module_h
 #include <base/errors.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Defines
 #define MAX_FILENAME_SIZE 	256
 #define FILE_POBJ 		0xf11e
@@ -206,5 +210,9 @@ int vfs_chroot( char *path );
 int vfs_chdir( char *path );
 
 int init_vfs( );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

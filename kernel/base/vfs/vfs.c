@@ -223,6 +223,9 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 				expecting_dir = expecting_dir; // XXX: get compiler to shut up about unused variable
 			}
 
+			if ( strcmp( namebuf, "." ) == 0 )
+				continue;
+
 			vfs_function_ret = VFS_FUNCTION( move, lookup, current_buf, namebuf, flags );
 			if ( vfs_function_ret ){
 				kprintf( "[%s] Oops we got an error, %d\n", __func__, -vfs_function_ret );
