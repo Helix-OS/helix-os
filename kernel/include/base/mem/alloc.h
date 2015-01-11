@@ -3,6 +3,10 @@
 #include <arch/paging.h>
 #include <base/logger.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MBL_FREE 0x66726565
 #define MBL_USED 0x75736564
 #define MBL_DIRTY 0x64697274
@@ -35,5 +39,9 @@ void *kcalloc( unsigned nmemb, unsigned size );
 mheap_t *init_heap( mheap_t *heap, unsigned *p_dir, unsigned start, unsigned size );
 
 void dump_aheap_blocks( mheap_t * );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

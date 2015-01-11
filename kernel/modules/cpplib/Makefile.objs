@@ -1,0 +1,10 @@
+cpplib-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/cpplib/*.c))
+cpplib-obj-y   = $(patsubst %.cpp, %.o, $(wildcard $(MODULE_DIR)/cpplib/*.cpp))
+cpplib-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/cpplib/*.s))
+cpplib-link-y += $(MODOBJ_DIR)/cpplib_mod.o
+
+mod-obj-y += $(cpplib-obj-y) $(cpplib-link-y)
+
+$(MODOBJ_DIR)/cpplib_mod.o: $(cpplib-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(cpplib-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"
