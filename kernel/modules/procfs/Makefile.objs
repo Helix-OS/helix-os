@@ -1,0 +1,10 @@
+procfs-obj-y   = $(patsubst %.c,   %.o, $(wildcard $(MODULE_DIR)/procfs/*.c))
+procfs-obj-y   = $(patsubst %.cpp, %.o, $(wildcard $(MODULE_DIR)/procfs/*.cpp))
+procfs-obj-y  += $(patsubst %.s,   %.o, $(wildcard $(MODULE_DIR)/procfs/*.s))
+procfs-link-y += $(MODOBJ_DIR)/procfs_mod.o
+
+mod-obj-y += $(procfs-obj-y) $(procfs-link-y)
+
+$(MODOBJ_DIR)/procfs_mod.o: $(procfs-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(procfs-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

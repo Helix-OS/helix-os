@@ -1,6 +1,7 @@
 #ifndef _helix_vfs_module_h
 #define _helix_vfs_module_h
 #include <base/errors.h>
+#include <base/stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,8 +73,8 @@ struct dirent;
 typedef int (*file_get_info)( struct file_node *node, struct file_info *buf );
 
 typedef int (*open_func)( struct file_node *, char *, int );
-typedef int (*write_func)( struct file_node *, void *, unsigned long, unsigned long );
-typedef int (*read_func)( struct file_node *, void *, unsigned long, unsigned long );
+typedef int (*write_func)( struct file_node *, void *, size_t, size_t );
+typedef int (*read_func)( struct file_node *, void *, size_t, size_t );
 typedef int (*close_func)( struct file_node *, int flags );
 
 typedef int (*mkdir_func)( struct file_node *, char *, int );

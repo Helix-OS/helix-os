@@ -65,7 +65,7 @@ void print_something( const something *foo ){
 	kprintf( "[%s] Have \"%s\"\n", __func__, foo->str );
 }
 
-const nothrow_t &nothrow = 1;
+const klib::nothrow_t &klib::nothrow = 1;
 
 int init( ){
 	kprintf( "[%s] Hello world!\n", provides );

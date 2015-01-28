@@ -8,4 +8,5 @@ kernel/modobjs/parts_mod.o
 kernel/modobjs/devfs_mod.o
 kernel/modobjs/fatfs_mod.o
 kernel/modobjs/dummy_mod.o
-kernel/modobjs/cppmod_mod.o
+kernel/modobjs/cpplib_mod.o
+kernel/modobjs/procfs_mod.o

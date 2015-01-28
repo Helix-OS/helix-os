@@ -1,6 +1,10 @@
 #ifndef _helix_tasking_h
 #define _helix_tasking_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <base/datastructs/list.h>
 #include <base/datastructs/dlist.h>
 #include <base/logger.h>
@@ -78,5 +82,9 @@ unsigned long get_current_pid( );
 void init_task_stack( task_t *task, char *argv[], char *envp[] );
 
 void set_current_task_node( list_node_t *node );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
