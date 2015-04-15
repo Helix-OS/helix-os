@@ -28,7 +28,7 @@ static void syscall_handler( registers_t *regs ){
 		// Syscall not registered
 		return;
 
-    kprintf( "[%s] Have syscall %d at 0x%x\n", __func__, regs->eax, location );
+    //kprintf( "[%s] Have syscall %d at 0x%x\n", __func__, regs->eax, location );
 
 	int ret;
 	asm volatile( "	\

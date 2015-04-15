@@ -58,6 +58,7 @@ task_t *init_task( task_t *task ){
 	task->pid = ++pidcount;
 	task->group = cur->group;
 	task->state = TASK_STATE_RUNNING;
+	task->parent = cur->pid;
 
 	// If a process, assume the new directory has already been switched to
 	task->pagedir = get_current_page_dir( );
@@ -354,10 +355,12 @@ int is_task_blocked( ){
 }
 
 void block_tasks( ){
+	asm volatile ("cli");
 	task_blocked = 1;
 }
 
 void unblock_tasks( ){
+	asm volatile ("sti");
 	task_blocked = 0;
 }
 

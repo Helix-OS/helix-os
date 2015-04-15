@@ -1,3 +1,30 @@
 file kernel/helix_kernel-i586
 set disassembly-flavor intel
 target remote :1234
+
+# print the list of all tasks
+define p_tasks
+	set $node = task_list
+
+	printf "| node       | task struct | pid | ppid | state | semaphore  | curdir     | froot      |\n"
+	printf "+------------+-------------+-----+------+-------+------------+------------+------------+\n"
+	while $node != 0
+		set $task = (task_t *)$node->data
+		set $state = '?'
+
+		if $task->state < 5
+			set $state = ((char [5]){'r', 's', 'w', 'S', 'z'})[$task->state]
+		end
+
+		printf "| 0x%08x | 0x%08x  | %3u | %4u | %5c | 0x%08x | 0x%08x | 0x%08x |\n", \
+			$node, $task, $task->pid, $task->parent, $state, $task->sem, $task->curdir, $task->froot
+
+		set $node = $node->next
+	end
+end
+
+define dump_task
+	if $argc == 1
+		print *(task_t *)get_task_node_by_pid( $arg0 )->data
+	end
+end

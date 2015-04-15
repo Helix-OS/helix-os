@@ -260,6 +260,10 @@ void page_fault_handler( registers_t *regs ){
 			);
 
 			kprintf( "[%s] Have bad process %d, killing...\n", __func__, current->pid );
+			if ( current->sem ){
+				*current->sem++;
+				kprintf( "[%s] Resetting semaphore...\n", __func__, current->pid );
+			}
 			remove_task_by_pid( current->pid );
 		}
 	}
