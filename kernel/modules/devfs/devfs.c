@@ -125,7 +125,7 @@ static int devfs_read_node( struct file_node *node, void *buffer,
 
 	if ( devbuf ){
 		if ( devbuf->read ){
-			kprintf( "[%s] Got here, devbuf: 0x%x, dev: 0x%x, read: 0x%x\n", __func__, devbuf, devbuf->dev, devbuf->read );
+			//kprintf( "[%s] Got here, devbuf: 0x%x, dev: 0x%x, read: 0x%x\n", __func__, devbuf, devbuf->dev, devbuf->read );
 			// TODO: Properly handle reads not align on devbuf->block_size
 			ret = devbuf->read( devbuf, buffer, length / devbuf->block_size, offset / devbuf->block_size );
 
@@ -147,7 +147,7 @@ static int devfs_write_node( struct file_node *node, void *buffer,
 
 	if ( devbuf ){
 		if ( devbuf->write ){
-			kprintf( "[%s] Got here, devbuf: 0x%x, dev: 0x%x, write: 0x%x\n", __func__, devbuf, devbuf->dev, devbuf->write );
+			//kprintf( "[%s] Got here, devbuf: 0x%x, dev: 0x%x, write: 0x%x\n", __func__, devbuf, devbuf->dev, devbuf->write );
 			// TODO: Properly handle writes not aligned on devbuf->block_size
 			ret = devbuf->write( devbuf, buffer, length / devbuf->block_size, offset / devbuf->block_size );
 

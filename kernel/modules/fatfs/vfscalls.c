@@ -257,8 +257,8 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 	dev = node->fs->devstruct;
 	cache = hashmap_get( dev->inode_map, node->inode );
 	cluster_size = dev->bpb->bytes_per_sect * dev->bpb->sect_per_clus;
-	sectbuf = knew( uint8_t[cluster_size] ); 
 	namebuf = knew( char[256] );
+	sectbuf = knew( uint8_t[cluster_size] ); 
 
 	dirbuf = (void *)sectbuf;
 
@@ -266,34 +266,27 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 			cluster_size, dev->bpb->bytes_per_sect * node->inode );
 
 	/*
-	kprintf( " " );
-	for ( i = 0; i < cluster_size; i+=32 ){
-		kprintf( "0x%x: ", i );
+	kfree( namebuf );
+	kfree( sectbuf );
 
-		for ( count = 0; count < 32; count ++ ){
-			if (( sectbuf[i*32 + count] & 0xff ) < 0x10 ){
-				kprintf( "0x%x  ", sectbuf[i*32 + count] & 0xff );
-			} else {
-				kprintf( "0x%x ", sectbuf[i*32 + count] & 0xff );
-			}
-		}
-
-		kprintf( "\n" );
-	}
-
+	return 0;
 	*/
 
 	if ( cache ){
 		if ( cache->dir.attributes & FAT_ATTR_DIRECTORY ){
 			for ( count = i = 0; i < dev->bpb->dirents; i++ ){
-				if ( *(char *)(dirbuf + i) == 0 || *(char *)(dirbuf + i) == 0xe5 )
+				if ( *(char *)(dirbuf + i) == 0 ){
+					break;
+
+				} else if ( *(char *)(dirbuf + i) == 0xe5 ){
 					continue;
+				}
 
 				if ( dirbuf[i].attributes == FAT_ATTR_LONGNAME ){
 					fatfs_apply_longname((void *)(dirbuf + i), namebuf, 256 );
 
 				} else {
-					//kprintf( "[%s] Got here, 0x%x, 0x%x\n", __func__, *(char *)(dirbuf + i), dirbuf[i].attributes );
+					kprintf( "[%s] Got here, 0x%x, 0x%x\n", __func__, *(char *)(dirbuf + i), dirbuf[i].attributes );
 
 					if ( count == entry ){
 						found = true;
