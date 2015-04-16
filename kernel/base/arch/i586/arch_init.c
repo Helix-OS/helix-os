@@ -8,6 +8,7 @@
 extern unsigned int *kernel_dir;
 extern unsigned int early_placement;
 extern mheap_t *kheap;
+multiboot_header_t *bootheader = 0;
 
 /* \brief Handles archetecture-specific initialization for i586. 
  *
@@ -29,6 +30,8 @@ void arch_init( multiboot_header_t *mboot, int blarg, int magic ){
 	// Take care of multiboot stuff...
 	if ( magic != 0x2badb002 )
 		panic( "Need multiboot-compliant bootloader to boot Helix kernel.\n" );
+
+	bootheader = mboot;
 
 	if ( mboot->flags & MULTIBOOT_FLAG_ELF )
 		elfinfo = &mboot->elf_headers;

@@ -1,0 +1,9 @@
+vbe-obj-i586   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/vbe/*.c))
+vbe-obj-i586  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/vbe/*.s))
+vbe-link-i586 += $(MODOBJ_DIR)/vbe_mod.o
+
+mod-obj-y += $(vbe-obj-$(ARCH)) $(vbe-link-$(ARCH))
+
+$(MODOBJ_DIR)/vbe_mod.o: $(vbe-obj-$(ARCH))
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(vbe-obj-$(ARCH))
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

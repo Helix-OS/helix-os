@@ -41,7 +41,8 @@ if [ $machine = "Linux" ]; then
 	if [ $EXISTS -eq 1 ]; then
 		losetup /dev/loop1 $IMAGE
 		grub-install --root-directory=$PWD/temp_mount/boot --boot-directory=$PWD/temp_mount/boot \
-			--no-floppy --modules="normal part_msdos ext2 multiboot" /dev/loop1
+		    --no-floppy --modules="normal part_msdos ext2 multiboot vbe vga video_cirrus" /dev/loop1
+
 		losetup -d /dev/loop1
 	fi
 

@@ -3,6 +3,7 @@ kernel/modobjs/debugger_mod.o
 kernel/modobjs/pci_mod.o
 kernel/modobjs/ata_mod.o
 kernel/modobjs/vga_mod.o
+kernel/modobjs/vbe_mod.o
 kernel/modobjs/ps2keybd_mod.o
 kernel/modobjs/parts_mod.o
 kernel/modobjs/devfs_mod.o

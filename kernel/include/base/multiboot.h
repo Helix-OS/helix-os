@@ -61,6 +61,7 @@ typedef struct multiboot_header {
 	uint32_t boot_loader_name;
 	uint32_t apm_table;
 	uint32_t vbe_control_info;
+	uint32_t vbe_mode_info;
 	uint32_t vbe_mode;
 	uint32_t vbe_interface_seg;
 	uint32_t vbe_interface_off;
