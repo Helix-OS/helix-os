@@ -45,13 +45,16 @@ typedef struct psf2_header {
     uint32_t charsize;
     uint32_t height;
     uint32_t width;
-} __attribute__((packed)) psf2_header;
+} __attribute__((packed)) psf2_header_t;
 
 typedef struct vbe_device {
     vbe_mode_block_t *mode;
     vbe_info_block_t *info;
+    psf2_header_t *fontfile;
     uint8_t *framebuf;
+    uint8_t *textbuf;
     unsigned x_res, y_res, bpp, pitch;
+    unsigned text_x, text_y, cur_x, cur_y;
 } vbe_device_t;
 
 #endif

@@ -10,6 +10,8 @@
 #include <base/tasking/task.h>
 #include <base/tasking/userspace.h>
 
+initrd_t *main_initrd = 0;
+
 // XXX: remove after userspace loading is fully implemented
 extern int syscall_spawn( int, char **, char **, int );
 
@@ -19,8 +21,12 @@ void utest( ){
 
 	// open initial file descriptors
 	fd = syscall_open( "/test/devices/keyboard", FILE_READ );
+    /*
 	fd = syscall_open( "/test/devices/console",  FILE_READ );
 	fd = syscall_open( "/test/devices/console",  FILE_READ );
+    */
+	fd = syscall_open( "/test/devices/fbconsole",  FILE_READ );
+	fd = syscall_open( "/test/devices/fbconsole",  FILE_READ );
 
 	fd = syscall_open( "/test/userroot/bin/init", FILE_READ );
 	//fd = syscall_open( "/test/userroot/bin/sh", FILE_READ );
@@ -51,6 +57,7 @@ void kmain( unsigned flags, void *modules, multiboot_elf_t *elfinfo ){
 	kprintf( "-==[ Helix kernel booting\n" );
 
 	initrd = init_initrd( modules );
+    main_initrd = initrd;
 
 	init_syscalls( );
 	init_tasking( );
