@@ -18,7 +18,7 @@ extern initrd_t *main_initrd;
 
 static int vbe_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset );
 
-void set_pixel( vbe_device_t *dev, unsigned x, unsigned y, uint32_t val ){
+static void set_pixel( vbe_device_t *dev, unsigned x, unsigned y, uint32_t val ){
     if ( x < dev->x_res && y < dev->y_res ){
         uint32_t *place = (uint32_t *)(dev->framebuf + y * dev->pitch + x * 4);
         *place = val;
@@ -38,7 +38,7 @@ static void put_char( vbe_device_t *dev, unsigned c, unsigned xpos, unsigned ypo
                 *place = 0x00d0d0c0;
 
             } else {
-                *place = 0;
+                *place = 0x00202020;
             }
 
             place += 1;
@@ -48,25 +48,32 @@ static void put_char( vbe_device_t *dev, unsigned c, unsigned xpos, unsigned ypo
     }
 }
 
-static void redraw_textbuf( vbe_device_t *dev ){
+static void redraw_textbuf( vbe_device_t *dev, unsigned startx, unsigned starty ){
     psf2_header_t *font = dev->fontfile;
     uint8_t *buf = dev->textbuf;
-    unsigned x, y, c, x_accum, y_accum;
+    unsigned x, y, c;
 
-    for ( y_accum = y = 0; y < dev->text_y; y++ ){
-        for ( x_accum = x = 0; x < dev->text_x; x++ ){
-            c = *buf;
+    for ( y = starty; y < dev->text_y; y++ ){
+        for ( x = startx; x < dev->text_x; x++ ){
+			c = buf[y * dev->text_x + x];
 
             if ( c ){
-                put_char( dev, c, x_accum, y_accum );
+                put_char( dev, c, x * font->width, y * font->height );
             }
-
-            buf += 1;
-            x_accum += font->width;
         }
-
-        y_accum += font->height;
     }
+}
+
+static void clear_screen( vbe_device_t *dev ){
+	unsigned x, y;
+	for ( y = 0; y < dev->mode->Yres; y++ ){
+		for ( x = 0; x < dev->mode->Xres; x++ ){
+			set_pixel( dev, x, y, 0x00202020 );
+			//set_pixel( dev, x, y, 0x00d0d0c0 );
+		}
+	}
+
+	dev->cur_y = dev->cur_x = 0;
 }
 
 /* Offset is ignored in this function, since it's handled by the driver */
@@ -76,11 +83,16 @@ static int vbe_hal_write( struct hal_device *dev, void *buf, unsigned count, uns
 	char *str = buf;
 	int ret = 0;
 	int i;
+	unsigned startx, starty;
+
+	starty = vbe->cur_y;
+	startx = 0;
 
 	for ( ret = 0; ret < count; ret++ ){
 		switch ( str[ret] ){
 			case '\n':
 				vbe->cur_y++;
+				starty = starty? starty - 1 : starty;
 			case '\r':
 				vbe->cur_x = 0;
 				continue;
@@ -103,10 +115,13 @@ static int vbe_hal_write( struct hal_device *dev, void *buf, unsigned count, uns
 
 		if ( vbe->cur_y >= vbe->text_y - 1){
 			for ( i = 0; i < vbe->text_y - 1; i++ ){
+				// copy the next line of text in the framebuffer to the current line
                 memcpy(
-                    vbe->framebuf + (i * vbe->fontfile->height) * vbe->pitch,
+                    vbe->framebuf + ( i      * vbe->fontfile->height) * vbe->pitch,
                     vbe->framebuf + ((i + 1) * vbe->fontfile->height) * vbe->pitch,
                     vbe->pitch * vbe->fontfile->height );
+
+				// update the text buffer accordingly
 				memcpy( textbuf + i * vbe->text_x, textbuf + (i + 1) * vbe->text_x, vbe->text_x );
             }
 
@@ -120,7 +135,8 @@ static int vbe_hal_write( struct hal_device *dev, void *buf, unsigned count, uns
 		//set_cursor( dev, vbe->cur_x, vbe->cur_y );
 	}
 
-    redraw_textbuf( vbe );
+    redraw_textbuf( vbe, startx, starty );
+    //redraw_textbuf( vbe, 0, 0 );
 
 	return ret;
 }
@@ -165,7 +181,6 @@ int init( ){
         new_vbe->y_res    = mode->Yres;
         new_vbe->bpp      = mode->bpp;
         new_vbe->pitch    = mode->pitch;
-        new_vbe->cur_x    = new_vbe->cur_y = 0;
 
         unsigned pos = mode->physbase;
         unsigned end = mode->physbase + mode->Xres * 4 + mode->Yres * mode->pitch;
@@ -175,19 +190,7 @@ int init( ){
         }
         flush_tlb( );
 
-        /*
-        unsigned x, y;
-        for ( x = 0, y = 0; y < new_vbe->mode->Yres - 1; y++, x++ ){
-            set_pixel( new_vbe, x, y, 0x00ffff00 );
-        }
-
-        for ( x = 0, y = new_vbe->mode->Yres - 1; y > 0; y--, x++ ){
-            set_pixel( new_vbe, x, y, 0x00ff00ff );
-        }
-
-        put_char( new_vbe, 'a', 100, 50 );
-        redraw_textbuf( new_vbe );
-        */
+		clear_screen( new_vbe );
 
         new_haldev = knew( hal_device_t );
         new_haldev->block_size = 1;
