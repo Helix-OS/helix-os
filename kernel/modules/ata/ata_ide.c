@@ -359,19 +359,7 @@ int ata_ide_hal_read( hal_device_t *dev, void *buf, unsigned count, unsigned off
 	drive = ide_dev->drive + ide_dev->channel * 2;
 
 	kprintf( "[%s] Got here, like a boss. reading drive %d, ctrl at 0x%x\n", __func__, drive, ctrl );
-	//ret = ata_ide_read_sectors( ctrl, ide_dev->drive, offset, count, 0, buf );
-	ret = ata_ide_read_sectors( ctrl, drive, count, offset, 0, (unsigned)buf );
-	//ret = ata_ide_read_sectors( ctrl, 0, 1, 0, 0, buf );
-
-	/*
-	{
-		char *meh = buf;
-		int i;
-
-		for ( i = 0; i < 512; i++ )
-			kprintf( "%c", meh[i] );
-	}
-	*/
+	ret = ata_ide_read_sectors( ctrl, drive, count, offset, 0x10, (unsigned)buf );
 
 	//ret = count;
 	return ret;
@@ -388,7 +376,7 @@ int ata_ide_hal_write( hal_device_t *dev, void *buf, unsigned count, unsigned of
 	ide_dev = dev->dev;
 	ctrl = ide_dev->ctrl;
 
-	ata_ide_write_sectors( ctrl, ide_dev->drive, offset, count, 0, (unsigned)buf );
+	ata_ide_write_sectors( ctrl, ide_dev->drive, offset, count, 0x10, (unsigned)buf );
 
 	ret = count;
 	return ret;
