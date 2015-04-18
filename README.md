@@ -12,12 +12,12 @@ It currently supports:
 - PCI devices 
 - IDE disks
 - VGA text mode
-- FAT12 filesystem
+- FAT12/16 filesystem
+- VBE framebuffer with psf font support
 
 Next steps:
 
 - Start working on the userland
-- VGA framebuffer
 - TCP/IP stack
 - More filesystem drivers, e.g. EXT2
 
@@ -25,5 +25,3 @@ After that:
 
 - Port development tools
 - Be self-hosting
-
-Still early in development.

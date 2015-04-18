@@ -13,7 +13,7 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 	char *namebuf;
 	uint8_t *sectbuf;
 	int i;
-	int has_longname = 0;
+	bool has_longname = false;
 
 	fatfs_dirent_t *dirbuf;
 	fatfs_dircache_t *dircache;
@@ -36,18 +36,27 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 
 			for ( i = 0; i < dev->bpb->dirents; i++ ){
 
-				if ( *(char *)(dirbuf + i) == 0 || *(char *)(dirbuf + i) == 0xe5 )
+				if ( *(char *)(dirbuf + i) == 0 ){
+					break;
+
+				} else if ( *(char *)(dirbuf + i) == 0xe5 ){
 					continue;
+				}
 
 				if ( dirbuf[i].attributes == FAT_ATTR_LONGNAME ){
 					longentbuf = (void *)(dirbuf + i);
 					fatfs_apply_longname( longentbuf, namebuf, 256 );
-					has_longname = 1;
+					has_longname = true;
 
 				} else {
 					char *fname = has_longname? namebuf : (char *)dirbuf[i].name;
 
-					if ( strcmp( name, fname ) == 0 ){
+					if (( has_longname && (strcmp( name, fname ) == 0 )) ||
+						// XXX: doesn't handle regular name entries properly, this is here to make sure
+						//      "." and ".." are found
+						// TODO: handle regular name entries correctly
+					    ( strncmp( name, (char *)dirbuf[i].name, strlen( name ) % 12) == 0 ))
+					{
 						// Found it, cool
 						newcache = knew( fatfs_dircache_t );
 						memcpy( &newcache->dir, dirbuf + i, sizeof( fatfs_dirent_t ));
@@ -64,7 +73,7 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 						break;
 					}
 
-					has_longname = 0;
+					has_longname = false;
 					namebuf[0] = 0;
 				}
 			}
@@ -253,6 +262,7 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 	uint8_t *sectbuf;
 	char *namebuf;
 	bool found = false;
+	bool has_longname = false;
 
 	dev = node->fs->devstruct;
 	cache = hashmap_get( dev->inode_map, node->inode );
@@ -265,16 +275,11 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 	VFS_FUNCTION(( &dev->device_node ), read, sectbuf,
 			cluster_size, dev->bpb->bytes_per_sect * node->inode );
 
-	/*
-	kfree( namebuf );
-	kfree( sectbuf );
-
-	return 0;
-	*/
-
 	if ( cache ){
 		if ( cache->dir.attributes & FAT_ATTR_DIRECTORY ){
 			for ( count = i = 0; i < dev->bpb->dirents; i++ ){
+				kprintf( "[%s] Got here, 0x%x, 0x%x, %x\n",
+						__func__, *(char *)(dirbuf + i), dirbuf[i].attributes, dirbuf[i].cluster_low );
 				if ( *(char *)(dirbuf + i) == 0 ){
 					break;
 
@@ -284,28 +289,35 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 
 				if ( dirbuf[i].attributes == FAT_ATTR_LONGNAME ){
 					fatfs_apply_longname((void *)(dirbuf + i), namebuf, 256 );
+					has_longname = true;
 
 				} else {
 					kprintf( "[%s] Got here, 0x%x, 0x%x\n", __func__, *(char *)(dirbuf + i), dirbuf[i].attributes );
 
 					if ( count == entry ){
-						found = true;
+						kprintf( "[%s] found \"%s\" (0x%x %x %x %x)\n", __func__, namebuf,
+								namebuf[0], namebuf[1], namebuf[2], namebuf[3] );
+
+						//found = true;
+						ret = 1;
+						dirp->inode = fatfs_relclus_to_sect( dev, dirbuf[i].cluster_low );
+						dirp->type = FILE_TYPE_REG;
+
+						if ( has_longname ){
+							strncpy( dirp->name, namebuf, 256 );
+
+						} else {
+							strncpy( dirp->name, dirbuf[i].name, 11 );
+							dirp->name[11] = 0;
+						}
+
 						break;
+
 					}
 
-					namebuf[0] = 0;
+					has_longname = false;
 					count++;
 				}
-			}
-
-			if ( found ){
-				ret = 1;
-				dirp->inode = fatfs_relclus_to_sect( dev, dirbuf[i].cluster_low );
-				dirp->type = FILE_TYPE_REG;
-				strncpy( dirp->name, namebuf, 256 );
-
-			} else {
-				ret = 0;
 			}
 
 		} else {
