@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <dalibc/syscalls.h>
 
+char *path = "/bin/";
 int running = 1;
 
 char *getline( char *buf, unsigned len ){
@@ -69,17 +70,14 @@ char **split_str( char *s, char split ){
 int exec_cmd( char *args[], char *env[] ){
 	int pid;
 	int ret = 0;
+	char cmdbuf[32];
 
 	if ( args ){
 		if ( strlen( args[0] ) > 0 ){
 			if ( strcmp( args[0], "cd" ) == 0 ){
 				if ( args[1] ){
-					printf( "Changing directory to \"%s\"\n", args[1] );
-					if ( syscall_chdir( args[1] ) >= 0 ){
-						puts( "Changed directory." );
-
-					} else {
-						printf( "Could not change directory to \"%s\"\n", args[1] );
+					if ( syscall_chdir( args[1] ) < 0 ){
+						printf( "cd: %s: no such file or directory\n", args[1] );
 					}
 
 				} else {
@@ -95,13 +93,15 @@ int exec_cmd( char *args[], char *env[] ){
 				puts( "Help message coming soon." );
 
 			} else {
-				pid = _spawn( args[0], args, NULL );
+				strncpy( cmdbuf, path,    sizeof( cmdbuf ));
+				strncat( cmdbuf, args[0], sizeof( cmdbuf ) - strlen( path ) - 1);
 
+				pid = _spawn( cmdbuf, args, NULL );
 				if ( pid > 0 ){
 					syscall_waitpid( pid, &ret, 0 );
 
 				} else {
-					puts( "Command not found." );
+					printf( "sh: %s: command not found\n", cmdbuf );
 				}
 			}
 		}
