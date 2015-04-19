@@ -10,10 +10,8 @@
 #include <base/tasking/task.h>
 
 int paging_enabled = 0;
-unsigned int 	npages = 0,
-		last_free_page = 0;
-unsigned int	*current_dir,
-		*kernel_dir;
+unsigned int npages = 0, last_free_page = 0, nfree_pages = 0;
+unsigned int *current_dir, *kernel_dir;
 char *page_bitmap;
 
 int init_paging( unsigned max_mem ){
@@ -23,6 +21,7 @@ int init_paging( unsigned max_mem ){
 	kernel_dir	= kmalloc_early( PAGE_SIZE, 1 );
 	npages		= max_mem / 4;
 	page_bitmap	= kmalloc_early( npages / 8, 1 );
+	nfree_pages = npages;
 
 	kprintf( "%d pages\n", npages );
 
@@ -32,6 +31,7 @@ int init_paging( unsigned max_mem ){
 	for ( j = 0, i = PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT; i < 0x300000; i += 0x1000, j++ ){
 		map_r_page( kernel_dir, i, i, PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
 		BM_SET_BIT( page_bitmap, ((i & ~0xfff ) >> 12), 1 );
+		nfree_pages--;
 	}
 
 	set_page_dir( kernel_dir );
@@ -119,6 +119,7 @@ int free_page( unsigned *dir, unsigned vaddress ){
 			if ( last_free_page > (raddress >> 15))
 				last_free_page = (raddress >> 15);
 
+			nfree_pages++;
 			ret = 1;
 		}
 	}
@@ -156,10 +157,17 @@ unsigned get_free_page( ){
 		kprintf( "0x%x: ", i );
 		for ( j = 0; i & 1; i>>=1 ) j++;
 		ret = ((page << 3) + j) << 12;
-		kprintf( "get_free_page: returning 0x%x, 0x%x, 0x%x\n", ret, page, j );
+		nfree_pages--;
+
+		kprintf( "get_free_page: returning 0x%x, 0x%x, 0x%x, %d pages remaining\n", ret, page, j, nfree_pages );
 	}
 	
 	return ret;
+}
+
+// get number of free pages
+unsigned get_nfree_pages( ){
+	return nfree_pages;
 }
 
 page_dir_t *get_current_page_dir( ){

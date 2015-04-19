@@ -27,5 +27,6 @@ int init_paging( unsigned max_mem );
 void page_fault_handler( registers_t *regs );
 
 unsigned get_free_page( );
+unsigned get_nfree_pages( );
 
 #endif

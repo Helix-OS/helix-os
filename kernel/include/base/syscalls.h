@@ -56,6 +56,7 @@ typedef enum {
 	SYSCALL_SBRK,
 	SYSCALL_CHROOT,
 	SYSCALL_CHDIR,
+	SYSCALL_SYSINFO,
 } syscall_t;
 
 DECL_SYSCALL0( test );
@@ -70,6 +71,8 @@ DECL_SYSCALL3( waitpid, unsigned, int *, int );
 DECL_SYSCALL1( sbrk, int );
 DECL_SYSCALL1( chroot, const char * );
 DECL_SYSCALL1( chdir, const char * );
+//DECL_SYSCALL3( sysinfo, unsigned type, unsigned key, void *buf );
+DECL_SYSCALL3( sysinfo, unsigned, unsigned, void * );
 
 void init_syscalls( );
 void arch_init_syscalls( );

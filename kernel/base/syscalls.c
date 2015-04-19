@@ -1,5 +1,6 @@
 #include <base/syscalls.h>
 #include <base/logger.h>
+#include <base/sysinfo.h>
 
 DEFN_SYSCALL0( test, SYSCALL_TEST );
 DEFN_SYSCALL1( exit, SYSCALL_EXIT, int );
@@ -13,10 +14,12 @@ DEFN_SYSCALL3( waitpid, SYSCALL_WAITPID, unsigned, int *, int );
 DEFN_SYSCALL1( sbrk, SYSCALL_SBRK, int );
 DEFN_SYSCALL1( chroot, SYSCALL_CHROOT,  const char * );
 DEFN_SYSCALL1( chdir, SYSCALL_CHDIR, const char * );
+DEFN_SYSCALL3( sysinfo, SYSCALL_SYSINFO, unsigned, unsigned, void * );
 
 void init_syscalls( ){
 	arch_init_syscalls( );
 	register_syscall( SYSCALL_TEST, syscall_tester );
+	register_syscall( SYSCALL_SYSINFO, sysinfo );
 }
 
 int syscall_tester( ){
