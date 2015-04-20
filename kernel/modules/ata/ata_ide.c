@@ -27,10 +27,16 @@ void ata_initialize_ide( ata_device_t *device ){
 		kprintf( "bar[%d] = 0x%x\n", i, bar[i] );
 
 	memset( new_ctrl, 0, sizeof( ide_control_t ));
+	new_ctrl->channels[ATA_PRIMARY 	].base = 0x1f0;
+	new_ctrl->channels[ATA_PRIMARY 	].ctrl = 0x3f4;
+	new_ctrl->channels[ATA_SECONDARY].base = 0x170;
+	new_ctrl->channels[ATA_SECONDARY].ctrl = 0x374;
+	/*
 	new_ctrl->channels[ATA_PRIMARY 	].base = ( bar[0] & ~3 ) + 0x1f0 * !bar[0];
 	new_ctrl->channels[ATA_PRIMARY 	].ctrl = ( bar[1] & ~3 ) + 0x3f4 * !bar[1];
 	new_ctrl->channels[ATA_SECONDARY].base = ( bar[2] & ~3 ) + 0x170 * !bar[2];
 	new_ctrl->channels[ATA_SECONDARY].ctrl = ( bar[3] & ~3 ) + 0x374 * !bar[3];
+	*/
 	new_ctrl->channels[ATA_PRIMARY 	].busmaster = ( bar[4] & ~3 );
 	new_ctrl->channels[ATA_SECONDARY].busmaster = ( bar[4] & ~3 ) + 8;
 

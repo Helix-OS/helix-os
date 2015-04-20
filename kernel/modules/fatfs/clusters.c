@@ -111,8 +111,33 @@ unsigned fatfs_get_next_cluster_fat16( fatfs_device_t *dev, unsigned cluster ){
 // TODO:
 unsigned fatfs_get_next_cluster_fat32( fatfs_device_t *dev, unsigned cluster ){
 	unsigned ret = 0;
+	unsigned fat_offset;
+	unsigned fat_sector;
+	unsigned ent_offset;
 
+	unsigned cluster_size;
+	uint16_t table_value;
+	uint8_t  *fat_table;
+
+	cluster_size = dev->bpb->bytes_per_sect * dev->bpb->sect_per_clus;
+	fat_offset = cluster * 4;
+	fat_sector = dev->bpb->reserved_sects + (fat_offset / cluster_size);
+	ent_offset = fat_offset % cluster_size;
+
+	fat_table = knew( uint8_t[ cluster_size ]);
+	VFS_FUNCTION(( &dev->device_node ), read, fat_table, cluster_size, fat_sector * dev->bpb->bytes_per_sect );
+
+	table_value = *(uint32_t *)(fat_table + ent_offset) & 0x0fffffff;
+	ret = table_value;
+
+	kfree( fat_table );
+
+	kprintf( "[%s] Have next cluster at 0x%x\n", __func__, ret );
+	return ret;
+
+	/*
 	kprintf( "[%s] Got here, probably an error\n", __func__ );
 
 	return ret;
+	*/
 }

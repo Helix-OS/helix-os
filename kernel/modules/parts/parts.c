@@ -25,6 +25,7 @@ static int partition_write( struct hal_device *dev, void *buf, unsigned count, u
 void check_for_parts( ){
 	list_head_t *devlist;
 	list_node_t *move;
+	list_node_t *last;
 	hal_device_t *dev, *temp;
 	part_dev_t *pdev;
 	char *buf = knew( char[512] );
@@ -33,6 +34,7 @@ void check_for_parts( ){
 
 	devlist = hal_get_device_list( );
 	move = devlist->base;
+	last = devlist->last;
 
 	foreach_in_list( move ){
 		dev = move->data;
@@ -73,6 +75,10 @@ void check_for_parts( ){
 				}
 			}
 		}
+
+		// XXX: prevent the scanner from looking at the partitions that were just added for partitions
+		if ( move == last )
+			break;
 	}
 
 	memset( buf, 0, 512 );

@@ -101,7 +101,7 @@ int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, uns
 	int ret = 0;
 
 	kprintf( "[%s] Got here, %d\n", __func__, length );
-	memset( buf, 'A', length );
+	memset( buf, 0, length );
 
 	fatfs_device_t *dev;
 	fatfs_dircache_t *cache;
