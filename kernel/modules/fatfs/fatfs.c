@@ -160,10 +160,10 @@ int test( ){
 
 	//file_mount_filesystem( "/test/fatdir", "/test/devices/ata1", "fatfs", 0 );
 	file_mount_filesystem( "/test/boot", "/test/devices/ata0p0", "fatfs", 0 );
-	file_mount_filesystem( "/test/userroot", "/test/devices/ata0p1", "fatfs", 0 );
-	lookup = file_lookup_absolute( "/test/fatdir/Makefile", &fnode, 0 );
+	//file_mount_filesystem( "/test/userroot", "/test/devices/ata0p1", "fatfs", 0 );
+	//lookup = file_lookup_absolute( "/test/fatdir/Makefile", &fnode, 0 );
 
-	if ( lookup == 0 ){
+	if ( 0 || lookup == 0 ){
 		kprintf( "[fatfs_test] Cool, found Makefile at inode %d\n", fnode.inode );
 		lookup = VFS_FUNCTION(( &fnode ), read, testbuf, 2300, 0 );
 		kprintf( "[fatfs_test] Read returned %d\n", lookup );

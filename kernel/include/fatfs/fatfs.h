@@ -2,6 +2,7 @@
 #define _helix_fatfs_module_h
 #include <base/stdint.h>
 #include <base/vfs/vfs.h>
+#include <base/lib/stdbool.h>
 #include <base/datastructs/hashmap.h>
 
 typedef enum {
@@ -23,8 +24,14 @@ typedef enum {
 } fat_attr_t;
 
 enum {
-	FAT_CLUSTER_BAD = 0xff7,
-	FAT_CLUSTER_END = 0xff8,
+	FAT12_CLUSTER_BAD = 0xff7,
+	FAT12_CLUSTER_END = 0xff8,
+
+	FAT16_CLUSTER_BAD = 0xfff7,
+	FAT16_CLUSTER_END = 0xfff8,
+
+	FAT32_CLUSTER_BAD = 0x0ffffff7,
+	FAT32_CLUSTER_END = 0x0ffffff8,
 };
 
 // BIOS Parameter Block
@@ -109,6 +116,7 @@ unsigned fatfs_get_next_cluster( fatfs_device_t *dev, unsigned cluster );
 unsigned fatfs_get_next_cluster_fat12( fatfs_device_t *dev, unsigned cluster );
 unsigned fatfs_get_next_cluster_fat16( fatfs_device_t *dev, unsigned cluster );
 unsigned fatfs_get_next_cluster_fat32( fatfs_device_t *dev, unsigned cluster );
+bool is_last_cluster( fatfs_device_t *dev, unsigned cluster );
 
 int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name, int flags );
 int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry );

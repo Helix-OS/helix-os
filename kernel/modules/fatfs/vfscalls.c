@@ -115,12 +115,13 @@ int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, uns
 
 			i = offset / cluster_size;
 			cluster = cache->dir.cluster_low;
-			kprintf( "[%s] Have first cluster of file at 0x%x\n", __func__, cluster );
+			kprintf( "[%s] Have first cluster of file at 0x%x, offset is %d\n", __func__, cluster, i );
 
 			for ( ; i; i-- )
 				cluster = fatfs_get_next_cluster( dev, cluster );
 
-			if ( cluster < FAT_CLUSTER_BAD ){
+			//if ( cluster < FAT_CLUSTER_BAD ){
+			if ( is_last_cluster( dev, cluster ) == false ){
 				clusbuf = knew( uint8_t[ cluster_size ]);
 
 				i = offset % cluster_size;
@@ -134,7 +135,11 @@ int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, uns
 						cluster = fatfs_get_next_cluster( dev, cluster );
 						kprintf( "[%s] cluster: 0x%x\n", __func__, cluster );
 
+						/*
 						if ( cluster >= FAT_CLUSTER_BAD )
+							break;
+							*/
+						if ( is_last_cluster( dev, cluster ))
 							break;
 
 						VFS_FUNCTION(( &dev->device_node ), read, clusbuf, cluster_size,
@@ -142,11 +147,15 @@ int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, uns
 
 						kprintf( "[%s] Read new cluster\n", __func__ );
 					}
-				}
+
+				} 
 
 				ret = k;
 
 				kfree( clusbuf );
+
+			} else {
+				kprintf( "[%s] Reached end of file at cluster 0x%x\n", __func__, cluster );
 			}
 
 		} else {

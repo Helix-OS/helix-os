@@ -24,7 +24,8 @@ unsigned fatfs_relclus_to_sect( fatfs_device_t *dev, unsigned cluster ){
 }
 
 unsigned fatfs_get_next_cluster( fatfs_device_t *dev, unsigned cluster ){
-	unsigned ret = FAT_CLUSTER_END;
+	//unsigned ret = FAT_CLUSTER_END;
+	unsigned ret = 0xffffffff;
 
 	kprintf( "[%s] got here, cluster: 0x%x\n", __func__, cluster );
 
@@ -140,4 +141,23 @@ unsigned fatfs_get_next_cluster_fat32( fatfs_device_t *dev, unsigned cluster ){
 
 	return ret;
 	*/
+}
+
+bool is_last_cluster( fatfs_device_t *dev, unsigned cluster ){
+	kprintf( "[%s] fat type %d, cluster %d, got here\n", __func__, dev->type, cluster );
+
+	switch ( dev->type ){
+		case FAT_TYPE_12:
+			return cluster >= FAT12_CLUSTER_BAD;
+			break;
+		case FAT_TYPE_16:
+			return cluster >= FAT16_CLUSTER_BAD;
+			break;
+		case FAT_TYPE_32:
+			return cluster >= FAT32_CLUSTER_BAD;
+			break;
+		default:
+			kprintf( "[%s] unknown fatfs type %d, most definitely a bug\n", __func__, dev->type );
+			return true;
+	}
 }
