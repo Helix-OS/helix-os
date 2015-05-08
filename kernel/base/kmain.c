@@ -1,4 +1,5 @@
 #include <base/kmain.h>
+#include <base/cmdline.h>
 #include <base/mem/alloc.h>
 #include <base/module.h>
 #include <base/kstd.h>
@@ -11,6 +12,7 @@
 #include <base/tasking/userspace.h>
 
 initrd_t *main_initrd = 0;
+cmdline_opt_t *main_opts = 0;
 
 // XXX: remove after userspace loading is fully implemented
 extern int syscall_spawn( int, char **, char **, int );
@@ -20,13 +22,34 @@ void utest( ){
 	int fd;
 
 	// open initial file descriptors
-	fd = syscall_open( "/test/devices/keyboard", FILE_READ );
+	syscall_open( "/test/devices/keyboard", FILE_READ );
     /*
 	fd = syscall_open( "/test/devices/console",  FILE_READ );
 	fd = syscall_open( "/test/devices/console",  FILE_READ );
     */
-	fd = syscall_open( "/test/devices/fbconsole",  FILE_READ );
-	fd = syscall_open( "/test/devices/fbconsole",  FILE_READ );
+
+	// XXX: this references data in kernel address space, won't work once proper
+	//      memory seperation is enforced. 
+	// TODO: add sysinfo request to get kernel options
+
+	char *thing = cmdline_get( main_opts, "console" );
+	if ( thing ){
+		/*
+		syscall_open( "/test/devices/fbconsole",  FILE_READ );
+		syscall_open( "/test/devices/fbconsole",  FILE_READ );
+		*/
+		kprintf( "[%s] Have console at \"%s\"\n", __func__, thing );
+		/*
+		syscall_open( thing, FILE_READ );
+		syscall_open( thing, FILE_READ );
+		*/
+		syscall_open( "/test/devices/fbconsole",  FILE_READ );
+		syscall_open( "/test/devices/fbconsole",  FILE_READ );
+
+	} else {
+		syscall_open( "/test/devices/fbconsole",  FILE_READ );
+		syscall_open( "/test/devices/fbconsole",  FILE_READ );
+	}
 
 	fd = syscall_open( "/test/userroot/bin/init", FILE_READ );
 	//fd = syscall_open( "/test/userroot/bin/sh", FILE_READ );
@@ -52,10 +75,12 @@ void utest( ){
  *                  the modules parameter must be ignored.
  */
 // TODO: possibly change type of elfinfo to not depend on multiboot
-void kmain( unsigned flags, void *modules, multiboot_elf_t *elfinfo ){
+void kmain( unsigned flags, void *modules, multiboot_elf_t *elfinfo, char *cmdline ){
 	initrd_t *initrd = 0;
 	kprintf( "-==[ Helix kernel booting\n" );
+	cmdline_opt_t *opts = NULL;
 
+	main_opts = parse_command_line( cmdline );
 	initrd = init_initrd( modules );
     main_initrd = initrd;
 

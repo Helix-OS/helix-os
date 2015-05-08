@@ -50,7 +50,7 @@ void arch_init( multiboot_header_t *mboot, int blarg, int magic ){
 
 	init_timer( );
 
-	kmain( 0, modules, elfinfo );
+	kmain( 0, modules, elfinfo, mboot->cmdline );
 
 	while( 1 ) asm volatile( "hlt" );
 }
