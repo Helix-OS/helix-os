@@ -37,12 +37,14 @@ if [ $machine = "Linux" ]; then
 	mkdir -p temp_mount/boot/grub
 	cp -r build/* temp_mount/boot
 	echo "[ ] Copied" temp_mount/boot/*
+	sync
 
 	if [ $EXISTS -eq 1 ]; then
 		losetup /dev/loop1 $IMAGE
 		grub-install --root-directory=$PWD/temp_mount/boot --boot-directory=$PWD/temp_mount/boot \
 		    --no-floppy --modules="normal part_msdos ext2 multiboot vbe vga video_cirrus" /dev/loop1
 
+		sync
 		losetup -d /dev/loop1
 	fi
 
@@ -57,6 +59,7 @@ if [ $machine = "Linux" ]; then
 	mount -t vfat /dev/loop0 temp_mount
 
 	cp -r userland/build/* temp_mount
+	sync
 
 	echo "[ ] Copied" temp_mount/*
 
