@@ -2,7 +2,7 @@ ALL_TARGETS += kernel
 ALL_CLEAN   += kclean
 
 # global kernel compiler/assembler/linker options
-INCLUDE      = -Ikernel/include -Ikernel/include/base/arch/$(ARCH)
+INCLUDE      = -Ikernel/include -Ikernel/include/base/arch/$(ARCH) -I$(MODULE_DIR)
 CFLAGS       = -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall $(INCLUDE) -g \
 		-ffreestanding
 C++FLAGS     = -nostartfiles -nodefaultlibs -nostdlib -fno-builtin -Wall $(INCLUDE) -g \
