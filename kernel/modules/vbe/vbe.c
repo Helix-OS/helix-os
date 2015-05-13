@@ -35,10 +35,10 @@ static void put_char( vbe_device_t *dev, unsigned c, unsigned xpos, unsigned ypo
 	for ( y = 0; y < font->height; y++ ){
 		for ( x = 0; x < font->width; x++ ){
 			if ( bitmap[c * font->charsize + y] & (mod >> x)){
-				*place = 0x00d0d0c0;
+				*place = VBE_FOREGROUND;
 
 			} else {
-				*place = 0x00202020;
+				*place = VBE_BACKGROUND;
 			}
 
 			place += 1;
@@ -68,8 +68,7 @@ static void clear_screen( vbe_device_t *dev ){
 	unsigned x, y;
 	for ( y = 0; y < dev->mode->Yres; y++ ){
 		for ( x = 0; x < dev->mode->Xres; x++ ){
-			set_pixel( dev, x, y, 0x00202020 );
-			//set_pixel( dev, x, y, 0x00d0d0c0 );
+			set_pixel( dev, x, y, VBE_BACKGROUND );
 		}
 	}
 

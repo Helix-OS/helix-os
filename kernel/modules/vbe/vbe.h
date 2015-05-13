@@ -2,6 +2,9 @@
 #define _helix_vbe_module_h
 #include <base/stdint.h>
 
+#define VBE_BACKGROUND 0x00121212
+#define VBE_FOREGROUND 0x00d0d0c0
+
 typedef struct vbe_info_block {
     uint8_t  vbe_sig[4];
     uint16_t version;
