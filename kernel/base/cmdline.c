@@ -1,6 +1,10 @@
 #include <base/cmdline.h>
 #include <base/string.h>
 
+// FIXME: Giving a longer (> 4 or 5 chars) command line option causes a page fult
+//        When the user process starts, in the amalloc() function
+//        So most definitely heap corruption, but where?
+// TODO:  Ok seriously, rewrite the kernel malloc()
 cmdline_opt_t *parse_command_line( char *cmdline ){
 	cmdline_opt_t *ret = NULL;
 	cmdline_opt_t *opts;
@@ -28,7 +32,7 @@ cmdline_opt_t *parse_command_line( char *cmdline ){
 				case '=':
 					len = i - pos;
 
-					opts[k].key = knew( sizeof( char[len] ));
+					opts[k].key = knew( sizeof( char[len + 1] ));
 					strncpy( opts[k].key, cmdline + pos, len );
 					opts[k].key[len] = 0;
 					kprintf( "option \"%s\" = ", opts[k].key );
@@ -43,7 +47,7 @@ cmdline_opt_t *parse_command_line( char *cmdline ){
 				case ' ':
 					if ( !has_val ){
 						len = i - pos;
-						opts[k].key = knew( sizeof( char[len] ));
+						opts[k].key = knew( sizeof( char[len + 1] ));
 						strncpy( opts[k].key, cmdline + pos, len );
 						opts[k].key[len] = 0;
 						opts[k].value = strdup( "true" );
@@ -51,7 +55,7 @@ cmdline_opt_t *parse_command_line( char *cmdline ){
 
 					} else {
 						len = i - pos;
-						opts[k].value = knew( sizeof( char[len] ));
+						opts[k].value = knew( sizeof( char[len + 1] ));
 						strncpy( opts[k].value, cmdline + pos, len );
 						opts[k].value[len] = 0;
 					}

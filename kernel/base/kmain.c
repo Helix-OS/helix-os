@@ -30,21 +30,11 @@ void utest( ){
 
 	// XXX: this references data in kernel address space, won't work once proper
 	//      memory seperation is enforced. 
-	// TODO: add sysinfo request to get kernel options
-
-	char *thing = cmdline_get( main_opts, "console" );
-	if ( thing ){
-		/*
-		syscall_open( "/test/devices/fbconsole",  FILE_READ );
-		syscall_open( "/test/devices/fbconsole",  FILE_READ );
-		*/
-		kprintf( "[%s] Have console at \"%s\"\n", __func__, thing );
-		/*
-		syscall_open( thing, FILE_READ );
-		syscall_open( thing, FILE_READ );
-		*/
-		syscall_open( "/test/devices/fbconsole",  FILE_READ );
-		syscall_open( "/test/devices/fbconsole",  FILE_READ );
+	// TODO:  add sysinfo request to get kernel options
+	bool foo = cmdline_has( main_opts, "textmode" );
+	if ( foo ){
+		syscall_open( "/test/devices/console",  FILE_READ );
+		syscall_open( "/test/devices/console",  FILE_READ );
 
 	} else {
 		syscall_open( "/test/devices/fbconsole",  FILE_READ );
