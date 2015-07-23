@@ -4,7 +4,6 @@ void switch_to_usermode( void ){
 	//set_kernel_stack( get_current_task( )->stack );
 
 	asm volatile(	" 			\
-			cli;			\
 			mov $0x23, %ax; 	\
 			mov %ax, %ds;		\
 			mov %ax, %es;		\
@@ -15,9 +14,6 @@ void switch_to_usermode( void ){
 			pushl $0x23;		\
 			pushl %eax;		\
 			pushf;			\
-			popl %eax;		\
-			orl $0x200, %eax;	\
-			pushl %eax;		\
 			pushl $0x1b;		\
 			pushl $1f;		\
 			iret;			\
@@ -28,7 +24,6 @@ void switch_to_usermode( void ){
 
 void switch_to_usermode_jmp( void *addr ){
 	asm volatile(	" 			\
-			cli;			\
 			mov $0x23, %%ax; 	\
 			mov %%ax, %%ds;		\
 			mov %%ax, %%es;		\
@@ -39,9 +34,6 @@ void switch_to_usermode_jmp( void *addr ){
 			pushl $0x23;		\
 			pushl %%eax;		\
 			pushf;			\
-			popl %%eax;		\
-			orl $0x200, %%eax;	\
-			pushl %%eax;		\
 			pushl $0x1b;		\
 			pushl %0;		\
 			iret;			\

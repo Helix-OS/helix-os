@@ -121,7 +121,7 @@ char *fatfs_apply_longname( fatfs_longname_ent_t *longname, char *namebuf, int m
 	char *ret = namebuf;
 	int j, index;
 
-	index = longname->name_index - 'A';
+	index = (longname->name_index & 0x0f) - 1;
 	if ( index + 13 > maxlen )
 		return ret;
 
