@@ -1,0 +1,20 @@
+#include $(MKROOT)/$(MKCONFIG)
+USER_CLEAN = 
+
+include $(wildcard userland/ports/*/portobjs.mk)
+
+.PHONY: user-libs
+user-libs: user-test_progs
+
+userland/build:
+	cp -rv userland/tree userland/build
+
+.PHONY: user-clean
+user-clean: $(USER_CLEAN)
+	@-rm -rf userland/build
+
+.PHONY: userspace
+userspace: $(DEFAULT_PORTS)
+
+ALL_TARGETS += userspace
+ALL_CLEAN   += user-clean

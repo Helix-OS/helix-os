@@ -1,3 +1,5 @@
-[submodule "userland/dalibc"]
-	path = userland/dalibc
+
+[submodule "userland/ports/dalibc"]
+	path = userland/ports/dalibc
 	url = https://github.com/dragontux/dalibc.git
+	branch = libc-dev

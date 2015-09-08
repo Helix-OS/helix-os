@@ -8,10 +8,11 @@ do_all: all
 
 include buildconf/$(CONFIG)
 include kernel/Makefile.objs
+include userland/Makefile.objs
 
 # TODO: have these be included too
-ALL_TARGETS += userspace $(ARCH_TARGETS)
-ALL_CLEAN   += user-clean tools-clean
+ALL_TARGETS += $(ARCH_TARGETS)
+ALL_CLEAN   += tools-clean
 
 .PHONY: all
 all: $(ALL_TARGETS)
@@ -19,9 +20,6 @@ dev-all: $(ALL_TARGETS) ktools docs
 
 ktools:
 	@cd tools; $(MAKE) ARCH=$(ARCH) PLATFORM=$(PLATFORM)
-
-userspace: $(MKCONFIG)
-	@cd userland; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT)
 
 cross-cc:
 	@echo -e "[ ] Making cross-compiler..."
@@ -39,13 +37,9 @@ docs:
 	@cd doc; doxygen doxy.conf > /dev/null
 	@echo -e "[ ] done";
 
-user-clean:
-	@-cd userland; $(MAKE) MKCONFIG=$(MKCONFIG) MKROOT=$(MKROOT) clean
-
 tools-clean:
 	@-cd tools; $(MAKE) clean
 
 clean: $(ALL_CLEAN)
 	@-rm -rf build
 	@-rm *.img
-	@-rm $(MKCONFIG)
