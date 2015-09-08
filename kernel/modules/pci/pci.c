@@ -220,6 +220,13 @@ void pci_dump_devices( ){
 			move->vendor_id, move->dev_id, move->class_id, temp,
 			pci_get_subclass_id( move ));
 
+		kprintf( "[%s]     BAR0: 0x%x\n", provides, pci_dev_conf_read_dword( move, PCI_CONFIG_BAR0 ));
+		kprintf( "[%s]     BAR1: 0x%x\n", provides, pci_dev_conf_read_dword( move, PCI_CONFIG_BAR1 ));
+		kprintf( "[%s]     BAR2: 0x%x\n", provides, pci_dev_conf_read_dword( move, PCI_CONFIG_BAR2 ));
+		kprintf( "[%s]     BAR3: 0x%x\n", provides, pci_dev_conf_read_dword( move, PCI_CONFIG_BAR3 ));
+		kprintf( "[%s]     BAR4: 0x%x\n", provides, pci_dev_conf_read_dword( move, PCI_CONFIG_BAR4 ));
+		kprintf( "[%s]     BAR5: 0x%x\n", provides, pci_dev_conf_read_dword( move, PCI_CONFIG_BAR5 ));
+
 		move = move->next;
 	}
 }
