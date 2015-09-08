@@ -23,6 +23,7 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 	dircache = hashmap_get( dev->inode_map, node->inode );
 
 	if ( dircache ){
+		kprintf( "[%s] Got here, looking for \"%s\"\n", __func__, name );
 		namebuf = knew( char[ 256 ]);
 
 		if ( dircache->dir.attributes & FAT_ATTR_DIRECTORY ){
@@ -58,6 +59,7 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 					    ( strncmp( name, (char *)dirbuf[i].name, strlen( name ) % 12) == 0 ))
 					{
 						// Found it, cool
+						kprintf( "[%s] found \"%s\"\n", __func__, name );
 						newcache = knew( fatfs_dircache_t );
 						memcpy( &newcache->dir, dirbuf + i, sizeof( fatfs_dirent_t ));
 						newcache->references = 0;
@@ -71,6 +73,10 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 
 						ret = 0;
 						break;
+
+					} else {
+						kprintf( "[%s] didn't find \"%s\", have \"%s\" instead...\n",
+							__func__, name, fname );
 					}
 
 					has_longname = false;
@@ -81,11 +87,14 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 			kfree( sectbuf );
 
 		} else {
+			kprintf( "[%s] Couldn't find \"%s\", given file not a directory\n", __func__, name );
 			ret = -ERROR_NOT_DIRECTORY;
 		}
 
 		kfree( namebuf );
+
 	} else {
+		kprintf( "[%s] Couldn't find \"%s\", no inode cache found (?)\n", __func__, name );
 		ret = -ERROR_NOT_FOUND;
 	}
 	
@@ -95,7 +104,7 @@ int fatfs_vfs_lookup( struct file_node *node, struct file_node *buf, char *name,
 int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, unsigned long offset ){
 	unsigned cluster_size;
 	unsigned i, k;
-	unsigned cluster;
+	uint32_t cluster;
 	uint8_t *outbuf = buf;
 	uint8_t *clusbuf;
 	int ret = 0;
@@ -114,48 +123,56 @@ int fatfs_vfs_read( struct file_node *node, void *buf, unsigned long length, uns
 		if ( cache->dir.attributes & FAT_ATTR_ARCHIVE ){
 
 			i = offset / cluster_size;
+			//cluster = cache->dir.cluster_low | (cache->dir.cluster_high << 16);
 			cluster = cache->dir.cluster_low;
+			cluster |= (uint32_t)cache->dir.cluster_high << 16;
 			kprintf( "[%s] Have first cluster of file at 0x%x, offset is %d\n", __func__, cluster, i );
 
-			for ( ; i; i-- )
-				cluster = fatfs_get_next_cluster( dev, cluster );
+			if ( offset < cache->dir.size ){
+				for ( ; i; i-- )
+					cluster = fatfs_get_next_cluster( dev, cluster );
 
-			//if ( cluster < FAT_CLUSTER_BAD ){
-			if ( is_last_cluster( dev, cluster ) == false ){
-				clusbuf = knew( uint8_t[ cluster_size ]);
+				//if ( cluster < FAT_CLUSTER_BAD ){
+				if ( is_last_cluster( dev, cluster ) == false ){
+					clusbuf = knew( uint8_t[ cluster_size ]);
 
-				i = offset % cluster_size;
-				VFS_FUNCTION(( &dev->device_node ), read, clusbuf, cluster_size,
-						fatfs_relclus_to_sect( dev, cluster ) * dev->bpb->bytes_per_sect );
+					i = offset % cluster_size;
+					VFS_FUNCTION(( &dev->device_node ), read, clusbuf, cluster_size,
+							fatfs_relclus_to_sect( dev, cluster ) * dev->bpb->bytes_per_sect );
 
-				for ( k = 0; k < length && k < cache->dir.size; k++, i++ ){
-					outbuf[k] = clusbuf[ i % cluster_size ];
+					for ( k = 0; k < length && k < cache->dir.size; k++, i++ ){
+						outbuf[k] = clusbuf[ i % cluster_size ];
 
-					if (( i + 1 ) % cluster_size == 0 ){
-						cluster = fatfs_get_next_cluster( dev, cluster );
-						kprintf( "[%s] cluster: 0x%x\n", __func__, cluster );
+						if (( i + 1 ) % cluster_size == 0 ){
+							cluster = fatfs_get_next_cluster( dev, cluster );
+							kprintf( "[%s] cluster: 0x%x\n", __func__, cluster );
 
-						/*
-						if ( cluster >= FAT_CLUSTER_BAD )
-							break;
-							*/
-						if ( is_last_cluster( dev, cluster ))
-							break;
+							/*
+							if ( cluster >= FAT_CLUSTER_BAD )
+								break;
+								*/
+							if ( is_last_cluster( dev, cluster ))
+								break;
 
-						VFS_FUNCTION(( &dev->device_node ), read, clusbuf, cluster_size,
-								fatfs_relclus_to_sect( dev, cluster ) * dev->bpb->bytes_per_sect );
+							VFS_FUNCTION(( &dev->device_node ), read, clusbuf, cluster_size,
+									fatfs_relclus_to_sect( dev, cluster ) * dev->bpb->bytes_per_sect );
 
-						kprintf( "[%s] Read new cluster\n", __func__ );
-					}
+							kprintf( "[%s] Read new cluster\n", __func__ );
+						}
 
-				} 
+					} 
 
-				ret = k;
+					ret = k;
 
-				kfree( clusbuf );
+					kfree( clusbuf );
+
+				} else {
+					kprintf( "[%s] Reached end of file at cluster 0x%x\n", __func__, cluster );
+				}
 
 			} else {
-				kprintf( "[%s] Reached end of file at cluster 0x%x\n", __func__, cluster );
+				kprintf( "[%s] Offset is greater than file length, returning...%x\n", __func__, cluster );
+				ret = 0;
 			}
 
 		} else {

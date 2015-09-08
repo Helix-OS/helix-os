@@ -53,17 +53,30 @@ typedef struct fatfs_bpb {
 } __attribute__((packed)) fatfs_bpb_t;
 
 typedef struct fatfs_12_ebr {
-	fatfs_bpb_t 	bpb;
-	uint8_t 	drive_num;
-	uint8_t 	nt_flags;
-	uint8_t 	signature;
-	uint32_t 	volume_id;
-	uint8_t 	volume_label[11];
-	uint8_t 	sysident[8];
+	fatfs_bpb_t bpb;
+	uint8_t     drive_num;
+	uint8_t     nt_flags;
+	uint8_t     signature;
+	uint32_t    volume_id;
+	uint8_t     volume_label[11];
+	uint8_t     sysident[8];
 } __attribute__((packed)) fatfs_12_ebr;
 
 typedef struct fatfs_32_ebr {
-	fatfs_bpb_t 	bpb;
+	fatfs_bpb_t bpb;
+	uint32_t    sects_per_fat;
+	uint16_t    flags;
+	uint16_t    version;
+	uint32_t    root_clus;
+	uint16_t    fsinfo_sect;
+	uint16_t    backup_boot_sect;
+	uint8_t     should_be_zero[12];
+	uint8_t     drive_num;
+	uint8_t     nt_flags;
+	uint8_t     sig;
+	uint32_t    volume_id;
+	uint8_t     volume_label[11];
+	uint8_t     sysident[8];
 } __attribute__((packed)) fatfs_32_ebr;
 
 typedef struct fatfs_dirent {

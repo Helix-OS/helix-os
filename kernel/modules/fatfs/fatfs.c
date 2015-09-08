@@ -39,10 +39,17 @@ struct file_system *fatfs_create( struct file_driver *device, struct file_system
 
 		VFS_FUNCTION(( &dev->device_node ), read, dev->bpb, 512, 0 );
 
-		first_data_sector = dev->bpb->reserved_sects + dev->bpb->fats * dev->bpb->sects_per_fat;
-
 		dev->type = fatfs_get_type( dev->bpb );
 		dev->inode_map = hashmap_create( 32 );
+
+		if ( dev->type == FAT_TYPE_32 ){
+			unsigned first_sect = dev->bpb->reserved_sects + dev->bpb->fats * dev->fat32->sects_per_fat;
+			first_data_sector = (dev->fat32->root_clus - 2) * dev->bpb->sect_per_clus + first_sect;
+
+		} else {
+			first_data_sector = dev->bpb->reserved_sects + dev->bpb->fats * dev->bpb->sects_per_fat;
+		}
+
 
 		root->fs = ret;
 		root->inode = first_data_sector;
@@ -57,6 +64,13 @@ struct file_system *fatfs_create( struct file_driver *device, struct file_system
 				"%d reserved sectors\n", __func__, dev->type,
 				dev->bpb->oem_ident, dev->bpb->bytes_per_sect,
 				dev->bpb->sect_per_clus, dev->bpb->reserved_sects );
+
+		if ( dev->bpb->dirents == 0 ){
+			dev->bpb->dirents = (dev->bpb->bytes_per_sect * dev->bpb->sect_per_clus)
+				/ sizeof( fatfs_dirent_t );
+
+			kprintf( "[%s] bpb dirent size is zero, setting to %u\n", __func__, dev->bpb->dirents );
+		}
 
 		dump_root_entries( dev );
 
@@ -82,9 +96,18 @@ static void dump_root_entries( fatfs_device_t *dev ){
 	sectbuf = knew( uint8_t[512] ); 
 	dirbuf = (void *)sectbuf;
 
-	first_data_sector = dev->bpb->reserved_sects + dev->bpb->fats * dev->bpb->sects_per_fat;
-	kprintf( "[%s] Reading directory from first data sector at 0x%x\n", __func__, first_data_sector );
-	VFS_FUNCTION(( &dev->device_node ), read, sectbuf, 512, dev->bpb->bytes_per_sect * first_data_sector );
+	if ( dev->type == FAT_TYPE_32 ){
+		unsigned first_sect = dev->bpb->reserved_sects + dev->bpb->fats * dev->fat32->sects_per_fat;
+		unsigned root_sect = (dev->fat32->root_clus - 2) * dev->bpb->sect_per_clus + first_sect;
+		kprintf( "[%s] Have fat32, first cluster at %u, first sector at %u\n",
+				__func__, dev->fat32->root_clus, root_sect );
+		VFS_FUNCTION(( &dev->device_node ), read, sectbuf, 512, dev->bpb->bytes_per_sect * root_sect );
+
+	} else {
+		first_data_sector = dev->bpb->reserved_sects + dev->bpb->fats * dev->bpb->sects_per_fat;
+		kprintf( "[%s] Reading directory from first data sector at 0x%x\n", __func__, first_data_sector );
+		VFS_FUNCTION(( &dev->device_node ), read, sectbuf, 512, dev->bpb->bytes_per_sect * first_data_sector );
+	}
 
 	kprintf( "[%s] Directories per cluster %d\n", __func__, dev->bpb->dirents );
 
@@ -159,7 +182,7 @@ int test( ){
 	int i;
 
 	//file_mount_filesystem( "/test/fatdir", "/test/devices/ata1", "fatfs", 0 );
-	file_mount_filesystem( "/test/boot", "/test/devices/ata0p0", "fatfs", 0 );
+	//file_mount_filesystem( "/test/boot", "/test/devices/ata0p0", "fatfs", 0 );
 	file_mount_filesystem( "/test/userroot", "/test/devices/ata0p1", "fatfs", 0 );
 	//lookup = file_lookup_absolute( "/test/fatdir/Makefile", &fnode, 0 );
 

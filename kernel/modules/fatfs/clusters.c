@@ -2,7 +2,29 @@
 #include <base/kstd.h>
 #include <base/mem/alloc.h>
 
-unsigned fatfs_relclus_to_sect( fatfs_device_t *dev, unsigned cluster ){
+unsigned fatfs_relclus_to_sect_fat32( fatfs_device_t *dev, unsigned cluster ){
+	//unsigned first_data_sector;
+	unsigned first_sect;
+	unsigned ret; // Return sector
+
+	kprintf( "[%s] got here\n", __func__ );
+
+
+	first_sect = dev->bpb->reserved_sects + dev->bpb->fats * dev->fat32->sects_per_fat;
+	//first_data_sector = (dev->fat32->root_clus - 2) * dev->bpb->sect_per_clus + first_sect;
+	ret = (cluster - dev->fat32->root_clus) * dev->bpb->sect_per_clus + first_sect;
+
+
+	/*
+	ret  = (cluster - root_cluster) * dev->bpb->sect_per_clus + first_data_sector;
+	// Add sectors for the root directory
+	ret += dev->bpb->dirents * 32 / dev->bpb->bytes_per_sect;
+	*/
+
+	return ret;
+}
+
+unsigned fatfs_relclus_to_sect_fat12_16( fatfs_device_t *dev, unsigned cluster ){
 	unsigned first_data_sector;
 	unsigned root_cluster = 2;
 	unsigned ret; // Return sector
@@ -18,6 +40,22 @@ unsigned fatfs_relclus_to_sect( fatfs_device_t *dev, unsigned cluster ){
 
 	} else { // cluster given /is/ the root directory
 		ret = first_data_sector;
+	}
+
+	return ret;
+}
+
+unsigned fatfs_relclus_to_sect( fatfs_device_t *dev, unsigned cluster ){
+	unsigned ret;
+
+	switch ( dev->type ){
+		case FAT_TYPE_32:
+			ret = fatfs_relclus_to_sect_fat32( dev, cluster );
+			break;
+
+		default:
+			ret = fatfs_relclus_to_sect_fat12_16( dev, cluster );
+			break;
 	}
 
 	return ret;
