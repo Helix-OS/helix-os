@@ -114,11 +114,23 @@ void *memsetw( void *dest, unsigned char value, unsigned count ){
 }
 
 void *memcpy( void *dest, const void *src, unsigned count ){
-	uint8_t *ret_dest = dest;
-	const uint8_t *src_dest = src;
+	uint8_t *byte_ret;
+	const uint8_t *byte_src;
 
-	while ( count-- ){
-		*(ret_dest++) = *(src_dest++);
+	uint32_t *long_ret = dest;
+	const uint32_t *long_src = src;
+
+	while ( count > 4 ){
+		*(long_ret++) = *(long_src++);
+		count -= 4;
+	}
+
+	byte_ret = (uint8_t *)long_ret;
+	byte_src = (const uint8_t *)long_src;
+
+	while ( count ){
+		*(byte_ret++) = *(byte_src++);
+		count--;
 	}
 
 	return dest;
