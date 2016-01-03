@@ -4,10 +4,11 @@
 #include <base/multiboot.h>
 #include <base/kmain.h>
 #include <base/mem/alloc.h>
+#include <base/mem/salloc.h>
 
 extern unsigned int *kernel_dir;
 extern unsigned int early_placement;
-extern mheap_t *kheap;
+//extern mheap_t *kheap;
 multiboot_header_t *bootheader = 0;
 
 /* \brief Handles archetecture-specific initialization for i586. 
@@ -45,8 +46,9 @@ void arch_init( multiboot_header_t *mboot, int blarg, int magic ){
 	init_tables( );
 	init_paging( mboot->mem_lower + mboot->mem_upper );
 
-	kheap = kmalloc_early( sizeof( mheap_t ), 0 );
-	init_heap( kheap, kernel_dir, 0xd0000000, PAGE_SIZE * 32 );
+	//kheap = kmalloc_early( sizeof( mheap_t ), 0 );
+	//init_heap( kheap, kernel_dir, 0xd0000000, PAGE_SIZE * 32 );
+    init_kernel_heap( kernel_dir, 0xd0000000, PAGE_SIZE * 128 );
 
 	init_timer( );
 

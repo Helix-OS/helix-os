@@ -35,7 +35,7 @@ void init_tasking( void ){
 
 	root_task->stack = 0xff000000;
 	*/
-	root_task->stack = (unsigned long)kmalloca( 2048 );
+	root_task->stack = (unsigned long)kmalloca( 4096 );
 	tasking_initialized = 1;
 
 	//register_pitimer_call( rrschedule_call );
@@ -401,7 +401,7 @@ int remove_task_by_pid( int pid ){
 	if ( task->stack ){
 		kprintf( "[remove_task_by_pid] freeing thread stack at 0x%x\n", task->stack );
 		//TODO: unmap stack pages here
-		//kfree((void *)( task->stack ));
+		//kfreea((void *)( task->stack ));
 	}
 
 	// FIXME: lots of use-after-free errors resulting from the commented code

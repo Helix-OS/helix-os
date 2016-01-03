@@ -22,6 +22,7 @@ typedef __uint32_t uint32_t;
 typedef __uint64_t uint64_t;
 
 typedef unsigned long size_t;
+typedef unsigned long uintptr_t;
 
 #ifdef __cplusplus
 }
