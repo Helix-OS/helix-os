@@ -36,7 +36,7 @@ void *kmalloc_early( int size, int align ){
 sheap_t *init_kernel_heap( unsigned *p_dir, unsigned start, unsigned size ){
 	//memset( heap, 0, sizeof( mheap_t ));
 
-	map_pages( p_dir, start, start + size, PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+	//map_pages( p_dir, start, start + size, PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
 	flush_tlb( );
 	void *bitmap = kmalloc_early( size / PAGE_SIZE / 8, 0 );
 
