@@ -1,8 +1,8 @@
 MAKE=make
 PREFIX=$(shell pwd)
 TARGET=i586-elf
-BINUTILS=binutils-2.24
-GCC=gcc-4.8.2
+BINUTILS=binutils-2.25.1
+GCC=gcc-5.3.0
 
 CLEAN_DIRS=binbuild-$(TARGET) gccbuild-$(TARGET)
 CLEAN_SOURCE=$(BINUTILS) $(GCC)
