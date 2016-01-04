@@ -405,20 +405,25 @@ int remove_task_by_pid( int pid ){
 	}
 
 	// FIXME: lots of use-after-free errors resulting from the commented code
+	//   +++: Seems to be fixed with the new memory allocator, keep an eye on this though
+	//
 	// Clean up process objects
-	/*
 	nobjs = dlist_allocated( task->pobjects );
+	kprintf( "[%s] Cleaning up %d process objects: ", __func__, nobjs );
+
 	for ( i = 0; i < nobjs; i++ ){
 		objptr = dlist_get( task->pobjects, i );
-		if ( objptr )
+		if ( objptr ){
+			kprintf( "." );
 			kfree( objptr );
+		}
 	}
 
 	kfree( task->pobjects );
+	kprintf( " done.\n" );
 
 	// And done
 	kfree( task );
-	*/
 	unblock_tasks( );
 	rrschedule_call( );
 
