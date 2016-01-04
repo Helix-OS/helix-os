@@ -118,7 +118,10 @@ int main( int argc, char *argv[], char *envp[] ){
 		printf( "$ " );
 		getline( buf, 128 );
 		putchar( '\n' );
-		ret = exec_cmd( split_str( buf, ' ' ), NULL );
+
+		char **splitbuf = split_str( buf, ' ' );
+		ret = exec_cmd( splitbuf, NULL );
+		free( splitbuf );
 	}
 
 	return ret;
