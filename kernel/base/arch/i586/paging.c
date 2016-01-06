@@ -113,14 +113,21 @@ int free_page( unsigned *dir, unsigned vaddress ){
 			move = (unsigned *)( dir[ vaddress >> 22 ] & ~0xfff );
 			raddress = move[ vaddress >> 12 & 0x3ff ];
 			move[ vaddress >> 12 & 0x3ff ] = 0;
-			kprintf( "freeing 0x%x at 0x%x (0x%x)\n", vaddress, raddress, raddress >> 15 );
-			BM_SET_BIT( page_bitmap, (raddress >> 12), 0 );
 
-			if ( last_free_page > (raddress >> 15))
-				last_free_page = (raddress >> 15);
+			if ( raddress ){
+				kprintf( "[%s] freeing 0x%x at 0x%x (0x%x)\n", __func__, vaddress, raddress, raddress >> 15 );
+				BM_SET_BIT( page_bitmap, (raddress >> 12), 0 );
 
-			nfree_pages++;
-			ret = 1;
+				if ( last_free_page > (raddress >> 15))
+					last_free_page = (raddress >> 15);
+
+				nfree_pages++;
+				ret = 1;
+
+			} else {
+				kprintf( "[%s] /!\\ have null real address for 0x%x, not freeing...\n", __func__, vaddress );
+				ret = 0;
+			}
 		}
 	}
 

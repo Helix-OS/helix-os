@@ -304,8 +304,10 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 	if ( cache ){
 		if ( cache->dir.attributes & FAT_ATTR_DIRECTORY ){
 			for ( count = i = 0; i < dev->bpb->dirents; i++ ){
+				/*
 				kprintf( "[%s] Got here, 0x%x, 0x%x, %x\n",
 						__func__, *(char *)(dirbuf + i), dirbuf[i].attributes, dirbuf[i].cluster_low );
+						*/
 				if ( *(char *)(dirbuf + i) == 0 ){
 					break;
 
@@ -318,7 +320,7 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 					has_longname = true;
 
 				} else {
-					kprintf( "[%s] Got here, 0x%x, 0x%x\n", __func__, *(char *)(dirbuf + i), dirbuf[i].attributes );
+					//kprintf( "[%s] Got here, 0x%x, 0x%x\n", __func__, *(char *)(dirbuf + i), dirbuf[i].attributes );
 
 					if ( count == entry ){
 						kprintf( "[%s] found \"%s\" (0x%x %x %x %x)\n", __func__, namebuf,
