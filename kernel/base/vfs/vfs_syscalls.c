@@ -252,3 +252,79 @@ int vfs_chdir( char *path ){
 
 	return ret;
 }
+
+/*
+int vfs_fstat( int fd, file_info_t *infobuf ){
+	int ret = -1;
+	return ret;
+}
+*/
+
+int vfs_lseek( int fd, long offset, int whence ){
+	int ret = -1;
+	file_pobj_t *nodeobj;
+	file_info_t *info;
+	unsigned size;
+
+	if (( ret = vfs_get_pobj( fd, &nodeobj) >= 0 )) {
+		info = knew( file_info_t );
+
+		if (( ret = VFS_FUNCTION( &nodeobj->node, get_info, info )) >= 0 ){
+			//unsigned size = info->size;
+			size = info->size;
+
+			// TODO: possibly make these unsigned comparisons?
+			switch ( whence ){
+				case FILE_SEEK_SET:
+					kprintf( "[%s] Seek set: %d\n", __func__, offset );
+					if ( offset <= size ){
+						nodeobj->read_offset = offset;
+						nodeobj->write_offset = offset;
+						ret = offset;
+
+					} else {
+						ret = -ERROR_INVALID_OFFSET;
+					}
+					break;
+
+				case FILE_SEEK_CUR:
+					kprintf( "[%s] Seek cur: %d\n", __func__, nodeobj->read_offset + offset );
+					if ( nodeobj->read_offset + offset <= size ){
+						nodeobj->read_offset += offset;
+						nodeobj->write_offset = nodeobj->read_offset;
+						ret = nodeobj->read_offset;
+
+					} else {
+						ret = -ERROR_INVALID_OFFSET;
+					}
+
+					break;
+
+				case FILE_SEEK_END:
+					kprintf( "[%s] Seek end: %d\n", __func__, size + offset );
+					if ( size + offset <= size ){
+						nodeobj->read_offset = size + offset;
+						nodeobj->write_offset = nodeobj->read_offset;
+						ret = nodeobj->read_offset;
+
+					} else {
+						ret = -ERROR_INVALID_OFFSET;
+					}
+
+					break;
+
+				default:
+					kprintf( "[%s] Invalid seek: %d, %d\n", __func__, fd, offset );
+					ret = -ERROR_INVALID_ARGUMENT;
+					break;
+			}
+		}
+
+		kfree( info );
+	}
+
+	debugp( DEBUG_VFS, MASK_CHECKPOINT, "[%s] Got here, %u, %u, returning %d\n",
+		__func__, size, nodeobj->read_offset + size, ret );
+
+	return ret;
+}

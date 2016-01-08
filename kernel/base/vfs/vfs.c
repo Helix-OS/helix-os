@@ -288,6 +288,7 @@ int init_vfs( ){
 	register_syscall( SYSCALL_READDIR, vfs_readdir );
 	register_syscall( SYSCALL_CHROOT,  vfs_chroot );
 	register_syscall( SYSCALL_CHDIR,   vfs_chdir );
+	register_syscall( SYSCALL_LSEEK,   vfs_lseek );
 
 	drv = file_get_driver( "ramfs" );
 	kprintf( "[%s] Have ramfs at 0x%x\n", provides, drv );

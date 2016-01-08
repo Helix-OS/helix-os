@@ -15,6 +15,8 @@ DEFN_SYSCALL1( sbrk, SYSCALL_SBRK, int );
 DEFN_SYSCALL1( chroot, SYSCALL_CHROOT,  const char * );
 DEFN_SYSCALL1( chdir, SYSCALL_CHDIR, const char * );
 DEFN_SYSCALL3( sysinfo, SYSCALL_SYSINFO, unsigned, unsigned, void * );
+DEFN_SYSCALL3( lseek, SYSCALL_LSEEK, int, long, int );
+//DEFN_SYSCALL2( fstat, SYSCALL_FSTAT, int, void * );
 
 void init_syscalls( ){
 	arch_init_syscalls( );

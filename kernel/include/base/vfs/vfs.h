@@ -62,6 +62,12 @@ typedef enum {
 	FILE_TYPE_DIR,
 } file_type_t;
 
+typedef enum {
+	FILE_SEEK_SET,
+	FILE_SEEK_CUR,
+	FILE_SEEK_END,
+} file_seek_t;
+
 // Structure prototypes for the following function prototypes
 struct file_node;
 struct file_info;
@@ -149,19 +155,23 @@ typedef struct file_node {
 	file_mount_t 	*mount; 	// Mount point
 } file_node_t;
 
-// Information about a file
+// Information about a file, can be returned by fstat(2)
 typedef struct file_info {
-	file_type_t	type;
+	file_type_t type;
 
-	unsigned 	mask;
-	unsigned	uid;
-	unsigned 	gid;
-	unsigned	time;
-	unsigned	inode;
-	unsigned	size;
-	unsigned	links;
-	unsigned 	flags;
-	unsigned	dev_id;
+	unsigned mask;
+	unsigned uid;
+	unsigned gid;
+	unsigned time;
+	unsigned inode;
+	unsigned size;
+	unsigned links;
+	unsigned flags;
+	unsigned dev_id;
+	unsigned blocks;
+	unsigned blocksize;
+
+	// TODO: add time fields
 
 } file_info_t;
 
@@ -209,6 +219,7 @@ int vfs_readdir( int pnode, dirent_t *dirp, int entry );
 
 int vfs_chroot( char *path );
 int vfs_chdir( char *path );
+int vfs_lseek( int fd, long offset, int whence );
 
 int init_vfs( );
 
