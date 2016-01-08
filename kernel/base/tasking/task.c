@@ -36,6 +36,8 @@ void init_tasking( void ){
 	root_task->stack = 0xff000000;
 	*/
 	root_task->stack = (unsigned long)kmalloca( 4096 );
+	kprintf( "[%s] Kernel stack at 0x%x\n", __func__, root_task->stack );
+	root_task->stack += 0xffc;
 	tasking_initialized = 1;
 
 	//register_pitimer_call( rrschedule_call );
