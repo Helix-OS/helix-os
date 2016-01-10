@@ -7,6 +7,7 @@
 #include <base/string.h>
 #include <base/syscalls.h>
 #include <base/tasking/task.h>
+#include <base/ipc/pipes.h>
 
 char *provides = "vfs";
 
@@ -289,6 +290,7 @@ int init_vfs( ){
 	register_syscall( SYSCALL_CHROOT,  vfs_chroot );
 	register_syscall( SYSCALL_CHDIR,   vfs_chdir );
 	register_syscall( SYSCALL_LSEEK,   vfs_lseek );
+	register_syscall( SYSCALL_PIPE,    make_pipes );
 
 	drv = file_get_driver( "ramfs" );
 	kprintf( "[%s] Have ramfs at 0x%x\n", provides, drv );

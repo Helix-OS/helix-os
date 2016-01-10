@@ -5,6 +5,8 @@
 #include <base/tasking/elfload.h>
 #include <base/stdint.h>
 #include <base/debug.h>
+#include <base/ipc/pipes.h>
+#include <base/datastructs/pipe.h>
 
 // Not a syscall, is a helper function
 int vfs_get_pobj( int pnode, file_pobj_t **obj ){
@@ -136,20 +138,27 @@ int vfs_close( int pnode ){
 
 int vfs_read( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
-	int ret = 0;
+	pipe_pobj_t *pipeobj;
+	int ret = -ERROR_NOT_FILE;
 
 	if ( length && ( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
 		ret = VFS_FUNCTION( &nodeobj->node, read, buf,
 				length, nodeobj->read_offset );
 
 		nodeobj->read_offset += ret;
+
+	} else if ( pobj_get( pnode, (void **)&pipeobj ) >= 0 && pipeobj->base.type == PIPELINE_POBJ ){
+		pipe_t *temp = shared_get( pipeobj->pipe );
+		ret = pipeline_read( temp->bufs[0], buf, length );
 	}
+
 
 	return ret;
 }
 
 int vfs_write( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
+	pipe_pobj_t *pipeobj;
 	int ret = 0;
 
 	if ( length && ( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
@@ -157,7 +166,12 @@ int vfs_write( int pnode, void *buf, int length ){
 				length, nodeobj->write_offset );
 
 		nodeobj->write_offset += ret;
+
+	} else if ( pobj_get( pnode, (void **)&pipeobj ) >= 0 && pipeobj->base.type == PIPE_POBJ ){
+		pipe_t *temp = shared_get( pipeobj->pipe );
+		ret = pipe_write( temp, buf, length );
 	}
+
 
 	return ret;
 }

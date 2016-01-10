@@ -2,7 +2,7 @@
 #define _helix_datastruct_shared_h
 
 #define NO_DTOR      NULL
-#define DEFAULT_DTOR free
+#define DEFAULT_DTOR kfree
 
 typedef void (*shared_dtor_t)( void *ptr );
 
