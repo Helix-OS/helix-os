@@ -1,6 +1,7 @@
 // TODO: reorganize this file so functions can be found easier
 #include <base/tasking/task.h>
 #include <base/tasking/rrsched.h>
+#include <base/tasking/pobj.h>
 #include <base/string.h>
 #include <base/syscalls.h>
 #include <base/debug.h>
@@ -96,8 +97,11 @@ task_t *init_task( task_t *task ){
 
 			if ( nfobj ){
 				debugp( DEBUG_TASKING, MASK_CHECKPOINT, "[%s] Adding inode %d...\n", __func__, i );
+				/*
 				nftemp = knew( file_pobj_t );
 				memcpy( nftemp, nfobj, sizeof( file_pobj_t ));
+				*/
+				nftemp = pobj_copy( &nfobj->base );
 
 				dlist_add( task->pobjects, nftemp );
 
@@ -417,7 +421,7 @@ int remove_task_by_pid( int pid ){
 		objptr = dlist_get( task->pobjects, i );
 		if ( objptr ){
 			kprintf( "." );
-			kfree( objptr );
+			pobj_free( objptr );
 		}
 	}
 

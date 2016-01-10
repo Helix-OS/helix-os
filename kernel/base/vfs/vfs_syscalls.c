@@ -18,7 +18,7 @@ int vfs_get_pobj( int pnode, file_pobj_t **obj ){
 		nodeobj = dlist_get( cur_task->pobjects, pnode );
 
 		if ( nodeobj ){
-			if ( nodeobj->type == FILE_POBJ ){
+			if ( nodeobj->base.type == FILE_POBJ ){
 				*obj = nodeobj;
 
 			} else {
@@ -51,8 +51,8 @@ int vfs_open( char *path, int flags ){
 
 	if ( strlen( path )){
 		newobj = knew( file_pobj_t );
-		newobj->type = FILE_POBJ;
-		//newobj->path = strdup( path );
+		newobj->base.type = FILE_POBJ;
+		newobj->base.size = sizeof( file_pobj_t );
 		dirpath = strdup( path );
 
 		for ( i = strlen( path ); i; i-- ){

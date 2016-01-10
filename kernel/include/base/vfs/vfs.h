@@ -1,11 +1,13 @@
 #ifndef _helix_vfs_module_h
 #define _helix_vfs_module_h
-#include <base/errors.h>
-#include <base/stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <base/errors.h>
+#include <base/stdint.h>
+#include <base/tasking/pobj.h>
 
 // Defines
 #define MAX_FILENAME_SIZE 	256
@@ -186,7 +188,7 @@ typedef struct dirent {
 } dirent_t;
 
 typedef struct file_pobj {
-	unsigned type;
+	base_pobj_t base;
 	file_node_t node;
 
 	unsigned read_offset;
@@ -195,12 +197,13 @@ typedef struct file_pobj {
 } file_pobj_t;
 
 int file_register_driver( file_driver_t *driver );
+file_driver_t *file_get_driver( char *name );
 //int file_register_mount( file_system_t *fs );
 file_mount_t *file_register_mount( file_system_t *fs );
-int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int flags );
-file_driver_t *file_get_driver( char *name );
-int file_lookup( char *path, file_node_t *buf, int flags );
 
+int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int flags );
+
+int file_lookup( char *path, file_node_t *buf, int flags );
 int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int flags );
 int file_lookup_absolute( char *path, file_node_t *buf, int flags );
 
