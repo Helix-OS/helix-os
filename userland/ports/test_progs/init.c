@@ -30,7 +30,7 @@ int main( int argc, char *argv[], char *envp[] ){
 
 	for ( i = 0; init_commands[i]; i++ ){
 		printf( "starting %s...\n", init_commands[i] );
-		_spawn( init_commands[i], NULL, NULL );
+		_spawn( init_commands[i], NULL, NULL, NULL );
 	}
 
 	return 0;

@@ -96,7 +96,7 @@ int exec_cmd( char *args[], char *env[] ){
 				strncpy( cmdbuf, path,    sizeof( cmdbuf ));
 				strncat( cmdbuf, args[0], sizeof( cmdbuf ) - strlen( path ) - 1);
 
-				pid = _spawn( cmdbuf, args, NULL );
+				pid = _spawn( cmdbuf, args, NULL, NULL );
 				if ( pid > 0 ){
 					syscall_waitpid( pid, &ret, 0 );
 

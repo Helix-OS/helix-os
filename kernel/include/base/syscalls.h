@@ -70,7 +70,7 @@ DECL_SYSCALL2( open, char *, int );
 DECL_SYSCALL1( close, int );
 DECL_SYSCALL3( read, int, void *, int );
 DECL_SYSCALL3( write, int, void *, int );
-DECL_SYSCALL4( spawn, int, char **, char **, int );
+DECL_SYSCALL4( spawn, int, char **, char **, int * );
 DECL_SYSCALL3( readdir, int, void *, int );
 DECL_SYSCALL3( waitpid, unsigned, int *, int );
 DECL_SYSCALL1( sbrk, int );

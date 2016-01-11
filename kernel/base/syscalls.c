@@ -8,7 +8,7 @@ DEFN_SYSCALL2( open, SYSCALL_OPEN, char *, int );
 DEFN_SYSCALL1( close, SYSCALL_CLOSE, int );
 DEFN_SYSCALL3( read, SYSCALL_READ, int, void *, int );
 DEFN_SYSCALL3( write, SYSCALL_WRITE, int, void *, int );
-DEFN_SYSCALL4( spawn, SYSCALL_SPAWN, int, char **, char **, int );
+DEFN_SYSCALL4( spawn, SYSCALL_SPAWN, int, char **, char **, int * );
 DEFN_SYSCALL3( readdir, SYSCALL_READDIR, int, void *, int );
 DEFN_SYSCALL3( waitpid, SYSCALL_WAITPID, unsigned, int *, int );
 DEFN_SYSCALL1( sbrk, SYSCALL_SBRK, int );

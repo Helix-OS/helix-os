@@ -63,12 +63,12 @@ void usleep( unsigned long useconds );
 int create_thread( void (*start)( ));
 
 //int create_process( void (*start)( ), char *argv[], char *envp[], memmap_t *map );
-int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *map );
+int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *map, int *fds );
 
 void exit_thread( );
 void exit_process( int status );
 task_t *add_task( task_t *new_task );
-task_t *init_task( task_t *buffer );
+task_t *init_task( task_t *buffer, int *fds );
 int remove_task_by_pid( int pid );
 pid_t waitpid( pid_t id, int *status, int options );
 void *sbrk( int increment );

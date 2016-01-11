@@ -1,3 +1,12 @@
+/* TODO: vfs_read, vfs_write, etc currently handle pipe reads and writes,
+ *       this would probably be better off with that split from this.
+ *       Preferably with some sort of system for generalized file operations
+ *       on process objects, especially once things like sockets are implemented.
+ *
+ *  +++: also, pipe blocking is handled by manually calling the scheduler,
+ *       definitately want a general way to block on reads and writes
+ */
+
 #include <base/vfs/vfs.h>
 #include <base/tasking/task.h>
 #include <base/kstd.h>
@@ -127,11 +136,20 @@ int vfs_open( char *path, int flags ){
 }
 
 int vfs_close( int pnode ){
-	int ret;
+	int ret = -ERROR_NOT_FILE;
 	file_pobj_t *nodeobj;
+	pipe_pobj_t *pipeobj;
 
-	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 )
+	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
 		ret = VFS_FUNCTION( &nodeobj->node, close, 0 );
+
+	} else if ( pobj_get( pnode, (void **)&pipeobj ) >= 0 && pipeobj->base.type == PIPELINE_POBJ ){
+		// TODO: add general pobj removal thing
+		task_t *cur = get_current_task( );
+		kprintf( "[%s] Closing pipe object...\n", __func__ );
+		dlist_remove( cur->pobjects, pnode );
+		pobj_free( &pipeobj->base );
+	}
 
 	return ret;
 }
@@ -149,9 +167,19 @@ int vfs_read( int pnode, void *buf, int length ){
 
 	} else if ( pobj_get( pnode, (void **)&pipeobj ) >= 0 && pipeobj->base.type == PIPELINE_POBJ ){
 		pipe_t *temp = shared_get( pipeobj->pipe );
-		ret = pipeline_read( temp->bufs[0], buf, length );
-	}
+		ret = 0;
 
+		while ( length && temp->writers ){
+			ret = pipeline_read( temp->bufs[0], buf, length );
+
+			if ( !ret && temp->writers > 1 ){
+				rrschedule_call( );
+
+			} else {
+				break;
+			}
+		}
+	}
 
 	return ret;
 }
@@ -159,7 +187,7 @@ int vfs_read( int pnode, void *buf, int length ){
 int vfs_write( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
 	pipe_pobj_t *pipeobj;
-	int ret = 0;
+	int ret = -ERROR_NOT_FILE;
 
 	if ( length && ( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
 		ret = VFS_FUNCTION( &nodeobj->node, write, buf,
@@ -169,9 +197,20 @@ int vfs_write( int pnode, void *buf, int length ){
 
 	} else if ( pobj_get( pnode, (void **)&pipeobj ) >= 0 && pipeobj->base.type == PIPE_POBJ ){
 		pipe_t *temp = shared_get( pipeobj->pipe );
-		ret = pipe_write( temp, buf, length );
-	}
+		ret = 0;
 
+		while ( length && temp->readers ){
+			ret = pipe_write( temp, buf, length );
+
+			if ( !ret /* && temp->readers > 1 */ ){
+				task_t *cur = get_current_task( );
+				rrschedule_call( );
+
+			} else {
+				break;
+			}
+		}
+	}
 
 	return ret;
 }
@@ -188,7 +227,7 @@ int vfs_readdir( int pnode, dirent_t *dirp, int entry ){
 	return ret;
 }
 
-int vfs_spawn( int pnode, char *args[], char *envp[], int flags ){
+int vfs_spawn( int pnode, char *args[], char *envp[], int *fds ){
 	int ret = 0;
 	int vfsfunc;
 	file_pobj_t *nodeobj;
@@ -204,7 +243,7 @@ int vfs_spawn( int pnode, char *args[], char *envp[], int flags ){
 
 			vfsfunc = vfs_read( pnode, header, info->size );
 			if ( vfsfunc == info->size )
-				ret = elfload_from_mem( header, args, envp );
+				ret = elfload_from_mem( header, args, envp, fds );
 			else
 				ret = vfsfunc;
 

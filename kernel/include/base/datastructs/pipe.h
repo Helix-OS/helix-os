@@ -21,6 +21,8 @@ typedef struct pipe {
 	unsigned nbufs;
 	unsigned buf_size;
 	unsigned used;
+	unsigned readers;
+	unsigned writers;
 
 	pipeline_t **bufs;
 } pipe_t;

@@ -217,7 +217,7 @@ int vfs_open( char *path, int flags );
 int vfs_close( int pnode );
 int vfs_read( int pnode, void *buf, int length );
 int vfs_write( int pnode, void *buf, int length );
-int vfs_spawn( int pnode, char *args[], char *envp[], int flags );
+int vfs_spawn( int pnode, char *args[], char *envp[], int *fds );
 int vfs_readdir( int pnode, dirent_t *dirp, int entry );
 
 int vfs_chroot( char *path );

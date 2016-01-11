@@ -3,7 +3,7 @@
 #include <base/string.h>
 #include <base/kstd.h>
 
-int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[] ){
+int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[], int *fds ){
 	int ret = 0;
 	Elf32_Half phindex;
 	Elf32_Phdr *img_phdr;
@@ -69,7 +69,7 @@ int elfload_from_mem( Elf32_Ehdr *header, char *argv[], char *envp[] ){
 			MEMMAP_PERM_READ | MEMMAP_PERM_WRITE | MEMMAP_PERM_EXEC | MEMMAP_PERM_USER ));
 
 	//create_process( (void (*)())header->e_entry, argv, envp );
-	ret = create_process( (void (*)())header->e_entry, argbuf, envbuf, map_list );
+	ret = create_process( (void (*)())header->e_entry, argbuf, envbuf, map_list, fds );
 	set_page_dir( olddir );
 
 	for ( i = 0; i < argc; i++ )

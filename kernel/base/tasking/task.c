@@ -54,7 +54,7 @@ void init_tasking( void ){
 	asm volatile( "sti" );
 }
 
-task_t *init_task( task_t *task ){
+task_t *init_task( task_t *task, int *fds ){
 	task_t *cur = get_current_task( );
 	task_t *ret = 0;
 
@@ -93,7 +93,12 @@ task_t *init_task( task_t *task ){
 		file_pobj_t *nftemp;
 
 		for ( i = 0; i < 3; i++ ){
-			nfobj = dlist_get( cur->pobjects, i );
+			if ( fds ){
+				nfobj = dlist_get( cur->pobjects, fds[i] );
+
+			} else {
+				nfobj = dlist_get( cur->pobjects, i );
+			}
 
 			if ( nfobj ){
 				debugp( DEBUG_TASKING, MASK_CHECKPOINT, "[%s] Adding inode %d...\n", __func__, i );
@@ -123,7 +128,7 @@ int create_thread( void (*start)( )){
 	new_task = kmalloc( sizeof( task_t ));
 	memset( new_task, 0, sizeof( task_t ));
 
-	init_task( new_task );
+	init_task( new_task, NULL );
 	new_task->memmaps = cur->memmaps;
 	new_task->mainmap = cur->mainmap;
 	new_task->eip = (unsigned long)start;
@@ -134,7 +139,7 @@ int create_thread( void (*start)( )){
 	return new_task->pid;
 }
 
-int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *map ){
+int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *map, int *fds ){
 	task_t *new_task;
 
 	block_tasks( );
@@ -142,7 +147,7 @@ int create_process( void (*start)( ), char *argv[], char *envp[], list_head_t *m
 	new_task = kmalloc( sizeof( task_t ));
 	memset( new_task, 0, sizeof( task_t ));
 
-	init_task( new_task );
+	init_task( new_task, fds );
 	new_task->eip = (unsigned long)start;
 
 	if ( map ){
