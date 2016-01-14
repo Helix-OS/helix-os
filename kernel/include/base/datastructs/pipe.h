@@ -1,5 +1,6 @@
 #ifndef _helix_datastruct_pipe
 #define _helix_datastruct_pipe
+#include <base/tasking/task.h>
 
 enum {
 	PIPE_FLAG_NULL,
@@ -23,6 +24,7 @@ typedef struct pipe {
 	unsigned used;
 	unsigned readers;
 	unsigned writers;
+	semaphore_t sem;
 
 	pipeline_t **bufs;
 } pipe_t;

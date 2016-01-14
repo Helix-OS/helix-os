@@ -19,6 +19,7 @@ typedef enum error_number {
 	ERROR_NOT_FOUND,
 	ERROR_INVALID_PATH,
 	ERROR_INVALID_OFFSET,
+	ERROR_TRY_AGAIN,
 } error_number_t;
 
 #ifdef __cplusplus

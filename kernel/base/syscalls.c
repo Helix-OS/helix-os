@@ -17,6 +17,7 @@ DEFN_SYSCALL1( chdir, SYSCALL_CHDIR, const char * );
 DEFN_SYSCALL3( sysinfo, SYSCALL_SYSINFO, unsigned, unsigned, void * );
 DEFN_SYSCALL3( lseek, SYSCALL_LSEEK, int, long, int );
 DEFN_SYSCALL1( pipe, SYSCALL_PIPE, int * );
+DEFN_SYSCALL3( fcntl, SYSCALL_FCNTL, int, int, int );
 //DEFN_SYSCALL2( fstat, SYSCALL_FSTAT, int, void * );
 
 void init_syscalls( ){

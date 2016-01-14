@@ -138,17 +138,14 @@ int vfs_open( char *path, int flags ){
 int vfs_close( int pnode ){
 	int ret = -ERROR_NOT_FILE;
 	file_pobj_t *nodeobj;
-	pipe_pobj_t *pipeobj;
 
 	if (( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
 		ret = VFS_FUNCTION( &nodeobj->node, close, 0 );
 
-	} else if ( pobj_get( pnode, (void **)&pipeobj ) >= 0 && pipeobj->base.type == PIPELINE_POBJ ){
-		// TODO: add general pobj removal thing
 		task_t *cur = get_current_task( );
-		kprintf( "[%s] Closing pipe object...\n", __func__ );
+		kprintf( "[%s] Closing vfs object...\n", __func__ );
 		dlist_remove( cur->pobjects, pnode );
-		pobj_free( &pipeobj->base );
+		pobj_free( &nodeobj->base );
 	}
 
 	return ret;
@@ -156,23 +153,17 @@ int vfs_close( int pnode ){
 
 int vfs_read( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
-	pipe_pobj_t *pipeobj;
 	int ret = -ERROR_NOT_FILE;
 
 	if ( length && ( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
-		ret = VFS_FUNCTION( &nodeobj->node, read, buf,
-				length, nodeobj->read_offset );
+		while ( 1 ){
+			ret = VFS_FUNCTION( &nodeobj->node, read, buf,
+			                    length, nodeobj->read_offset );
 
-		nodeobj->read_offset += ret;
+			nodeobj->read_offset += (ret > 0)? ret : 0;
 
-	} else if ( pobj_get( pnode, (void **)&pipeobj ) >= 0 && pipeobj->base.type == PIPELINE_POBJ ){
-		pipe_t *temp = shared_get( pipeobj->pipe );
-		ret = 0;
-
-		while ( length && temp->writers ){
-			ret = pipeline_read( temp->bufs[0], buf, length );
-
-			if ( !ret && temp->writers > 1 ){
+			if ( !(nodeobj->node.flags & FILE_NONBLOCK) && ret == -ERROR_TRY_AGAIN ){
+				//kprintf( "Blocking..." );
 				rrschedule_call( );
 
 			} else {
@@ -186,24 +177,15 @@ int vfs_read( int pnode, void *buf, int length ){
 
 int vfs_write( int pnode, void *buf, int length ){
 	file_pobj_t *nodeobj;
-	pipe_pobj_t *pipeobj;
 	int ret = -ERROR_NOT_FILE;
 
 	if ( length && ( ret = vfs_get_pobj( pnode, &nodeobj )) >= 0 ){
-		ret = VFS_FUNCTION( &nodeobj->node, write, buf,
-				length, nodeobj->write_offset );
+		while ( 1 ){
+			ret = VFS_FUNCTION( &nodeobj->node, write, buf,
+			                    length, nodeobj->write_offset );
+			nodeobj->write_offset += (ret > 0)? ret : 0;
 
-		nodeobj->write_offset += ret;
-
-	} else if ( pobj_get( pnode, (void **)&pipeobj ) >= 0 && pipeobj->base.type == PIPE_POBJ ){
-		pipe_t *temp = shared_get( pipeobj->pipe );
-		ret = 0;
-
-		while ( length && temp->readers ){
-			ret = pipe_write( temp, buf, length );
-
-			if ( !ret /* && temp->readers > 1 */ ){
-				task_t *cur = get_current_task( );
+			if ( !(nodeobj->node.flags & FILE_NONBLOCK) && ret == -ERROR_TRY_AGAIN ){
 				rrschedule_call( );
 
 			} else {
@@ -378,6 +360,38 @@ int vfs_lseek( int fd, long offset, int whence ){
 
 	debugp( DEBUG_VFS, MASK_CHECKPOINT, "[%s] Got here, %u, %u, returning %d\n",
 		__func__, size, nodeobj->read_offset + size, ret );
+
+	return ret;
+}
+
+int vfs_fcntl( int fd, int command, int arg ){
+	int ret = -ERROR_NOT_FILE;
+	int temp;
+	int changeable = (FILE_NONBLOCK);
+	file_pobj_t *nodeobj;
+
+	kprintf( "[%s] Got here, fd: %d, command: %d, arg: %d\n", __func__, fd, command, arg );
+
+	if (( ret = vfs_get_pobj( fd, &nodeobj )) >= 0 ){
+		switch ( command ){
+			case FILE_CTRL_NO_OP:
+				ret = 0;
+				break;
+
+			case FILE_CTRL_GETFLAGS:
+				ret = nodeobj->node.flags;
+				break;
+
+			case FILE_CTRL_SETFLAGS:
+				temp = nodeobj->node.flags & ~(changeable);
+				ret = nodeobj->node.flags = temp | (arg & (FILE_NONBLOCK));
+				break;
+
+			default:
+				ret = -ERROR_INVALID_ARGUMENT;
+				break;
+		}
+	}
 
 	return ret;
 }

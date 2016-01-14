@@ -51,11 +51,12 @@ enum {
 
 // General file flags, passed to open, mknod, etc
 enum { 
-	FILE_NULL,
-	FILE_READ,
-	FILE_WRITE,
-	FILE_CREATE,
-	FILE_TRUNCATE,
+	FILE_NULL     = 0,
+	FILE_READ     = 1,
+	FILE_WRITE    = 2,
+	FILE_CREATE   = 4,
+	FILE_TRUNCATE = 8,
+	FILE_NONBLOCK = 16,
 };
 
 typedef enum {
@@ -69,6 +70,12 @@ typedef enum {
 	FILE_SEEK_CUR,
 	FILE_SEEK_END,
 } file_seek_t;
+
+typedef enum {
+	FILE_CTRL_NO_OP,
+	FILE_CTRL_GETFLAGS,
+	FILE_CTRL_SETFLAGS,
+} file_ctrl_t;
 
 // Structure prototypes for the following function prototypes
 struct file_node;
@@ -155,6 +162,7 @@ typedef struct file_node {
 
 	file_system_t 	*fs; 		// Owning file system
 	file_mount_t 	*mount; 	// Mount point
+	void *data;                 // various data, for various purposes
 } file_node_t;
 
 // Information about a file, can be returned by fstat(2)
@@ -190,10 +198,10 @@ typedef struct dirent {
 typedef struct file_pobj {
 	base_pobj_t base;
 	file_node_t node;
-
 	unsigned read_offset;
 	unsigned write_offset;
-	char *path;
+	unsigned file_type;
+	//char *path;
 } file_pobj_t;
 
 int file_register_driver( file_driver_t *driver );
@@ -223,6 +231,7 @@ int vfs_readdir( int pnode, dirent_t *dirp, int entry );
 int vfs_chroot( char *path );
 int vfs_chdir( char *path );
 int vfs_lseek( int fd, long offset, int whence );
+int vfs_fcntl( int fd, int command, int arg );
 
 int init_vfs( );
 

@@ -112,18 +112,14 @@ static int kbd_hal_read( struct hal_device *dev, void *buf, unsigned count, unsi
 	int ret = 0;
 	pipeline_t *line = dev->dev;
 
-	
-	while( 1 ){
-		enter_semaphore( &keybd_sem );
-		ret = pipeline_read( line, buf, count );
-		leave_semaphore( &keybd_sem );
 
-		if ( !ret )
-			usleep( 10 ); // just block if there's nothing to read
-		else
-			break;
+	enter_semaphore( &keybd_sem );
+	ret = pipeline_read( line, buf, count );
+	leave_semaphore( &keybd_sem );
+
+	if ( !ret ){
+		ret = -ERROR_TRY_AGAIN;
 	}
-
 
 	return ret;
 }

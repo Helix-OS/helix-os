@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 static char *init_commands[] = {
-	"/bin/logind",
+	"/bin/console",
 	NULL,
 };
 

@@ -6,6 +6,7 @@
 char *path = "/bin/";
 int running = 1;
 
+/*
 char *getline( char *buf, unsigned len ){
 	unsigned i;
 	char c;
@@ -31,6 +32,7 @@ char *getline( char *buf, unsigned len ){
 
 	return buf;
 }
+*/
 
 char **split_str( char *s, char split ){
 	unsigned i, nchars, j;
@@ -116,8 +118,17 @@ int main( int argc, char *argv[], char *envp[] ){
 
 	while ( running ){
 		printf( "$ " );
-		getline( buf, 128 );
-		putchar( '\n' );
+		//getline( buf, 128 );
+		fgets( buf, 128, stdin );
+
+		unsigned i;
+		for ( i = 0; buf[i]; i++ ){
+			if ( buf[i] == '\n' ){
+				buf[i] = 0;
+				break;
+			}
+		}
+		//putchar( '\n' );
 
 		char **splitbuf = split_str( buf, ' ' );
 		ret = exec_cmd( splitbuf, NULL );
