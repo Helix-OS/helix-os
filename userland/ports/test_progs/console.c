@@ -13,12 +13,18 @@ int async_getline( char *buf, unsigned len, int *state ){
 	for ( i = *state; c > 0 && i < (len - 1) && c != '\n'; ){
 		if ( c == '\b' && i > 0 ){
 			putchar( '\b' );
+			putchar( '\b' );
+			putchar( '_' );
 			buf[i] = 0;
 			i--;
 
 		} else if ( c != '\b' ){
 			buf[i] = c;
+			if ( i > 0 ){
+				putchar( '\b' );
+			}
 			putchar( c );
+			putchar( '_' );
 			i++;
 		}
 
@@ -27,6 +33,8 @@ int async_getline( char *buf, unsigned len, int *state ){
 	}
 
 	if ( c == '\n' || i == (len - 1)){
+		putchar('\b');
+		putchar('\n');
 		ret = 1;
 		buf[i] = '\n';
 		buf[i+1] = 0;
@@ -69,7 +77,6 @@ int main( int argc, char *argv[] ){
 		has_line = async_getline( buf, 256, &state );
 
 		if ( has_line ){
-			putchar( '\n' );
 			write( p_to[1], buf, strlen( buf ));
 		}
 
