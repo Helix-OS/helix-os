@@ -34,8 +34,7 @@ pipe_t *pipe_create( unsigned outputs, unsigned buf_size, unsigned flags ){
 
 int pipe_write( pipe_t *pipe, char *buf, unsigned size ){
 	pipeline_t *line;
-	unsigned i, j, c,
-		 ret = 0;
+	unsigned i, j, c, ret = 0;
 
 	for ( i = 0; i < pipe->nbufs; i++ ){
 		line = pipe->bufs[i];
@@ -44,11 +43,11 @@ int pipe_write( pipe_t *pipe, char *buf, unsigned size ){
 		if ( line->flags & PIPE_FLAG_OPEN ){
 			for ( j = 0; j < size; j++ ){
 				if ( line->avail == line->size - 1 ){
-					if ( line->flags & PIPE_FLAG_BLOCK )
-						// TODO: Implement blocking here
-						break;
-					else 
-						line->readp = ( line->readp + 1 ) % line->size;
+					// Just return and assume the caller will either block,
+					// try and call again, or decide it didn't really want to
+					// send that data anyways
+					break;
+
 				} else {
 					line->avail++;
 				}

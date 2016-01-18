@@ -28,11 +28,11 @@ static file_system_t pipe_vfs_fs = {
 };
 
 file_pobj_t *make_pipe_pobj( ){
-	file_pobj_t *ret = knew( pipe_pobj_t );
+	file_pobj_t *ret = knew( file_pobj_t );
 	pipe_t *temp;
 
 	ret->base.type = FILE_POBJ;
-	ret->base.size = sizeof( pipe_pobj_t );
+	ret->base.size = sizeof( file_pobj_t );
 	ret->base.ctor = pipe_obj_ctor;
 	ret->base.dtor = pipe_obj_dtor;
 	ret->node.fs = &pipe_vfs_fs;
