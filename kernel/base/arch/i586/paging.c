@@ -29,21 +29,22 @@ int init_paging( unsigned max_mem ){
 	memset( kernel_dir, 0, PAGE_SIZE );
 
 	for ( j = 0, i = PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT; i < 0x300000; i += 0x1000, j++ ){
-		map_r_page( kernel_dir, i, i, PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
+		map_r_page( kernel_dir, i + KERNEL_VBASE, i, PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT );
 		BM_SET_BIT( page_bitmap, ((i & ~0xfff ) >> 12), 1 );
 		nfree_pages--;
 	}
 
-	set_page_dir( kernel_dir );
+	current_dir = kernel_dir;
 	paging_enabled = 1;
+	set_page_dir( kernel_dir );
 
 	return 0;
 }
 
 int map_page( unsigned *dir, unsigned vaddress, unsigned permissions ){
 	int ret = 1;
-	unsigned	*move = (void *)0, 
-			raddress;
+	unsigned *move = (void *)0;
+	unsigned raddress;
 
 	raddress = get_free_page( );
 	//raddress = (vaddress & 0xfff) | (raddress & ~0xfff);
@@ -51,13 +52,16 @@ int map_page( unsigned *dir, unsigned vaddress, unsigned permissions ){
 
 	if ( dir ){
 		if ( !dir[ vaddress >> 22 ] ){
-			dir[ vaddress >> 22 ] = (unsigned)kmalloc_early( PAGE_SIZE, 1 ) | permissions;
+			void *newtable = ident_virt_to_phys( kmalloc_early( PAGE_SIZE, 1 ));
+			dir[ vaddress >> 22] = (uintptr_t)newtable | permissions;
 		}
 
-		move = (unsigned *)( dir[ vaddress >> 22 ] & ~0xfff );
-		move[ (vaddress >> 12) & 0x3ff ] = raddress;
+		unsigned *ptable = ident_phys_to_virt( (void *)(dir[vaddress >> 22] & ~0xfff ));
+
+		ptable[ (vaddress >> 12) & 0x3ff ] = raddress;
+
 		kprintf( "mapped 0x%x, 0x%x, 0x%x (0x%x)\n", vaddress, (vaddress >> 12) & 0x3ff,
-							 move[ (vaddress >> 12) & 0x3ff ], BM_GET_BIT( page_bitmap, (raddress >> 12)));
+				 ptable[ (vaddress >> 12) & 0x3ff ], BM_GET_BIT( page_bitmap, (raddress >> 12)));
 		BM_SET_BIT( page_bitmap, (raddress >> 12), 1 );
 	}
 
@@ -72,11 +76,13 @@ int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress, unsigned pe
 
 	if ( dir ){
 		if ( !dir[ vaddress >> 22 ] ){
-			dir[ vaddress >> 22 ] = (unsigned)kmalloc_early( PAGE_SIZE, 1 ) | permissions;
+			void *newtable = ident_virt_to_phys( kmalloc_early( PAGE_SIZE, 1 ));
+			dir[ vaddress >> 22] = (uintptr_t)newtable | permissions;
 		}
 
-		move = (unsigned *)( dir[ vaddress >> 22 ] & ~0xfff );
-		move[ vaddress >> 12 & 0x3ff ] = raddress;
+		unsigned *ptable = ident_phys_to_virt( (void *)(dir[vaddress >> 22] & ~0xfff ));
+		ptable[ (vaddress >> 12) & 0x3ff ] = raddress;
+
 		ret = 1;
 	}
 
@@ -110,9 +116,9 @@ int free_page( unsigned *dir, unsigned vaddress ){
 
 	if ( dir ){
 		if ( dir[ vaddress >> 22 ]){
-			move = (unsigned *)( dir[ vaddress >> 22 ] & ~0xfff );
-			raddress = move[ vaddress >> 12 & 0x3ff ];
-			move[ vaddress >> 12 & 0x3ff ] = 0;
+			unsigned *ptable = ident_phys_to_virt( (void *)( dir[vaddress >> 22] & ~0xfff ));
+			raddress = ptable[ (vaddress >> 12) & 0x3ff ];
+			ptable[ vaddress >> 12 & 0x3ff ] = 0;
 
 			if ( raddress ){
 				kprintf( "[%s] freeing 0x%x at 0x%x (0x%x)\n", __func__, vaddress, raddress, raddress >> 15 );
@@ -139,9 +145,10 @@ unsigned get_page( unsigned *dir, unsigned vaddress ){
 	unsigned *move = (void *)0;
 
 	if ( dir ){
-		move = (unsigned *)dir[ vaddress >> 22 ];
-		if ( move ){
-			move = (unsigned *)((unsigned)move & ~0xfff);
+		unsigned *ptable = ident_phys_to_virt( (void *)(dir[vaddress >> 22] & ~0xfff ));
+
+		if ( ptable ){
+			move = (unsigned *)((uintptr_t)ptable & ~0xfff);
 			ret = move[ vaddress >> 12 & 0x3ff ];
 		}
 	}
@@ -150,9 +157,10 @@ unsigned get_page( unsigned *dir, unsigned vaddress ){
 }
 
 unsigned get_free_page( ){
-	unsigned	ret = 0,
-			i, j,
-			page;
+	unsigned ret = 0;
+	unsigned i;
+	unsigned j;
+	unsigned page;
 
 	if ( page_bitmap ){
 		for ( page = last_free_page;( page_bitmap[ page ] & 0xff ) == 0xff; page++ )
@@ -199,7 +207,6 @@ void set_page_dir( unsigned *dir ){
 	}
 
 	address = address | PAGE_USER | PAGE_WRITEABLE | PAGE_PRESENT;
-	//kprintf( "Setting page dir to 0x%x... ", address );
 
 	current_dir = dir;
 	asm volatile( "mov %0, %%cr3":: "r"( address ));
@@ -234,7 +241,7 @@ void page_fault_handler( registers_t *regs ){
 	bool found = false;
 
 	asm volatile( "mov %%cr2, %0": "=r"( fault_addr ));
-	kprintf( "page fault\n" );
+	kprintf( "page fault on 0x%x\n", fault_addr );
 	dump_registers( regs );
 
 	current = get_current_task( );

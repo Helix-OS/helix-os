@@ -175,7 +175,8 @@ int init( ){
 		new_vbe->text_y  = mode->Yres / new_vbe->fontfile->height;
 		new_vbe->textbuf = knew( uint8_t[new_vbe->text_y][new_vbe->text_x]);
 
-		new_vbe->framebuf = (void *)mode->physbase;
+		//new_vbe->framebuf = (void *)mode->physbase;
+		new_vbe->framebuf = (void *)0xfb000000;
 		new_vbe->x_res    = mode->Xres;
 		new_vbe->y_res    = mode->Yres;
 		new_vbe->bpp      = mode->bpp;
@@ -183,9 +184,10 @@ int init( ){
 
 		unsigned pos = mode->physbase;
 		unsigned end = mode->physbase + mode->Xres * 4 + mode->Yres * mode->pitch;
+		unsigned fb_base = 0xfb000000;
 
-		for ( ; pos < end; pos += PAGE_SIZE ){
-			map_r_page( get_current_page_dir( ), pos, pos, PAGE_WRITEABLE | PAGE_PRESENT );
+		for ( ; pos < end; pos += PAGE_SIZE, fb_base += PAGE_SIZE ){
+			map_r_page( get_current_page_dir( ), fb_base, pos, PAGE_WRITEABLE | PAGE_PRESENT );
 		}
 		flush_tlb( );
 

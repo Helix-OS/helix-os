@@ -63,8 +63,9 @@ tar_header_t *initrd_get_file( initrd_t *rd, char *name ){
 		     *move;
 	int i;
 
-	for ( i = 0; i < dlist_allocated( rd->headers ); i++ ){
+	for ( i = 0; i < dlist_used( rd->headers ); i++ ){
 		move = initrd_get( rd, i );
+
 		if ( strcmp( move->filename, name ) == 0 ){
 			ret = move;
 			break;

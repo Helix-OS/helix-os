@@ -2,10 +2,11 @@
 #define _helix_paging_h
 #include <arch/isr.h>
 
-#define PAGE_USER	4
-#define PAGE_WRITEABLE	2
-#define PAGE_PRESENT	1
-#define PAGE_SIZE	0x1000
+#define PAGE_USER      4
+#define PAGE_WRITEABLE 2
+#define PAGE_PRESENT   1
+#define PAGE_SIZE      0x1000
+#define KERNEL_VBASE   0xc0000000
 
 typedef unsigned page_dir_t;
 
@@ -28,5 +29,18 @@ void page_fault_handler( registers_t *regs );
 
 unsigned get_free_page( );
 unsigned get_nfree_pages( );
+
+static inline void *ident_phys_to_virt( void *paddr ){
+	uintptr_t temp = (uintptr_t)paddr + KERNEL_VBASE;
+
+	return (void *)temp;
+}
+
+static inline void *ident_virt_to_phys( void *vaddr ){
+	uintptr_t temp = (uintptr_t)vaddr - KERNEL_VBASE;
+
+	return (void *)temp;
+}
+
 
 #endif

@@ -45,7 +45,7 @@ void dump_registers( registers_t *regs ){
 	kprintf("eax: 0x%x\tebx: 0x%x\tecx: 0x%x\tedx: 0x%x\n"
 		"edi: 0x%x\tesi: 0x%x\tesp: 0x%x\tebp: 0x%x\t\n"
 		"eip: 0x%x\tuesp:0x%x\t cs: 0x%x\t ss: 0x%x\n"
-		" ds: 0x%x\tint: 0x%x\terr: 0x%x\tefl: 0x%s\n",
+		" ds: 0x%x\tint: 0x%x\terr: 0x%x\tefl: 0x%x\n",
 		regs->eax, regs->ebx, regs->ecx, regs->edx, 
 		regs->edi, regs->esi, regs->esp, regs->ebp, 
 		regs->eip, regs->useresp,  regs->cs,  regs->ss,

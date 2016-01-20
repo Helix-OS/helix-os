@@ -85,7 +85,7 @@ int init( ){
 	kprintf( "[%s] Hello, initializin' yo vga\n", provides );
 
 	new_vga = knew( vga_device_t );
-	charbuf = new_vga->buffer = (vga_char_t *)0xb8000;
+	charbuf = new_vga->buffer = (vga_char_t *)0xc00b8000;
 	new_vga->max_x = 80;
 	new_vga->max_y = 25;
 

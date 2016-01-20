@@ -18,8 +18,12 @@ region_t kernel_heap_region;
 
 void *kmalloc_early( int size, int align ){
 	void *ret;
-	if ( !early_placement )
-		early_placement = ((unsigned)&end & 0xfffff000) + 0x1000;
+
+	if ( !early_placement ){
+		uintptr_t realend = (uintptr_t)&end + 0xc0000000;
+		kprintf( "[%s] Have real end at 0x%x\n", __func__, realend );
+		early_placement = (realend & 0xfffff000) + 0x1000;
+	}
 
 	if ( align && early_placement & 0xfff ){
 		early_placement &= 0xfffff000;
@@ -29,7 +33,7 @@ void *kmalloc_early( int size, int align ){
 	ret = (void *)early_placement;
 	early_placement += size;
 
-	//kprintf( "[alloc] returning 0x%x, size: 0x%x, placement: 0x%x\n", ret, size, early_placement );
+	kprintf( "[alloc] returning 0x%x, size: 0x%x, placement: 0x%x\n", ret, size, early_placement );
 	return ret;
 }
 
@@ -40,33 +44,17 @@ sheap_t *init_kernel_heap( unsigned *p_dir, unsigned start, unsigned size ){
 	flush_tlb( );
 	void *bitmap = kmalloc_early( size / PAGE_SIZE / 8, 0 );
 
+	kprintf( "[%s] Have bitmap at 0x%x\n", __func__, bitmap );
+
 	bitmap_region_init_at_addr( (void *)start,
-	                            size / PAGE_SIZE,
-	                            &kernel_heap_region,
-	                            bitmap,
-	                            p_dir );
+                                size / PAGE_SIZE,
+                                &kernel_heap_region,
+                                bitmap,
+                                p_dir );
 
 	sheap_init_at_addr( &kernel_heap, &kernel_heap_region );
 
-    return &kernel_heap;
-
-	/*
-	heap->blocks = (mblock_t *)start;
-	heap->first_free = heap->blocks;
-	heap->page_dir = p_dir;
-
-	heap->blocks->size = (size + (size & (PAGE_SIZE-1)? PAGE_SIZE : 0));
-	heap->npages = heap->blocks->size / PAGE_SIZE;
-	heap->page_blocks = 4;
-
-	heap->blocks->type = MBL_FREE;
-	heap->blocks->prev = 0;
-	heap->blocks->next = MBL_END;
-
-	return heap;
-	*/
-
-	return NULL;
+	return &kernel_heap;
 }
 
 
