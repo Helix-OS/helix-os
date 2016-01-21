@@ -16,7 +16,8 @@ extern multiboot_header_t *bootheader;
 // define in base/kmain.c
 extern initrd_t *main_initrd;
 
-static int vbe_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset );
+static int vbe_console_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset );
+static int vbe_framebuf_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset );
 
 static void set_pixel( vbe_device_t *dev, unsigned x, unsigned y, uint32_t val ){
 	if ( x < dev->x_res && y < dev->y_res ){
@@ -75,8 +76,25 @@ static void clear_screen( vbe_device_t *dev ){
 	dev->cur_y = dev->cur_x = 0;
 }
 
+static int vbe_framebuf_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset ){
+	vbe_device_t *vbe = dev->dev;
+	int ret = 0;
+
+	unsigned fbufsize = vbe->x_res * 4 + vbe->y_res * vbe->pitch;
+	unsigned nbytes = count;
+
+	if ( count + offset > fbufsize ){
+		nbytes = count - ((count + offset) - fbufsize);
+	}
+
+	memcpy( vbe->framebuf, buf, nbytes );
+	ret = nbytes;
+
+	return ret;
+}
+
 /* Offset is ignored in this function, since it's handled by the driver */
-static int vbe_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset ){
+static int vbe_console_hal_write( struct hal_device *dev, void *buf, unsigned count, unsigned offset ){
 	vbe_device_t *vbe = dev->dev;
 	uint8_t *textbuf = vbe->textbuf;
 	char *str = buf;
@@ -196,10 +214,17 @@ int init( ){
 		new_haldev = knew( hal_device_t );
 		new_haldev->block_size = 1;
 		new_haldev->type = HAL_TYPE_VIDEO;
-		new_haldev->write = vbe_hal_write;
+		new_haldev->write = vbe_console_hal_write;
 		new_haldev->dev = new_vbe;
-		//new_haldev->name = strdup( "framebuf" );
 		new_haldev->name = strdup( "fbconsole" );
+		hal_register_device( new_haldev );
+
+		new_haldev = knew( hal_device_t );
+		new_haldev->block_size = 1;
+		new_haldev->type = HAL_TYPE_VIDEO;
+		new_haldev->write = vbe_framebuf_hal_write;
+		new_haldev->dev = new_vbe;
+		new_haldev->name = strdup( "framebuffer" );
 		hal_register_device( new_haldev );
 
 	} else {

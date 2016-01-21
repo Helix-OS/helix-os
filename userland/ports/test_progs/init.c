@@ -3,7 +3,8 @@
 #include <stdlib.h>
 
 static char *init_commands[] = {
-	"/bin/console",
+	//"/bin/console",
+	"/test/userroot/bin/fbman",
 	NULL,
 };
 
@@ -25,8 +26,10 @@ int main( int argc, char *argv[], char *envp[] ){
 	char *userroot = "/test/userroot";
 
 	print_nifty_ascii_art( );
+	/*
 	syscall_chroot( userroot );
 	printf( "Changed root to %s\n", userroot );
+	*/
 
 	for ( i = 0; init_commands[i]; i++ ){
 		printf( "starting %s...\n", init_commands[i] );
