@@ -66,10 +66,11 @@ void *sheap_alloc( sheap_t *heap, unsigned size ){
 	// and just map pages for larger blocks, including the length of the
 	// allocation in the first 4 bytes allocated
 	} else {
-		unsigned npages = (size + sizeof(uint32_t)) / PAGE_SIZE;
-		npages += (size % PAGE_SIZE) > 0;
+		unsigned realsize = (size + sizeof(uint32_t));
+		unsigned npages = realsize / PAGE_SIZE + !!(realsize % PAGE_SIZE);
 
-		kprintf( "[%s] Allocating %u pages for size %u\n", __func__, npages, size );
+		kprintf( "[%s] Allocating %u pages for size %u, real size %u\n",
+			__func__, npages, size, realsize );
 
 		ret = heap->region->alloc_page( heap->region, npages );
 
@@ -99,6 +100,7 @@ void sheap_free( sheap_t *heap, void *ptr ){
 
 			for ( i = 0; i < npages; i++ ){
 				heap->region->free_page( heap->region, pageptr );
+				pageptr = (void *)((uintptr_t)pageptr + PAGE_SIZE);
 			}
 		}
 	}
