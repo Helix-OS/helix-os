@@ -2,6 +2,7 @@
 #include <dalibc/syscalls.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct psf2_header {
     uint8_t  magic[4];
@@ -62,6 +63,11 @@ struct window {
 
 	void *progdata;
 };
+
+#define FOR_EACH_WINDOW_EVENT( EVENT_VAR, WINDOW ) \
+	for ( (EVENT_VAR) = window_get_event((WINDOW)); \
+	      (EVENT_VAR); \
+	      (EVENT_VAR) = window_get_event((WINDOW)) )
 
 void *read_file( char *path ){
 	int fd = open( path, 0 );
@@ -336,7 +342,7 @@ void test_printer_update( window_t *window, framebuf_t *fb ){
 	winevent_t *ev;
 	unsigned *progdata = window->progdata;
 
-	for ( ev = window_get_event( window ); ev; ev = window_get_event( window )){
+	FOR_EACH_WINDOW_EVENT( ev, window ){
 		if ( ev->type == W_EVENT_KEY ){
 			if ( ev->data[0] == '\n' ){
 				*progdata = 1;
@@ -376,15 +382,19 @@ window_t *make_test_printer( window_t *winlist ){
 }
 
 typedef struct term_data {
-	char *textbuf;
 	int pid;
 	int out_fd;
 	int in_fd;
 
+	char *textbuf;
 	unsigned text_xpos;
 	unsigned text_ypos;
 	unsigned text_height;
 	unsigned text_width;
+
+	char *linebuf;
+	unsigned line_len;
+	unsigned line_pos;
 } term_data_t;
 
 void terminal_put_char( term_data_t *term, char ch ){
@@ -399,7 +409,9 @@ void terminal_put_char( term_data_t *term, char ch ){
 
 		case '\b':
 			term->text_xpos--;
-			break;
+			i = term->text_ypos * term->text_width + term->text_xpos;
+			term->textbuf[i] = '\0';
+			return;
 
 		default:
 			break;
@@ -426,19 +438,61 @@ void terminal_put_char( term_data_t *term, char ch ){
 	term->text_xpos++;
 }
 
+char *terminal_get_line( term_data_t *term, char ch ){
+	char *ret = NULL;
+
+	if ( ch == '\n' ){
+		if ( term->line_pos ){
+			terminal_put_char( term, '\b' );
+		}
+
+		term->linebuf[term->line_pos] = ch;
+		term->linebuf[term->line_pos + 1] = '\0';
+		term->line_pos = 0;
+		ret = term->linebuf;
+		terminal_put_char( term, '\n' );
+
+	} else if ( ch == '\b' ){
+		if ( term->line_pos ){
+			term->line_pos--;
+			term->linebuf[term->line_pos] = '\b';
+			terminal_put_char( term, '\b' );
+
+			terminal_put_char( term, '\b' );
+			terminal_put_char( term, '_' );
+		}
+
+	} else {
+		if ( term->line_pos ){
+			terminal_put_char( term, '\b' );
+		}
+
+		term->linebuf[term->line_pos] = ch;
+		term->line_pos++;
+		terminal_put_char( term, ch );
+		terminal_put_char( term, '_' );
+	}
+
+	return ret;
+}
+
 void terminal_update( window_t *window, framebuf_t *fb ){
 	term_data_t *term = window->progdata;
 	winevent_t *ev;
 	char ch;
 
-	for ( ev = window_get_event( window ); ev; ev = window_get_event( window )) {
+	FOR_EACH_WINDOW_EVENT( ev, window ){
 		switch( ev->type ){
 			case W_EVENT_KEY:
 				{
+					char *line;
 					ch = ev->data[0];
-					terminal_put_char( term, ch );
-					write( term->out_fd, &ch, 1 );
+
+					if (( line = terminal_get_line( term, ch ))){
+						write( term->out_fd, line, strlen( line ));
+					}
 				}
+
 				break;
 
 			default:
@@ -487,18 +541,23 @@ window_t *make_terminal( framebuf_t *fb, window_t *winlist ){
 	int from[2];
 
 	term = ret->progdata = calloc( 1, sizeof( term_data_t ));
+
 	pipe( to );
 	pipe( from );
-
 	int p_fds[3] = { to[0], from[1], from[1] };
-
 	term->in_fd   = from[0];
 	term->out_fd  = to[1];
+
 	term->textbuf = sbrk( sizeof( char[80 * 26] ));
 	memset( term->textbuf, 0, sizeof( char[80 * 26] ));
 	term->text_height = 26;
 	term->text_width = 80;
 	//term->pid = _spawn( "/test/userroot/bin/sh", NULL, NULL, p_fds );
+
+	term->linebuf = malloc( sizeof( char[128] ));
+	term->line_pos = 0;
+	term->line_len = 128;
+
 	term->pid = _spawn( "/bin/sh", NULL, NULL, p_fds );
 
 	close( to[0] );
