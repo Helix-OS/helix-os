@@ -54,8 +54,5 @@ void hashmap_remove( hashmap_t *map, unsigned hash ){
 	list_node_t *node;
 	
 	list = map->buckets + ( hash % map->nbuckets );
-	node = list_get_val( list, hash );
-
-	if ( node )
-		list_remove_node( node );
+	list_remove_val( list, hash );
 }

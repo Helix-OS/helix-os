@@ -32,12 +32,52 @@ list_node_t *list_add_data( list_head_t *list, void *data ){
 }
 
 list_node_t *list_remove_index( list_head_t *list, int index ){
-	list_node_t *ret = 0,
-		    *move;
+	list_node_t *ret = 0;
+	list_node_t *move;
 
 	move = list_get_index( list, index );
+
 	if ( move ){
 		ret = list_remove_node( move );
+
+		if ( !ret ) {
+			list->base = list->last = ret;
+
+		} else {
+			if ( !ret->prev ){
+				list->base = ret;
+			}
+
+			if ( !ret->next ){
+				list->last = ret;
+			}
+		}
+	}
+
+	return ret;
+}
+
+list_node_t *list_remove_val( list_head_t *list, int val ){
+	list_node_t *ret = 0;
+	list_node_t *move;
+
+	move = list_get_val( list, val );
+
+	if ( move ){
+		ret = list_remove_node( move );
+
+		if ( !ret ) {
+			list->base = list->last = ret;
+
+		} else {
+			if ( !ret->prev ){
+				list->base = ret;
+			}
+
+			if ( !ret->next ){
+				list->last = ret;
+			}
+		}
 	}
 
 	return ret;
@@ -87,6 +127,7 @@ list_node_t *list_add_node( list_node_t *list, int val, void *data ){
 		    *move;
 
 	temp = kmalloc( sizeof( list_node_t ));
+	memset( temp, 0, sizeof( list_node_t ));
 	temp->val = val;
 	temp->data = data;
 	ret = temp;

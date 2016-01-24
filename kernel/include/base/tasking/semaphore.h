@@ -1,7 +1,9 @@
 #ifndef _helix_tasking_semaphore_h
 #define _helix_tasking_semaphore_h
+#include <base/lib/stdbool.h>
+#include <base/logger.h>
 
-typedef int semaphore_t;
+typedef volatile int semaphore_t;
 
 typedef struct protected_var {
 	semaphore_t sem;
@@ -21,6 +23,7 @@ void semaphore_wait( semaphore_t *sem );
 static inline int enter_semaphore( semaphore_t *sem ){
 	int ret;
 
+	/*
 	if ( *sem ){
 		ret = --*sem;
 
@@ -28,12 +31,19 @@ static inline int enter_semaphore( semaphore_t *sem ){
 		semaphore_wait( sem );
 		ret = --*sem;
 	}
+	*/
+	while ( __sync_bool_compare_and_swap( sem, 1, 0 ) == false ){
+		kprintf( "[%s] Waiting for semaphore...\n", __func__ );
+		semaphore_wait( sem );
+		ret = (int)sem;
+	}
 
 	return ret;
 }
 
 static inline int leave_semaphore( semaphore_t *sem ){
-	return ++(*sem);
+	return __sync_bool_compare_and_swap( sem, 0, 1 );
+	//return ++(*sem);
 }
 
 #endif
