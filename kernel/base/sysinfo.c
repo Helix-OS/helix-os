@@ -3,6 +3,7 @@
 #include <base/sysinfo.h>
 #include <base/tasking/task.h>
 #include <arch/paging.h>
+#include <base/module.h>
 
 int sysinfo( unsigned type, unsigned key, void *buf ){
 	int ret = 0;
@@ -17,6 +18,10 @@ int sysinfo( unsigned type, unsigned key, void *buf ){
 
 		case SYSINFO_PROCESS:
 			ret = get_process_info( key, buf );
+			break;
+
+		case SYSINFO_MODULES:
+			ret = get_module_info( key, buf );
 			break;
 
 		default:
@@ -47,6 +52,8 @@ int get_process_info( unsigned key, proc_info_t *buf ){
 	if ( i == key && tasklist ){
 		task = tasklist->data;
 		buf->pid = task->pid;
+		buf->parent = task->parent;
+		buf->p_group = task->group;
 		buf->state = task->state;
 		ret = 1;
 	}
@@ -54,3 +61,24 @@ int get_process_info( unsigned key, proc_info_t *buf ){
 	return ret;
 }
 
+// TODO: add a getter function for this
+extern list_head_t *mod_list;
+
+int get_module_info( unsigned key, sysinfo_mod_info_t *buf ){
+	int ret = 0;
+	list_node_t *temp;
+
+	temp = list_get_index( mod_list, key );
+	kprintf( "[%s] Got here, %u, 0x%x\n", __func__, key, temp );
+
+	if ( temp ){
+		module_t *mod = temp->data;
+
+		strncpy( buf->name, mod->name, 32 );
+		buf->address = mod->address;
+		buf->npages = mod->pages;
+		ret = key + 1;
+	}
+
+	return ret;
+}

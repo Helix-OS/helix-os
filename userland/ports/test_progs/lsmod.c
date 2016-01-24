@@ -25,24 +25,13 @@ typedef struct proc_info {
 	unsigned state;
 } proc_info_t;
 
-enum {
-	TASK_STATE_RUNNING,
-	TASK_STATE_SLEEPING,
-	TASK_STATE_WAITING,
-	TASK_STATE_STOPPED,
-	TASK_STATE_ENDED,
-};
+typedef struct mod_info {
+	char name[32];
+	unsigned long address;
+	unsigned long npages;
+} mod_info_t;
 
 int syscall_sysinfo( unsigned type, unsigned key, void *buf );
-
-static char *pstates[] = {
-	"running",
-	"sleeping",
-	"waiting",
-	"stopped",
-	"ended",
-	NULL
-};
 
 unsigned numlen( unsigned n ){
 	unsigned ret = 1;
@@ -54,19 +43,19 @@ unsigned numlen( unsigned n ){
 
 int main( int argc, char *argv[], char *envp[] ){
 	unsigned i;
-	proc_info_t procbuf;
+	mod_info_t modbuf;
 
-	printf( "TID\t| PPID | PID | state\n" );
-	for ( i = 0; syscall_sysinfo( SYSINFO_PROCESS, i, &procbuf ) > 0; i++ ){
+	printf( "     name | size | address\n" );
+	for ( i = 0; syscall_sysinfo( SYSINFO_MODULES, i, &modbuf ) > 0; i++ ){
 		unsigned k;
-		for ( k = 3 - numlen( procbuf.pid ); k; k-- ){
+		for ( k = 9 - strlen( modbuf.name ); k; k-- ){
 			putchar( ' ' );
 		}
 
-		printf( "%d", procbuf.tid );
-		printf( " |    %d", procbuf.parent );
-		printf( " |   %d", procbuf.pid );
-		printf( " | %s\n", pstates[procbuf.state] );
+		printf( "%s", modbuf.name );
+		printf( " |    %d", modbuf.npages );
+		printf( " | 0x%x", modbuf.address );
+		putchar( '\n' );
 	}
 
 	return 0;

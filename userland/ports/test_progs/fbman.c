@@ -626,7 +626,7 @@ int main( int argc, char *argv[], char *envp[] ){
 		redraw_framebuffer( fb );
 
 		//int c = getchar( );
-		int c;
+		unsigned char c;
 
 		if ( read( fb->keyboard, &c, 1 ) > 0 ) {
 			if ( c == '\x1b' ){

@@ -84,14 +84,16 @@ list_node_t *list_remove_val( list_head_t *list, int val ){
 }
 
 list_node_t *list_get_index( list_head_t *list, int i ){
-	list_node_t *ret = list->base,
-		    *move = 0;
+	list_node_t *ret = 0;
+	list_node_t *move = 0;
 	int n = 0;
 
 	if ( i > 0 )
 		move = list->base;
 	else if ( i < 0 )
 		move = list->last;
+	else if ( i == 0 )
+		ret = list->base;
 
 	while ( move && n != i ){
 		if ( i > 0 ){

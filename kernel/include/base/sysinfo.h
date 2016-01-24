@@ -19,8 +19,16 @@ typedef struct kinfo {
 
 typedef struct proc_info {
 	unsigned pid;
+	unsigned parent;
+	unsigned p_group;
 	unsigned state;
 } proc_info_t;
+
+typedef struct sysinfo_mod_info {
+	char name[32];
+	unsigned long address;
+	unsigned long npages;
+} sysinfo_mod_info_t;
 
 int sysinfo( unsigned type, unsigned key, void *buf );
 int get_kernel_info( unsigned key, kinfo_t *buf );
