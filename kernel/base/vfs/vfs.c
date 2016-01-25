@@ -302,26 +302,16 @@ int init_vfs( ){
 		kprintf( "[%s] Could not set file root...\n", provides );
 
 	} else {
+		// set up the base vfs directories
 		{
 			file_node_t filebuf;
 			int foobar;
 
-			file_lookup_absolute( "/test", &filebuf, 0 );
+			file_lookup_absolute( "/", &filebuf, 0 );
+			VFS_FUNCTION(( &filebuf ), mkdir, "helix", 0 );
+			file_lookup_absolute( "/helix", &filebuf, 0 );
 			VFS_FUNCTION(( &filebuf ), mkdir, "devices", 0 );
-			VFS_FUNCTION(( &filebuf ), mkdir, "somedir", 0 );
-			VFS_FUNCTION(( &filebuf ), mkdir, "fatdir", 0 );
-			VFS_FUNCTION(( &filebuf ), mkdir, "boot", 0 );
 			VFS_FUNCTION(( &filebuf ), mkdir, "userroot", 0 );
-			foobar = file_mount_filesystem( "/test/somedir", NULL, "ramfs", 0 );
-
-			if ( foobar >= 0 ){
-				file_lookup_absolute( "/test/somedir", &filebuf, 0 );
-				VFS_FUNCTION(( &filebuf ), mkdir, "wut", 0 );
-
-			} else {
-				kprintf( "[%s] Could not mount filesystem on /test/somedir\n" );
-			}
-
 		}
 	}
 

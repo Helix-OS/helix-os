@@ -179,8 +179,8 @@ int test( ){
 	char *blargbuf = knew( char[512] );
 	*/
 
-	file_mount_filesystem( "/test/devices", NULL, "devfs", 0 );
-	file_lookup_absolute( "/test/devices", &fnode, 0 );
+	//file_mount_filesystem( "/test/devices", NULL, "devfs", 0 );
+	//file_lookup_absolute( "/test/devices", &fnode, 0 );
 	
 	/*
 	for ( i = 0; VFS_FUNCTION(( &fnode ), readdir, &testdir, i ); i++ )

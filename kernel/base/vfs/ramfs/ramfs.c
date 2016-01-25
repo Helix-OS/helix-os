@@ -83,7 +83,7 @@ file_system_t *create_ramfs( struct file_driver *driver,
 	fs_root->references++;
 	fs_root->fs = ret;
 
-	ramfs_mkdir_node( fs_root, "test", 0 );
+	//ramfs_mkdir_node( fs_root, "test", 0 );
 
 	return ret;
 }

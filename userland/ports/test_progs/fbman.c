@@ -91,8 +91,8 @@ void *read_file( char *path ){
 framebuf_t *open_framebuffer( char *fbpath, char *keyboard, char *mouse ){
 	framebuf_t *fb = calloc( 1, sizeof( framebuf_t ));
 
-	fb->fd = open( "/test/devices/framebuffer", 0 );
-	fb->keyboard = open( "/test/devices/keyboard", 0 );
+	fb->fd = open( fbpath, 0 );
+	fb->keyboard = open( keyboard, 0 );
 	fb->mouse = -1;
 
 	fcntl( fb->keyboard, F_SETFL, O_NONBLOCK );
@@ -101,7 +101,7 @@ framebuf_t *open_framebuffer( char *fbpath, char *keyboard, char *mouse ){
 	fb->height = 768;
 	fb->redraw = 1;
 	fb->addr   = sbrk( sizeof( uint32_t[fb->width * fb->height]));
-	fb->font   = read_file( "/test/userroot/etc/fbman_font.psf" );
+	fb->font   = read_file( "/helix/userroot/etc/fbman_font.psf" );
 
 	return fb;
 }
@@ -570,11 +570,11 @@ window_t *make_terminal( framebuf_t *fb, window_t *winlist ){
 
 int main( int argc, char *argv[], char *envp[] ){
 	printf( "[fbman] Opening framebuffer...\n" );
-	framebuf_t *fb = open_framebuffer( "/test/devices/fbconsole",
-	                                   "/test/devices/keyboard",
+	framebuf_t *fb = open_framebuffer( "/helix/devices/framebuffer",
+	                                   "/helix/devices/keyboard",
 	                                   NULL );
 
-	syscall_chroot( "/test/userroot" );
+	syscall_chroot( "/helix/userroot" );
 
 	printf( "[fbman] Creating some testing windows...\n" );
 	window_t *testwin = NULL;

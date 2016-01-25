@@ -4,7 +4,7 @@
 
 static char *init_commands[] = {
 	//"/bin/console",
-	"/test/userroot/bin/fbman",
+	"/helix/userroot/bin/fbman",
 	NULL,
 };
 
@@ -23,7 +23,7 @@ void print_nifty_ascii_art( void ){
 int main( int argc, char *argv[], char *envp[] ){
 	int i;
 	char *asdf = malloc( 32 );
-	char *userroot = "/test/userroot";
+	char *userroot = "/helix/userroot";
 
 	print_nifty_ascii_art( );
 	/*

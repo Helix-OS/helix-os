@@ -22,7 +22,7 @@ void utest( ){
 	int fd;
 
 	// open initial file descriptors
-	syscall_open( "/test/devices/keyboard", FILE_READ );
+	syscall_open( "/helix/devices/keyboard", FILE_READ );
     /*
 	fd = syscall_open( "/test/devices/console",  FILE_READ );
 	fd = syscall_open( "/test/devices/console",  FILE_READ );
@@ -33,19 +33,19 @@ void utest( ){
 	// TODO:  add sysinfo request to get kernel options
 	bool foo = cmdline_has( main_opts, "textmode" );
 	if ( foo ){
-		syscall_open( "/test/devices/console",  FILE_READ );
-		syscall_open( "/test/devices/console",  FILE_READ );
+		syscall_open( "/helix/devices/console",  FILE_READ );
+		syscall_open( "/helix/devices/console",  FILE_READ );
 
 	} else {
-		syscall_open( "/test/devices/fbconsole",  FILE_READ );
-		syscall_open( "/test/devices/fbconsole",  FILE_READ );
+		syscall_open( "/helix/devices/fbconsole",  FILE_READ );
+		syscall_open( "/helix/devices/fbconsole",  FILE_READ );
 	}
 
-	fd = syscall_open( "/test/userroot/bin/init", FILE_READ );
+	fd = syscall_open( "/helix/userroot/bin/init", FILE_READ );
 	//fd = syscall_open( "/test/userroot/bin/sh", FILE_READ );
 	if ( fd >= 0 ){
 		kprintf( "[%s] Spawning process from fd %d\n", __func__, fd );
-		syscall_spawn( fd, (char *[]){ "/test/userroot/asdf", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
+		syscall_spawn( fd, (char *[]){ "/helix/userroot/asdf", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
 	}
 
 	syscall_test( );
@@ -82,6 +82,9 @@ void kmain( unsigned flags, void *modules, multiboot_elf_t *elfinfo, char *cmdli
 	// Initialize module system
 	init_module_system( elfinfo );
 	load_init_modules( initrd );
+
+	file_mount_filesystem( "/helix/devices", NULL, "devfs", 0 );
+	file_mount_filesystem( "/helix/userroot", "/helix/devices/ata0p1", "fatfs", 0 );
 
 	kprintf( "-==[ Kernel initialized successfully.\n" );
 
