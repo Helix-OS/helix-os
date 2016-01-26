@@ -2,6 +2,7 @@
 #include <base/vfs/ramfs/ramfs.h>
 #include <base/tasking/semaphore.h>
 #include <base/datastructs/list.h>
+#include <base/datastructs/hashmap.h>
 #include <base/lib/stdbool.h>
 #include <base/logger.h>
 #include <base/string.h>
@@ -12,12 +13,14 @@
 char *provides = "vfs";
 
 static list_node_t *driver_list = 0;
-static list_node_t *mount_list = 0;
+//static list_node_t *mount_list = 0;
+static hashmap_t *mount_map;
 
 static file_node_t *global_vfs_root;
 
 static protected_var_t *p_driver_list;
-static protected_var_t *p_mount_list;
+//static protected_var_t *p_mount_list;
+static protected_var_t *p_mount_map;
 
 int file_register_driver( file_driver_t *driver ){
 	list_node_t *drivers;
@@ -38,25 +41,48 @@ int file_register_driver( file_driver_t *driver ){
 	return 0;
 }
 
-file_mount_t *file_register_mount( file_system_t *fs ){
-	list_node_t *mounts;
-	file_mount_t *new_mount;
+static inline unsigned vfs_node_hash( file_node_t *node ){
+	return (node->fs->id << 24) | node->inode;
+}
 
-	mounts = access_protected_var( p_mount_list );
-	new_mount = knew( file_mount_t );
-	new_mount->fs = fs;
-	new_mount->fs->references++;
+static inline unsigned vfs_alloc_fs_id( void ){
+	static unsigned fs_count = 0x1;
 
-	if ( !mounts->data ){
-		mounts->data = new_mount;
+	return fs_count++;
+}
 
-	} else {
-		list_add_data_node( mounts, new_mount );
+int file_register_mount( unsigned hash, file_node_t *mountnode ){
+	//list_node_t *mounts;
+	hashmap_t *mounts;
+	//file_mount_t *new_mount;
+
+	kprintf( "[%s] Adding mount node for hash 0x%x -> fs %u, inode %u\n",
+		__func__, hash, mountnode->fs->id, mountnode->inode );
+	mounts = access_protected_var( p_mount_map );
+	hashmap_add( mounts, hash, mountnode );
+	leave_protected_var( p_mount_map );
+	//return new_mount;
+	return 0;
+}
+
+file_node_t *file_get_mount( file_node_t *buf, unsigned hash ){
+	hashmap_t *mounts;
+	file_node_t *temp;
+	file_node_t *ret = NULL;
+
+	kprintf( "[%s] Looking for mount with hash 0x%x...\n", __func__, hash );
+
+	mounts = access_protected_var( p_mount_map );
+	temp = hashmap_get( mounts, hash );
+
+	if ( temp ){
+		kprintf( "[%s] Found hash 0x%x, copying to buffer\n", __func__, hash );
+		memcpy( buf, temp, sizeof( file_node_t ));
+		ret = buf;
 	}
 
-	leave_protected_var( p_mount_list );
-
-	return new_mount;
+	leave_protected_var( p_mount_map );
+	return ret;
 }
 
 file_driver_t *file_get_driver( char *name ){
@@ -73,6 +99,10 @@ file_driver_t *file_get_driver( char *name ){
 	}
 
 	return ret;
+}
+
+bool file_is_same_fs( file_node_t *node, file_node_t *other ) {
+	return node->fs->id == other->fs->id;
 }
 
 void set_global_vfs_root( file_node_t *root ){
@@ -122,8 +152,9 @@ int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int
 		ret = -1;
 		goto done;
 	}
+	fs->id = vfs_alloc_fs_id( );
 
-	file_register_mount( fs );
+	//file_register_mount( fs );
 
 	if ( strcmp( mount_path, "/" ) == 0 ){
 		set_global_vfs_root( fs->root_node );
@@ -131,9 +162,14 @@ int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int
 	} else {
 		mount = knew( file_node_t );
 		foo = file_lookup_absolute( mount_path, mount, 0 );
+		kprintf( "[%s] lookup for \"%s\" returned %d, mount node at hash 0x%x\n", 
+			__func__, mount_path, foo, vfs_node_hash( mount ));
 
 		if ( foo >= 0 ){
-			ret = VFS_FUNCTION( mount, mount, fs->root_node, flags );
+			file_node_t *mountroot = knew( file_node_t );
+			memcpy( mountroot, fs->root_node, sizeof( file_node_t ));
+			file_register_mount( vfs_node_hash( mount ), mountroot );
+			//ret = VFS_FUNCTION( mount, mount, fs->root_node, flags );
 		}
 
 		kfree( mount );
@@ -189,18 +225,20 @@ int file_lookup_absolute( char *path, file_node_t *buf, int flags ){
 }
 
 int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int flags ){
-	int ret = 0,
-	    found = 0,
-	    i,
-	    lastbuf = 1,
-	    vfs_function_ret;
-	char *namebuf,
-	     *pathptr = path;
+	int ret = 0;
+	int found = 0;
+	int i;
+	int lastbuf = 1;
+	int vfs_function_ret;
+
+	char *namebuf;
+	char *pathptr = path;
 	bool expecting_dir;
 
-	file_node_t *move = node,
-		    *nodebufs,
-		    *current_buf;
+	file_node_t *move = node;
+	file_node_t *nodebufs;
+	file_node_t *current_buf;
+	file_node_t *temp;
 
 	if ( path && buf ){
 		namebuf = knew( char[MAX_FILENAME_SIZE] );
@@ -227,6 +265,8 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 			if ( strcmp( namebuf, "." ) == 0 )
 				continue;
 
+			kprintf( "[%s] Doing lookup at hash 0x%x...\n", __func__, vfs_node_hash( move ));
+
 			vfs_function_ret = VFS_FUNCTION( move, lookup, current_buf, namebuf, flags );
 			if ( vfs_function_ret ){
 				kprintf( "[%s] Oops we got an error, %d\n", __func__, -vfs_function_ret );
@@ -234,11 +274,23 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 				break;
 			}
 
+			kprintf( "[%s] Have current buffer at hash 0x%x\n", __func__, vfs_node_hash( current_buf ));
+
+			if ( file_get_mount( current_buf, vfs_node_hash( current_buf ))){
+				kprintf( "[%s] Found mount point, new hash is 0x%x\n", __func__, vfs_node_hash( current_buf ));
+
+			} else {
+				kprintf( "[%s] Didn't find any mountpoints for hash 0x%x\n", __func__, vfs_node_hash( current_buf ));
+			}
+
+			/*
 			if ( current_buf->mount ){
 				move = current_buf->mount->fs->root_node;
 			} else {
 				move = current_buf;
 			}
+			*/
+			move = current_buf;
 
 			/* This is probably obtuse enough to deserve a comment, so...
 			 * There's two file node buffers which are alternated between during lookups.
@@ -267,10 +319,12 @@ int init_vfs( ){
 	kprintf( "[%s] Initializing virtual file system...", provides );
 
 	driver_list = list_add_data_node( driver_list, 0 );
-	mount_list = list_add_data_node( mount_list, 0 );
+	//mount_list = list_add_data_node( mount_list, 0 );
+	mount_map = hashmap_create( 16 );
 
 	p_driver_list = create_protected_var( 1, driver_list );
-	p_mount_list = create_protected_var( 1, mount_list );
+	//p_mount_list = create_protected_var( 1, mount_list );
+	p_mount_map = create_protected_var( 1, mount_map );
 
 	init_ramfs( );
 

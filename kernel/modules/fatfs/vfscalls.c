@@ -200,7 +200,7 @@ int fatfs_vfs_open( struct file_node *node, char *path, int flags ){
 		if ( cache->dir.attributes & FAT_ATTR_DIRECTORY ){
 			lookup = file_lookup_relative( path, node, &nodebuf, 0 );
 
-			if ( lookup == 0 ){
+			if ( lookup >= 0 && file_is_same_fs( &nodebuf, node )) {
 				/*
 				cache->references++;
 				ret = node->inode;

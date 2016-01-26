@@ -8,6 +8,7 @@ extern "C" {
 #include <base/errors.h>
 #include <base/stdint.h>
 #include <base/tasking/pobj.h>
+#include <base/lib/stdbool.h>
 
 // Defines
 #define MAX_FILENAME_SIZE 	256
@@ -127,11 +128,12 @@ typedef struct file_funcs {
 
 // A file system
 typedef struct file_system {
-	struct file_node 	*root_node; // Top node of file system
-	file_funcs_t 		*functions;
+	struct file_node *root_node; // Top node of file system
+	file_funcs_t *functions;
 
-	unsigned 		references;
-	void 			*devstruct; // device-specific storage
+	unsigned references;
+	unsigned id;     // filesystem-specific id number
+	void *devstruct; // device-specific storage
 } file_system_t;
 
 // File driver to provide file systems
@@ -207,13 +209,15 @@ typedef struct file_pobj {
 int file_register_driver( file_driver_t *driver );
 file_driver_t *file_get_driver( char *name );
 //int file_register_mount( file_system_t *fs );
-file_mount_t *file_register_mount( file_system_t *fs );
+//file_mount_t *file_register_mount( file_system_t *fs );
+int file_register_mount( unsigned hash, file_node_t *mountnode );
 
 int file_mount_filesystem( char *mount_path, char *device, char *filesystem, int flags );
 
 int file_lookup( char *path, file_node_t *buf, int flags );
 int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int flags );
 int file_lookup_absolute( char *path, file_node_t *buf, int flags );
+bool file_is_same_fs( file_node_t *node, file_node_t *other );
 
 void set_global_vfs_root( file_node_t *root );
 file_node_t *get_global_vfs_root( );

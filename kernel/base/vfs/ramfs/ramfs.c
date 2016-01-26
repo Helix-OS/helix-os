@@ -371,8 +371,8 @@ static int ramfs_mount_node( struct file_node *node, struct file_node *mount, in
 	ramfs_node_t *rfsbuf;
 
 	if ( node && mount ){
-		ramfs_get_internal_node( node->fs->devstruct, &rfsbuf, node->inode );
-		rfsbuf->mount = file_register_mount( mount->fs );
+		//ramfs_get_internal_node( node->fs->devstruct, &rfsbuf, node->inode );
+		//rfsbuf->mount = file_register_mount( mount->fs );
 	} else {
 		ret = -ERROR_INVALID_ARGUMENT;
 	}

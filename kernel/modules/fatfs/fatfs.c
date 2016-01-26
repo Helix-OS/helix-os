@@ -176,37 +176,6 @@ fat_type_t fatfs_get_type( fatfs_bpb_t *bpb ){
 }
 
 int test( ){
-	/*
-	file_node_t fnode;
-	int lookup;
-	char *testbuf = knew( char[2300] );
-	int i;
-
-	//file_mount_filesystem( "/test/fatdir", "/test/devices/ata1", "fatfs", 0 );
-	//file_mount_filesystem( "/test/boot", "/test/devices/ata0p0", "fatfs", 0 );
-	//file_mount_filesystem( "/test/userroot", "/test/devices/ata0p1", "fatfs", 0 );
-	//lookup = file_lookup_absolute( "/test/fatdir/Makefile", &fnode, 0 );
-
-	if ( 0 || lookup == 0 ){
-		kprintf( "[fatfs_test] Cool, found Makefile at inode %d\n", fnode.inode );
-		lookup = VFS_FUNCTION(( &fnode ), read, testbuf, 2300, 0 );
-		kprintf( "[fatfs_test] Read returned %d\n", lookup );
-
-		for ( i = 0; i < lookup; i++ )
-			kprintf( "%c", testbuf[i] );
-
-		kprintf( "\n" );
-
-	} else {
-		kprintf( "[fatfs_test] Didn't find test inode, ret = %d\n", lookup );
-	}
-
-	// TODO: Another example of large buffers crashing later when freed if not zeroed, 
-	//       check allocator correctness
-	memset( testbuf, 0, 2000 );
-	kfree( testbuf );
-	*/
-
 	return 0;
 }
 

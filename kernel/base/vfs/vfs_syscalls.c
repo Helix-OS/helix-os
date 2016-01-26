@@ -85,7 +85,7 @@ int vfs_open( char *path, int flags ){
 			else 
 				lookup = file_lookup_absolute( "/", &newobj->node, 0 );
 
-			if ( lookup == 0 ){
+			if ( lookup >= 0 ){
 				// TODO: Add permission checking
 
 				// check to see if the path is not just "/"
