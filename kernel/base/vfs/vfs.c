@@ -182,7 +182,6 @@ done:
 
 int file_lookup( char *path, file_node_t *buf, int flags ){
 	int ret = -ERROR_INVALID_PATH;
-	task_t *cur = get_current_task( );
 	file_node_t *node;
 
 	if ( path ){
@@ -238,7 +237,6 @@ int file_lookup_relative( char *path, file_node_t *node, file_node_t *buf, int f
 	file_node_t *move = node;
 	file_node_t *nodebufs;
 	file_node_t *current_buf;
-	file_node_t *temp;
 
 	if ( path && buf ){
 		namebuf = knew( char[MAX_FILENAME_SIZE] );
@@ -359,7 +357,6 @@ int init_vfs( ){
 		// set up the base vfs directories
 		{
 			file_node_t filebuf;
-			int foobar;
 
 			file_lookup_absolute( "/", &filebuf, 0 );
 			VFS_FUNCTION(( &filebuf ), mkdir, "helix", 0 );

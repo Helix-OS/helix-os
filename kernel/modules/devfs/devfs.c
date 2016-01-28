@@ -170,7 +170,7 @@ static int devfs_open_node( struct file_node *node, char *path, int flags ){
 }
 
 int test( ){
-	file_node_t fnode;
+	//file_node_t fnode;
 	int ret = 0;
 	/*
 	dirent_t testdir;

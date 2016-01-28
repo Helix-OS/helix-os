@@ -51,7 +51,6 @@ void *hashmap_get( hashmap_t *map, unsigned hash ){
 
 void hashmap_remove( hashmap_t *map, unsigned hash ){
 	list_head_t *list;
-	list_node_t *node;
 	
 	list = map->buckets + ( hash % map->nbuckets );
 	list_remove_val( list, hash );

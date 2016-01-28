@@ -287,7 +287,6 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 	unsigned cluster_size;
 	uint8_t *sectbuf;
 	char *namebuf;
-	bool found = false;
 	bool has_longname = false;
 
 	dev = node->fs->devstruct;
@@ -335,7 +334,7 @@ int fatfs_vfs_readdir( struct file_node *node, struct dirent *dirp, int entry ){
 							strncpy( dirp->name, namebuf, 256 );
 
 						} else {
-							strncpy( dirp->name, dirbuf[i].name, 11 );
+							strncpy( dirp->name, (char *)dirbuf[i].name, 11 );
 							dirp->name[11] = 0;
 						}
 

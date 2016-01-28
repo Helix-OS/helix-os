@@ -6,7 +6,8 @@
 #include <base/syscalls.h>
 #include <base/debug.h>
 
-//#include <arch/init_tables.h>
+// Used for set_kernel_stack
+#include <arch/init_tables.h>
 
 static list_node_t *task_list = 0;
 static list_node_t *current_task = 0;
@@ -458,6 +459,10 @@ void usleep( unsigned long useconds ){
 	rrschedule_call( );
 }
 
+void yield_current_task( void ){
+	rrschedule_call( );
+}
+
 /** \brief Idle task which just calls the scheduler to switch tasks.
  *
  *  This is needed because the scheduler disables interrupts while looking for an
@@ -470,5 +475,5 @@ void usleep( unsigned long useconds ){
  */
 static void idle_task( ){
 	while ( 1 )
-		rrschedule_call( );
+		yield_current_task( );
 }

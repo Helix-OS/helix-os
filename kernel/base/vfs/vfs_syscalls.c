@@ -164,7 +164,7 @@ int vfs_read( int pnode, void *buf, int length ){
 
 			if ( !(nodeobj->node.flags & FILE_NONBLOCK) && ret == -ERROR_TRY_AGAIN ){
 				//kprintf( "Blocking..." );
-				rrschedule_call( );
+				yield_current_task( );
 
 			} else {
 				break;
@@ -186,7 +186,7 @@ int vfs_write( int pnode, void *buf, int length ){
 			nodeobj->write_offset += (ret > 0)? ret : 0;
 
 			if ( !(nodeobj->node.flags & FILE_NONBLOCK) && ret == -ERROR_TRY_AGAIN ){
-				rrschedule_call( );
+				yield_current_task( );
 
 			} else {
 				break;

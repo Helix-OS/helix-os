@@ -43,7 +43,6 @@ int init_paging( unsigned max_mem ){
 
 int map_page( unsigned *dir, unsigned vaddress, unsigned permissions ){
 	int ret = 1;
-	unsigned *move = (void *)0;
 	unsigned raddress;
 
 	raddress = get_free_page( );
@@ -70,7 +69,6 @@ int map_page( unsigned *dir, unsigned vaddress, unsigned permissions ){
 
 int map_r_page( unsigned *dir, unsigned vaddress, unsigned raddress, unsigned permissions ){
 	int ret = 0;
-	unsigned *move = (void *)0;
 
 	raddress = (raddress & ~0xfff) | permissions;
 
@@ -111,8 +109,7 @@ int remap_pages( unsigned *dir, unsigned start, unsigned end, unsigned permissio
 
 int free_page( unsigned *dir, unsigned vaddress ){
 	int ret = 0;
-	unsigned int	*move = (void *)0,
-			raddress = 0;
+	unsigned int raddress = 0;
 
 	if ( dir ){
 		if ( dir[ vaddress >> 22 ]){

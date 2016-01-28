@@ -72,7 +72,6 @@ void utest( ){
 void kmain( unsigned flags, void *modules, multiboot_elf_t *elfinfo, char *cmdline ){
 	initrd_t *initrd = 0;
 	kprintf( "-==[ Helix kernel booting\n" );
-	cmdline_opt_t *opts = NULL;
 
 	main_opts = parse_command_line( cmdline );
 	initrd = init_initrd( modules );

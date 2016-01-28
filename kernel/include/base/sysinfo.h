@@ -33,5 +33,6 @@ typedef struct sysinfo_mod_info {
 int sysinfo( unsigned type, unsigned key, void *buf );
 int get_kernel_info( unsigned key, kinfo_t *buf );
 int get_process_info( unsigned key, proc_info_t *buf );
+int get_module_info( unsigned key, sysinfo_mod_info_t *buf );
 
 #endif

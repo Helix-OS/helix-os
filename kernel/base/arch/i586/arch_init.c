@@ -5,6 +5,7 @@
 #include <base/kmain.h>
 #include <base/mem/alloc.h>
 #include <base/mem/salloc.h>
+#include <base/serial.h>
 
 #include <base/elf.h>
 

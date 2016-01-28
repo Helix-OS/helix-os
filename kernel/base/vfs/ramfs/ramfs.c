@@ -368,7 +368,6 @@ static int ramfs_mkdir_node( struct file_node *node, char *name, int flags ){
 
 static int ramfs_mount_node( struct file_node *node, struct file_node *mount, int flags ){
 	int ret = 0;
-	ramfs_node_t *rfsbuf;
 
 	if ( node && mount ){
 		//ramfs_get_internal_node( node->fs->devstruct, &rfsbuf, node->inode );
