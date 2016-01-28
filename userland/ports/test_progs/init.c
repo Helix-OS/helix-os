@@ -2,8 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static char *init_commands[] = {
-	//"/bin/console",
+static char *text_init_commands[] = {
+	"/bin/console",
+	NULL,
+};
+
+static char *graphic_init_commands[] = {
 	"/bin/fbman",
 	NULL,
 };
@@ -29,6 +33,14 @@ int main( int argc, char *argv[], char *envp[] ){
 	syscall_chroot( userroot );
 	printf( "Changed root to %s\n", userroot );
 	*/
+
+	char **init_commands = NULL;
+
+	if ( argc > 1 && strcmp( argv[1], "graphic" ) == 0 ){
+		init_commands = graphic_init_commands;
+	} else {
+		init_commands = text_init_commands;
+	}
 
 	for ( i = 0; init_commands[i]; i++ ){
 		printf( "starting %s...\n", init_commands[i] );

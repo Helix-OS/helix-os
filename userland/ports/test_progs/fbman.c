@@ -52,6 +52,7 @@ struct window {
 	unsigned xpos;
 	unsigned ypos;
 	unsigned focused;
+	unsigned updated;
 
 	window_update update;
 	window_draw   draw;
@@ -166,7 +167,8 @@ void window_update_do_nothing( window_t *window, framebuf_t *fb ){
 }
 
 void window_draw_nothing( window_t *window, framebuf_t *fb ){
-	// this function intentionally left blank
+	// Just reset the updated flag, in case was moved or resized
+	window->updated = 0;
 }
 
 window_t *make_window( char *title, unsigned xpos, unsigned ypos,
@@ -230,10 +232,15 @@ void draw_window( framebuf_t *fb, window_t *window ){
 	window->draw( window, fb );
 }
 
-void update_window( framebuf_t *fb, window_t *window ){
+int update_window( framebuf_t *fb, window_t *window ){
+	int ret = 0;
+
 	if ( window->update ){
 		window->update( window, fb );
+		ret = window->updated;
 	}
+
+	return ret;
 }
 
 void resize_window( framebuf_t *fb, window_t *window, int xinc, int yinc ){
@@ -245,6 +252,7 @@ void resize_window( framebuf_t *fb, window_t *window, int xinc, int yinc ){
 
 	window->width += xinc;
 	window->height += yinc;
+	window->updated = 1;
 }
 
 void move_window( framebuf_t *fb, window_t *window, int xinc, int yinc ){
@@ -256,6 +264,7 @@ void move_window( framebuf_t *fb, window_t *window, int xinc, int yinc ){
 
 	window->xpos += xinc;
 	window->ypos += yinc;
+	window->updated = 1;
 }
 
 void draw_window_list( framebuf_t *fb, window_t *list ){
@@ -266,12 +275,16 @@ void draw_window_list( framebuf_t *fb, window_t *list ){
 	}
 }
 
-void update_window_list( framebuf_t *fb, window_t *list ){
+int update_window_list( framebuf_t *fb, window_t *list ){
+	int ret = 0;
 	window_t *temp = list;
 
 	for ( ; temp; temp = temp->next ){
-		update_window( fb, temp );
+		int is_updated = update_window( fb, temp );
+		ret = ret? ret : is_updated;
 	}
+
+	return ret;
 }
 
 window_t *focused_window = NULL;
@@ -350,6 +363,8 @@ void test_printer_update( window_t *window, framebuf_t *fb ){
 			} else {
 				*progdata = *progdata + 1;
 			}
+
+			window->updated = 1;
 		}
 
 		free( ev );
@@ -367,6 +382,8 @@ void test_printer_draw( window_t *window, framebuf_t *fb ){
 	{
 		window_draw_string( fb, window, "Testing this thing...\n", 0, i, 0x202020 );
 	}
+
+	window->updated = 0;
 }
 
 window_t *make_test_printer( window_t *winlist ){
@@ -491,6 +508,8 @@ void terminal_update( window_t *window, framebuf_t *fb ){
 					if (( line = terminal_get_line( term, ch ))){
 						write( term->out_fd, line, strlen( line ));
 					}
+
+					window->updated = 1;
 				}
 
 				break;
@@ -505,6 +524,7 @@ void terminal_update( window_t *window, framebuf_t *fb ){
 	int inret = read( term->in_fd, &ch, 1 );
 
 	while ( inret > 0 ){
+		window->updated = 1;
 		terminal_put_char( term, ch );
 		inret = read( term->in_fd, &ch, 1 );
 	}
@@ -529,6 +549,8 @@ void terminal_draw( window_t *window, framebuf_t *fb ){
 			}
 		}
 	}
+
+	window->updated = 0;
 }
 
 window_t *make_terminal( framebuf_t *fb, window_t *winlist ){
@@ -605,6 +627,7 @@ int main( int argc, char *argv[], char *envp[] ){
 	printf( "[fbman] Initialization done, entering draw loop\n" );
 
 	//draw_char( fb, '#', 700, 300, 0x202020 );
+	int do_redraw = 0;
 
 	for ( ;; ){
 		/*
@@ -614,16 +637,18 @@ int main( int argc, char *argv[], char *envp[] ){
 			memset( fb->addr, 0x80, sizeof( uint32_t[1024*768] ));
 		}
 		*/
+		int any_updates = update_window_list( fb, testwin );
 
-		update_window_list( fb, testwin );
+		if ( any_updates || do_redraw ){
+			//draw_box( fb, 50, 70, 100, 100, 0x00806080 );
+			//draw_window( fb, testwin );
+			draw_window_list( fb, testwin );
+			draw_box( fb, 0, 0, 1024, 20, 0x00303030 );
+			draw_string( fb, "[1] [2] [3] [4] asdf ", 4, 4, 0xa0a0a0 );
 
-		//draw_box( fb, 50, 70, 100, 100, 0x00806080 );
-		//draw_window( fb, testwin );
-		draw_window_list( fb, testwin );
-		draw_box( fb, 0, 0, 1024, 20, 0x00303030 );
-		draw_string( fb, "[1] [2] [3] [4] asdf ", 4, 4, 0xa0a0a0 );
-
-		redraw_framebuffer( fb );
+			redraw_framebuffer( fb );
+			do_redraw = 0;
+		}
 
 		//int c = getchar( );
 		unsigned char c;
@@ -671,11 +696,13 @@ int main( int argc, char *argv[], char *envp[] ){
 						//testwin = make_window( "even moar windows", 500, 200, 150, 200, testwin );
 						testwin = make_terminal( fb, testwin );
 						testwin = focus_window( testwin );
+						do_redraw = 1;
 						break;
 
 					case '\t':
 						if ( testwin ){
 							testwin = focus_window( testwin );
+							do_redraw = 1;
 						}
 						break;
 						/*

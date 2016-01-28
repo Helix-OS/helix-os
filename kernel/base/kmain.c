@@ -47,7 +47,9 @@ void utest( ){
 	//fd = syscall_open( "/test/userroot/bin/sh", FILE_READ );
 	if ( fd >= 0 ){
 		kprintf( "[%s] Spawning process from fd %d\n", __func__, fd );
-		syscall_spawn( fd, (char *[]){ "/bin/init", "meh", 0 }, (char *[]){ "LOLENV=asdf", 0 }, 0 );
+		syscall_spawn( fd,
+			(char *[]){ "/bin/init", foo? "textmode" : "graphic", 0 },
+			(char *[]){ "LOLENV=asdf", 0 }, 0 );
 	}
 
 	syscall_test( );
