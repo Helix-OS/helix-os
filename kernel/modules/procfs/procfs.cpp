@@ -28,6 +28,9 @@ static int procfs_close( file_node_t *node, int flags );
 static int procfs_readdir( file_node_t *node, struct dirent *dirp, int entry );
 
 file_funcs_t functions = {
+	.get_info = procfs_get_info,
+	.open     = procfs_open,
+	.close    = procfs_close,
 	.read     = procfs_read,
 	.write    = nullptr,
 	.mkdir    = nullptr,
@@ -37,9 +40,7 @@ file_funcs_t functions = {
 	.unlink   = nullptr,
 	.readdir  = procfs_readdir,
 	.lookup   = procfs_lookup,
-	.open     = procfs_open,
-	.close    = procfs_close,
-	.get_info = procfs_get_info,
+	.poll     = nullptr,
 };
 
 static file_system_t *create_procfs( struct file_driver *driver,

@@ -78,6 +78,17 @@ typedef enum {
 	FILE_CTRL_SETFLAGS,
 } file_ctrl_t;
 
+// event flags for poll()
+typedef enum {
+	FILE_EVENT_NONE              = 0,
+	FILE_EVENT_READABLE          = 1,
+	FILE_EVENT_PRIORITY_READABLE = 2,
+	FILE_EVENT_WRITABLE          = 4,
+	FILE_EVENT_HANGUP            = 8,
+	FILE_EVENT_ERROR             = 16,
+	FILE_EVENT_INVALID           = 32,
+} file_event_t;
+
 // Structure prototypes for the following function prototypes
 struct file_node;
 struct file_info;
@@ -89,9 +100,9 @@ struct dirent;
 typedef int (*file_get_info)( struct file_node *node, struct file_info *buf );
 
 typedef int (*open_func)( struct file_node *, char *, int );
+typedef int (*close_func)( struct file_node *, int flags );
 typedef int (*write_func)( struct file_node *, void *, size_t, size_t );
 typedef int (*read_func)( struct file_node *, void *, size_t, size_t );
-typedef int (*close_func)( struct file_node *, int flags );
 
 typedef int (*mkdir_func)( struct file_node *, char *, int );
 typedef int (*mknod_func)( struct file_node *, char *, int, int );
@@ -100,6 +111,7 @@ typedef int (*unlink_func)( struct file_node * );
 typedef int (*readdir_func)( struct file_node *, struct dirent *dirp, int entry );
 typedef int (*mount_func)( struct file_node *, struct file_node *, int flags );
 typedef int (*lookup_func)( struct file_node *, struct file_node *, char *name, int flags );
+typedef file_event_t (*poll_func)( struct file_node * );
 
 // Functions provided by drivers to manage filesystems
 typedef struct file_system *(*file_create_fs)( struct file_driver *,
@@ -109,21 +121,20 @@ typedef int (*file_remove_fs)( struct file_driver *, struct file_system *, unsig
 // VFS structures
 // File system functions
 typedef struct file_funcs {
-	read_func  	read;
-	write_func 	write;
+	file_get_info get_info;
 
-	mkdir_func	mkdir;
-	mknod_func	mknod;
-	mount_func 	mount;
-	link_func	link;
-	unlink_func	unlink;
-	readdir_func	readdir;
-	lookup_func 	lookup;
-
-	open_func	open;
-	close_func	close;
-
-	file_get_info	get_info;
+	open_func    open;
+	close_func   close;
+	read_func    read;
+	write_func   write;
+	mkdir_func   mkdir;
+	mknod_func   mknod;
+	mount_func   mount;
+	link_func    link;
+	unlink_func  unlink;
+	readdir_func readdir;
+	lookup_func  lookup;
+	poll_func    poll;
 } file_funcs_t;
 
 // A file system
@@ -206,6 +217,12 @@ typedef struct file_pobj {
 	//char *path;
 } file_pobj_t;
 
+typedef struct file_poll_fd {
+	int fd;
+	uint16_t events;
+	uint16_t revents;
+} file_poll_fd_t;
+
 int file_register_driver( file_driver_t *driver );
 file_driver_t *file_get_driver( char *name );
 //int file_register_mount( file_system_t *fs );
@@ -236,6 +253,7 @@ int vfs_chroot( char *path );
 int vfs_chdir( char *path );
 int vfs_lseek( int fd, long offset, int whence );
 int vfs_fcntl( int fd, int command, int arg );
+int vfs_poll( file_poll_fd_t *fds, unsigned nfds, unsigned timeout );
 
 int init_vfs( );
 
