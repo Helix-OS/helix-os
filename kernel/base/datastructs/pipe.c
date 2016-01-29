@@ -77,3 +77,11 @@ int pipeline_read( pipeline_t *line, char *buf, unsigned size ){
 
 	return i;
 }
+
+bool pipeline_readable( pipeline_t *line ){
+	return line->avail > 0;
+}
+
+bool pipe_writeable( pipe_t *pipe ){
+	return pipe->bufs[0]->avail < pipe->bufs[0]->size - 1;
+}

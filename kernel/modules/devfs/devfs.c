@@ -12,17 +12,17 @@ static int devfs_lookup_node( struct file_node *node, struct file_node *buf, cha
 static int devfs_read_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
 static int devfs_open_node( struct file_node *node, char *path, int flags );
 static int devfs_write_node( struct file_node *node, void *buffer, unsigned long length, unsigned long offset );
+static file_event_t devfs_poll_node( struct file_node *node, file_event_t mask );
 
 static file_system_t *devfs = 0;
 static file_funcs_t devfs_functions = {
-	.get_info 	= devfs_get_info_node,
-	.lookup 	= devfs_lookup_node,
-
-	.readdir 	= devfs_readdir_node,
-
-	.open		= devfs_open_node,
-	.read  		= devfs_read_node,
-	.write 		= devfs_write_node,
+	.get_info = devfs_get_info_node,
+	.lookup   = devfs_lookup_node,
+	.readdir  = devfs_readdir_node,
+	.open     = devfs_open_node,
+	.read     = devfs_read_node,
+	.write    = devfs_write_node,
+	.poll     = devfs_poll_node,
 };
 
 static file_system_t *create_devfs( struct file_driver *driver,
@@ -125,7 +125,6 @@ static int devfs_read_node( struct file_node *node, void *buffer,
 
 	if ( devbuf ){
 		if ( devbuf->read ){
-			//kprintf( "[%s] Got here, devbuf: 0x%x, dev: 0x%x, read: 0x%x\n", __func__, devbuf, devbuf->dev, devbuf->read );
 			// TODO: Properly handle reads not align on devbuf->block_size
 			ret = devbuf->read( devbuf, buffer, length / devbuf->block_size, offset / devbuf->block_size );
 
@@ -147,7 +146,6 @@ static int devfs_write_node( struct file_node *node, void *buffer,
 
 	if ( devbuf ){
 		if ( devbuf->write ){
-			//kprintf( "[%s] Got here, devbuf: 0x%x, dev: 0x%x, write: 0x%x\n", __func__, devbuf, devbuf->dev, devbuf->write );
 			// TODO: Properly handle writes not aligned on devbuf->block_size
 			ret = devbuf->write( devbuf, buffer, length / devbuf->block_size, offset / devbuf->block_size );
 
@@ -165,6 +163,24 @@ static int devfs_open_node( struct file_node *node, char *path, int flags ){
 
 	if ( file_lookup_relative( path, node, &meh, 0 ) == 0 )
 		ret = meh.inode;
+
+	return ret;
+}
+
+static file_event_t devfs_poll_node( struct file_node *node, file_event_t mask ){
+	int ret = 0;
+	hal_device_t *devbuf;
+
+	devbuf = hal_get_device( node->inode - 128 );
+
+	if ( devbuf ){
+		if ( devbuf->poll ){
+			ret = devbuf->poll( devbuf );
+
+		} else {
+			ret = mask;
+		}
+	}
 
 	return ret;
 }

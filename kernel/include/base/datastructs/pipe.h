@@ -1,6 +1,7 @@
 #ifndef _helix_datastruct_pipe
 #define _helix_datastruct_pipe
 #include <base/tasking/task.h>
+#include <base/lib/stdbool.h>
 
 enum {
 	PIPE_FLAG_NULL,
@@ -32,5 +33,7 @@ typedef struct pipe {
 pipe_t *pipe_create( unsigned outputs, unsigned buf_size, unsigned flags );
 int pipe_write( pipe_t *pipe, char *buf, unsigned size );
 int pipeline_read( pipeline_t *line, char *buf, unsigned size );
+bool pipeline_readable( pipeline_t *line );
+bool pipe_writeable( pipe_t *pipe );
 
 #endif

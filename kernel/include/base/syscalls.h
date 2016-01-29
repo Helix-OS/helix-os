@@ -60,6 +60,7 @@ typedef enum {
 	SYSCALL_LSEEK,
 	SYSCALL_PIPE,
 	SYSCALL_FCNTL,
+	SYSCALL_POLL,
 	/*
 	SYSCALL_FSTAT,
 	*/
@@ -82,6 +83,7 @@ DECL_SYSCALL3( sysinfo, unsigned, unsigned, void * );
 DECL_SYSCALL3( lseek, int, long, int );
 DECL_SYSCALL1( pipe, int * );
 DECL_SYSCALL3( fcntl, int, int, int );
+DECL_SYSCALL3( poll, void *, unsigned, int );
 //DECL_SYSCALL2( fstat, int, void * );
 
 void init_syscalls( );

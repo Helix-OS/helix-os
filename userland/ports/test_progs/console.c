@@ -73,17 +73,32 @@ int main( int argc, char *argv[] ){
 	int state;
 	int has_line;
 
+	struct pollfd polling[2];
+	polling[0].fd = 0;
+	polling[0].events = POLLIN;
+
+	polling[1].fd = p_from[0];
+	polling[1].events = POLLIN;
+
 	while ( 1 ) {
-		has_line = async_getline( buf, 256, &state );
+		int foo = poll( polling, 2, -1 );
 
-		if ( has_line ){
-			write( p_to[1], buf, strlen( buf ));
+		if ( polling[0].revents & POLLIN ){
+			has_line = async_getline( buf, 256, &state );
+
+			if ( has_line ){
+				write( p_to[1], buf, strlen( buf ));
+			}
 		}
 
-		int k = read( p_from[0], buf, 256 );
-		if ( k > 0 ){
-			fwrite( buf, 1, k, stdout );
+		if ( polling[1].revents & POLLIN ){
+			int k = read( p_from[0], buf, 256 );
+			if ( k > 0 ){
+				fwrite( buf, 1, k, stdout );
+			}
 		}
+
+		polling[0].revents = polling[1].revents = 0;
 	}
 
 	return 0;

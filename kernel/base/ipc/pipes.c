@@ -11,11 +11,13 @@ static int pipe_obj_dtor( base_pobj_t *obj );
 static int pipe_vfs_read( file_node_t *node, void *buf, size_t length, size_t offset );
 static int pipe_vfs_write( file_node_t *node, void *buf, size_t length, size_t offset );
 static int pipe_vfs_close( file_node_t *node, int flags );
+static file_event_t pipe_vfs_poll( file_node_t *node, file_event_t mask );
 
 static file_funcs_t pipe_vfs_funcs = {
 	.read  = pipe_vfs_read,
 	.write = pipe_vfs_write,
 	.close = pipe_vfs_close,
+	.poll  = pipe_vfs_poll,
 };
 
 // This is kind of an edge case of the VFS code. A pipe should
@@ -172,6 +174,18 @@ static int pipe_vfs_write( file_node_t *node, void *buf, size_t length, size_t o
 
 static int pipe_vfs_close( file_node_t *node, int flags ){
 	return 0;
+}
+
+static file_event_t pipe_vfs_poll( file_node_t *node, file_event_t mask ){
+	file_event_t ret = 0;
+	pipe_t *temp = shared_get( node->data );
+	pipeline_t *line = temp->bufs[0];
+
+	ret |= pipe_writeable( temp )   ? FILE_EVENT_WRITABLE : 0;
+	ret |= pipeline_readable( line )? FILE_EVENT_READABLE : 0;
+	ret &= mask;
+
+	return ret;
 }
 
 int make_pipes( int *fds ){

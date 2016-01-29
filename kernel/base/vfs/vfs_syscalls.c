@@ -1,12 +1,3 @@
-/* TODO: vfs_read, vfs_write, etc currently handle pipe reads and writes,
- *       this would probably be better off with that split from this.
- *       Preferably with some sort of system for generalized file operations
- *       on process objects, especially once things like sockets are implemented.
- *
- *  +++: also, pipe blocking is handled by manually calling the scheduler,
- *       definitately want a general way to block on reads and writes
- */
-
 #include <base/vfs/vfs.h>
 #include <base/tasking/task.h>
 #include <base/kstd.h>
@@ -390,6 +381,52 @@ int vfs_fcntl( int fd, int command, int arg ){
 			default:
 				ret = -ERROR_INVALID_ARGUMENT;
 				break;
+		}
+	}
+
+	return ret;
+}
+
+// TODO: implement timeout
+int vfs_poll( file_poll_fd_t *fds, unsigned nfds, int timeout ){
+	int ret = 0;
+	unsigned i;
+
+	kprintf( "[%s] Got here, fds: 0x%x, nfds: %u, timeout: %u\n",
+		__func__, fds, nfds, timeout );
+
+	while ( !ret ){
+		ret = 0;
+
+		for ( i = 0; i < nfds; i++ ){
+			file_pobj_t *nodeobj;
+
+			if ( vfs_get_pobj( fds[i].fd, &nodeobj ) >= 0 ){
+				int events = VFS_FUNCTION( &nodeobj->node, poll, fds[i].events );
+
+				if ( events > 0 ){
+					fds[i].revents = events & fds[i].events;
+					ret++;
+
+				// if there's no polling function, just assume the FS
+				// never blocks
+				} else if ( events == -ERROR_NO_FUNC ){
+					fds[i].revents = fds[i].events;
+
+				} else {
+					fds[i].revents = FILE_EVENT_ERROR;
+				}
+
+			} else {
+				fds[i].revents = FILE_EVENT_INVALID;
+			}
+		}
+
+		if ( !ret && timeout < 0 ){
+			yield_current_task( );
+
+		} else if ( timeout == 0 ){
+			break;
 		}
 	}
 

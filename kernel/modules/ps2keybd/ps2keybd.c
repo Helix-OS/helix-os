@@ -13,6 +13,7 @@ char *depends[] = { "base", "hal", 0 };
 char *provides = "ps2kbd";
 
 static int kbd_hal_read( struct hal_device *dev, void *buf, unsigned count, unsigned offset );
+static int kbd_hal_poll( struct hal_device *dev );
 
 enum {
 	KEYMETA_NULL,
@@ -124,6 +125,19 @@ static int kbd_hal_read( struct hal_device *dev, void *buf, unsigned count, unsi
 	return ret;
 }
 
+static int kbd_hal_poll( struct hal_device *dev ){
+	int ret = 0;
+	pipeline_t *line = dev->dev;
+
+	enter_semaphore( &keybd_sem );
+	if ( pipeline_readable( line )){
+		ret = FILE_EVENT_READABLE;
+	}
+	leave_semaphore( &keybd_sem );
+
+	return ret;
+}
+
 static void keyboard_handler( registers_t *regs ){
 	unsigned char scancode;
 	char *buf;
@@ -178,6 +192,7 @@ int init( ){
 	new_dev->subtype = HAL_PERIPHERAL_KEYBOARD;
 	new_dev->dev = keyboard_pipe->bufs[0];
 	new_dev->read = kbd_hal_read;
+	new_dev->poll = kbd_hal_poll;
 	new_dev->block_size = 1;
 	new_dev->name = strdup( "keyboard" );
 

@@ -49,10 +49,12 @@ typedef int (*hal_device_read_block)( struct hal_device *dev, void *buf,
 					unsigned count, unsigned offset );
 typedef int (*hal_device_write_block)( struct hal_device *dev, void *buf,
 					unsigned count, unsigned offset );
+typedef int (*hal_device_poll)( struct hal_device *dev );
 
 typedef struct hal_device {
 	hal_device_read_block 	read;
 	hal_device_write_block 	write;
+	hal_device_poll         poll;
 	void 	*dev;
 
 	char 	*name;

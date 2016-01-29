@@ -111,7 +111,7 @@ typedef int (*unlink_func)( struct file_node * );
 typedef int (*readdir_func)( struct file_node *, struct dirent *dirp, int entry );
 typedef int (*mount_func)( struct file_node *, struct file_node *, int flags );
 typedef int (*lookup_func)( struct file_node *, struct file_node *, char *name, int flags );
-typedef file_event_t (*poll_func)( struct file_node * );
+typedef file_event_t (*poll_func)( struct file_node *, file_event_t mask );
 
 // Functions provided by drivers to manage filesystems
 typedef struct file_system *(*file_create_fs)( struct file_driver *,
@@ -253,7 +253,7 @@ int vfs_chroot( char *path );
 int vfs_chdir( char *path );
 int vfs_lseek( int fd, long offset, int whence );
 int vfs_fcntl( int fd, int command, int arg );
-int vfs_poll( file_poll_fd_t *fds, unsigned nfds, unsigned timeout );
+int vfs_poll( file_poll_fd_t *fds, unsigned nfds, int timeout );
 
 int init_vfs( );
 

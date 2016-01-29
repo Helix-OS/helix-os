@@ -344,6 +344,7 @@ int init_vfs( ){
 	register_syscall( SYSCALL_LSEEK,   vfs_lseek );
 	register_syscall( SYSCALL_PIPE,    make_pipes );
 	register_syscall( SYSCALL_FCNTL,   vfs_fcntl );
+	register_syscall( SYSCALL_POLL,    vfs_poll );
 
 	drv = file_get_driver( "ramfs" );
 	kprintf( "[%s] Have ramfs at 0x%x\n", provides, drv );
