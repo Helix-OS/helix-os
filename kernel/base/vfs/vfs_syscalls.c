@@ -5,7 +5,7 @@
 #include <base/tasking/elfload.h>
 #include <base/stdint.h>
 #include <base/debug.h>
-#include <base/ipc/pipes.h>
+//#include <base/ipc/pipes.h>
 #include <base/datastructs/pipe.h>
 
 // Not a syscall, is a helper function

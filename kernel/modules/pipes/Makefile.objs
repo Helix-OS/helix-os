@@ -1,0 +1,9 @@
+pipes-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/pipes/*.c))
+pipes-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/pipes/*.s))
+pipes-link-y += $(MODOBJ_DIR)/pipes_mod.o
+
+mod-obj-y += $(pipes-obj-y) $(pipes-link-y)
+
+$(MODOBJ_DIR)/pipes_mod.o: $(pipes-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(pipes-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

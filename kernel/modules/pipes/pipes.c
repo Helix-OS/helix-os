@@ -1,9 +1,13 @@
-#include <base/ipc/pipes.h>
+#include <pipes/pipes.h>
 #include <base/datastructs/pipe.h>
 #include <base/kstd.h>
 #include <base/mem/alloc.h>
 #include <base/tasking/task.h>
 #include <base/vfs/vfs.h>
+#include <base/syscalls.h>
+
+char *depends[] = { "base", 0 };
+char *provides = "pipes";
 
 static int pipe_obj_ctor( base_pobj_t *oldobj, base_pobj_t *newobj );
 static int pipe_obj_dtor( base_pobj_t *obj );
@@ -209,3 +213,16 @@ int make_pipes( int *fds ){
 	return 0;
 }
 
+int init( ){
+	kprintf( "[%s] Hello world!\n", provides );
+	kprintf( "[%s] This is module \"%s\", and I'm in yo kernelz\n",
+			provides, provides );
+
+	register_syscall( SYSCALL_PIPE, make_pipes );
+
+	return 0;
+}
+
+void remove( ){
+	kprintf( "[%s] Mkkay, I'm out.\n", provides ); 
+}

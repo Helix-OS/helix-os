@@ -5,8 +5,8 @@ kbase-obj-y  += $(patsubst %.c, %.o, $(shell find $(BASEDIR)/arch/$(ARCH) -name 
 kbase-obj-y  += $(patsubst %.s, %.o, $(shell find $(BASEDIR)/arch/$(ARCH) -name "*.s" ))
 kbase-obj-y  += $(patsubst %.c, %.o, $(shell find $(BASEDIR)/arch/$(ARCH)/targets/$(PLATFORM) -name "*.c" ))
 kbase-obj-y  += $(patsubst %.s, %.o, $(shell find $(BASEDIR)/arch/$(ARCH)/targets/$(PLATFORM) -name "*.s" ))
-kbase-obj-y  += $(patsubst %.c, %.o, $(shell find $(BASEDIR)/{mem,tasking,vfs,datastructs,ipc} -name "*.c" ))
-kbase-obj-y  += $(patsubst %.s, %.o, $(shell find $(BASEDIR)/{mem,tasking,vfs,datastructs,ipc} -name "*.s" ))
+kbase-obj-y  += $(patsubst %.c, %.o, $(shell find $(BASEDIR)/{mem,tasking,vfs,datastructs} -name "*.c" ))
+kbase-obj-y  += $(patsubst %.s, %.o, $(shell find $(BASEDIR)/{mem,tasking,vfs,datastructs} -name "*.s" ))
 kbase-obj-y  += $(patsubst %.c, %.o, $(wildcard $(BASEDIR)/*.c))
 kbase-obj-y  += $(patsubst %.s, %.o, $(wildcard $(BASEDIR)/*.s))
 
