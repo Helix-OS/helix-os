@@ -1,0 +1,9 @@
+sockets-obj-y   = $(patsubst %.c, %.o, $(wildcard $(MODULE_DIR)/sockets/*.c))
+sockets-obj-y  += $(patsubst %.s, %.o, $(wildcard $(MODULE_DIR)/sockets/*.s))
+sockets-link-y += $(MODOBJ_DIR)/sockets_mod.o
+
+mod-obj-y += $(sockets-obj-y) $(sockets-link-y)
+
+$(MODOBJ_DIR)/sockets_mod.o: $(sockets-obj-y)
+	@$(LD) $(MOD_LDFLAGS) -o $@ $(sockets-obj-y)
+	@echo "[ ] LD $(MOD_LDFLAGS) -o $@ *.o"

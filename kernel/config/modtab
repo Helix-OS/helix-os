@@ -12,3 +12,4 @@ kernel/modobjs/dummy_mod.o
 kernel/modobjs/cpplib_mod.o
 kernel/modobjs/procfs_mod.o
 kernel/modobjs/pipes_mod.o
+kernel/modobjs/sockets_mod.o
